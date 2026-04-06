@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}更改擁有人 — 系統設定{% endblock %}
+{% block content %}
+<div class="container py-3" style="max-width:600px">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">批次更改擁有人</h5>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        此操作會將「原擁有人」的<strong>所有文件、資料夾、頁籤</strong>移轉給「新擁有人」，請謹慎操作。
+      </div>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">原擁有人 <span class="text-danger">*</span></label>
+          <select class="form-select" name="from_user_id" required>
+            <option value="">-- 請選擇 --</option>
+            {% for u in all_users %}
+            <option value="{{ u.id }}">{{ u.name }} ({{ u.username }})
+              {% if u.department %} — {{ u.department }}{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">新擁有人 <span class="text-danger">*</span></label>
+          <select class="form-select" name="to_user_id" required>
+            <option value="">-- 請選擇 --</option>
+            {% for u in all_users %}
+            <option value="{{ u.id }}">{{ u.name }} ({{ u.username }})
+              {% if u.department %} — {{ u.department }}{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-warning"
+                onclick="return confirm('確定要移轉所有文件？')">
+          <i class="bi bi-person-check me-1"></i>執行移轉
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

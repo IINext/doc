@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}回收夾 — 文件管理系統{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0"><i class="bi bi-trash3 me-2"></i>回收夾</h5>
+    <span class="text-muted small ms-3">共 {{ docs|length }} 筆</span>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>案號</th>
+            <th>主旨</th>
+            <th>版本</th>
+            <th>資料夾</th>
+            <th>擁有人</th>
+            <th>刪除時間</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in docs %}
+          <tr id="row-{{ d.id }}">
+            <td class="fw-semibold">{{ d.doc_number }}</td>
+            <td>{{ d.subject }}</td>
+            <td class="text-center">{{ d.version }}</td>
+            <td>{{ d.folder_name or '' }}</td>
+            <td>{{ d.owner_name or '' }}</td>
+            <td class="text-muted">{{ (d.updated_at or '')[:16] }}</td>
+            <td>
+              <button class="btn btn-xs btn-outline-success me-1"
+                      onclick="restoreDoc({{ d.id }})" title="還原">
+                <i class="bi bi-arrow-counterclockwise"></i> 還原
+              </button>
+              <button class="btn btn-xs btn-outline-danger"
+                      onclick="purgeDoc({{ d.id }})" title="永久刪除">
+                <i class="bi bi-x-lg"></i> 清除
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-5">
+              <i class="bi bi-trash3" style="font-size:2rem"></i>
+              <div class="mt-2">回收夾是空的</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function restoreDoc(id) {
+  if (!confirm('確定要還原此文件？')) return;
+  $.post(`/recycle/${id}/restore`, {}, res => {
+    if (res.success) { $(`#row-${id}`).fadeOut(300, () => $(`#row-${id}`).remove()); }
+    else alert(res.msg);
+  });
+}
+function purgeDoc(id) {
+  if (!confirm('確定要永久刪除？此操作無法復原！')) return;
+  $.post(`/recycle/${id}/purge`, {}, res => {
+    if (res.success) { $(`#row-${id}`).fadeOut(300, () => $(`#row-${id}`).remove()); }
+    else alert(res.msg);
+  });
+}
+</script>
+{% endblock %}

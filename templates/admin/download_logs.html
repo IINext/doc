@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}下載稽核紀錄 — 文件管理系統{% endblock %}
+{% block content %}
+<div class="container-fluid py-3" style="max-width:1100px">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0"><i class="bi bi-download me-2"></i>下載稽核紀錄</h5>
+    <span class="ms-3 text-muted small">共 {{ logs|length }} 筆（最多顯示 500 筆）</span>
+  </div>
+
+  <!-- Filter Form -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label form-label-sm mb-1">下載人</label>
+          <select class="form-select form-select-sm" name="user_name">
+            <option value="">— 全部 —</option>
+            {% for uname in all_users %}
+            <option value="{{ uname }}" {% if uname == filter_user %}selected{% endif %}>{{ uname }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label form-label-sm mb-1">文件名稱 / 案號</label>
+          <input type="text" class="form-control form-control-sm" name="subject"
+                 value="{{ filter_doc }}" placeholder="部分關鍵字">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label form-label-sm mb-1">下載日期（起）</label>
+          <input type="date" class="form-control form-control-sm" name="date_from"
+                 value="{{ filter_date_from }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label form-label-sm mb-1">下載日期（迄）</label>
+          <input type="date" class="form-control form-control-sm" name="date_to"
+                 value="{{ filter_date_to }}">
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel me-1"></i>篩選
+          </button>
+          <a href="{{ url_for('admin_download_logs') }}" class="btn btn-outline-secondary btn-sm">清除</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="text-muted" style="width:60px">#</th>
+            <th style="width:150px">下載時間</th>
+            <th style="width:120px">下載人</th>
+            <th style="width:130px">案號</th>
+            <th>文件主旨</th>
+            <th>路徑（頁籤 / 資料夾）</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td class="text-muted">{{ log.id }}</td>
+            <td class="text-nowrap">{{ log.downloaded_at[:16] }}</td>
+            <td>{{ log.user_name }}</td>
+            <td class="fw-semibold">
+              <a href="{{ url_for('doc_properties', doc_id=log.doc_id) }}"
+                 class="text-decoration-none">{{ log.doc_number }}</a>
+            </td>
+            <td>{{ log.subject }}</td>
+            <td class="text-muted small">{{ log.doc_path }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="bi bi-inbox fs-4 d-block mb-2"></i>目前無下載紀錄
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

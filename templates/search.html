@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}搜尋結果 — 文件管理系統{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center mb-3 gap-3">
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <form class="d-flex gap-2" action="{{ url_for('search') }}" method="get">
+      <input type="text" class="form-control" name="q" value="{{ q }}" style="width:300px" autofocus>
+      <button class="btn btn-primary btn-sm" type="submit">
+        <i class="bi bi-search me-1"></i>搜尋
+      </button>
+    </form>
+    <span class="text-muted small">共 {{ results|length }} 筆結果</span>
+  </div>
+
+  {% if q %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>案號</th>
+            <th>主旨</th>
+            <th>版本</th>
+            <th>類型</th>
+            <th>部門</th>
+            <th>資料夾</th>
+            <th>頁籤</th>
+            <th>狀態</th>
+            <th>擁有人</th>
+            <th>建立時間</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in results %}
+          {% set status_map = {'': '草稿', 'pending': '待簽核', 'signed': '已簽核'} %}
+          {% set badge_map  = {'': 'secondary', 'pending': 'warning', 'signed': 'success'} %}
+          {% set s = d.sign_status or '' %}
+          <tr>
+            <td class="fw-semibold">{{ d.doc_number }}</td>
+            <td>
+              {% if d.is_locked %}<i class="bi bi-lock-fill text-warning me-1"></i>{% endif %}
+              {{ d.subject }}
+            </td>
+            <td class="text-center">{{ d.version }}</td>
+            <td>{{ d.file_type_name or '' }}</td>
+            <td>{{ d.department or '' }}</td>
+            <td>{{ d.folder_name or '' }}</td>
+            <td>{{ d.tab_name or '' }}</td>
+            <td><span class="badge bg-{{ badge_map[s] }}">{{ status_map[s] }}</span></td>
+            <td>{{ d.owner_name or '' }}</td>
+            <td class="text-muted">{{ (d.created_at or '')[:16] }}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('doc_edit', doc_id=d.id) }}" class="btn btn-outline-primary btn-xs" title="修改">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{{ url_for('doc_download', doc_id=d.id) }}" class="btn btn-outline-success btn-xs" title="下載">
+                  <i class="bi bi-download"></i>
+                </a>
+                <a href="{{ url_for('doc_history', doc_id=d.id) }}" class="btn btn-outline-secondary btn-xs" title="履歷">
+                  <i class="bi bi-clock-history"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="11" class="text-center text-muted py-4">找不到符合「{{ q }}」的文件</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

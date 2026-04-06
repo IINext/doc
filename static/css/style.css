@@ -1,0 +1,178 @@
+/* ── 文件管理系統 全域樣式 ─────────────────────────────── */
+
+/* Layout */
+.dm-layout {
+  display: flex;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+.dm-sidebar {
+  width: 260px;
+  min-width: 200px;
+  max-width: 320px;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  background: #f0f2f5;
+  flex-shrink: 0;
+}
+
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dm-main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dm-toolbar {
+  flex-shrink: 0;
+}
+
+.dm-doc-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dm-statusbar {
+  flex-shrink: 0;
+  font-size: .78rem;
+}
+
+/* Sidebar tab/folder items */
+.tab-header {
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 4px;
+  transition: background .15s;
+  user-select: none;
+}
+.tab-header:hover { background: #e2e6ea; }
+
+.folder-item {
+  border-radius: 4px;
+  margin: 1px 4px;
+  transition: background .15s;
+  user-select: none;
+  font-size: .875rem;
+}
+.folder-item:hover { background: #e9ecef; }
+.folder-item.active {
+  background: #cfe2ff;
+  color: #084298;
+  font-weight: 600;
+}
+
+/* Document table */
+.dm-table { font-size: .85rem; }
+.dm-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: .8rem;
+  border-bottom: 2px solid #dee2e6;
+  padding: 6px 8px;
+}
+.dm-table tbody td {
+  padding: 5px 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.dm-table .sortable { cursor: pointer; }
+.dm-table .sortable:hover { background: #e9ecef; }
+.doc-row:hover { cursor: default; }
+.doc-row.table-active td { background: #cfe2ff !important; }
+
+/* Context menu */
+.ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 180px;
+  font-size: .875rem;
+}
+.ctx-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .1s;
+}
+.ctx-item:hover { background: #f0f4ff; }
+.ctx-item.ctx-disabled {
+  color: #adb5bd;
+  cursor: default;
+  pointer-events: none;
+}
+.ctx-divider {
+  border-top: 1px solid #dee2e6;
+  margin: 3px 0;
+}
+
+/* Flash zone */
+.flash-zone { position: sticky; top: 52px; z-index: 100; }
+
+/* Toast */
+.toast-msg {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9998;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: .875rem;
+  color: #fff;
+  background: #198754;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.toast-warning { background: #fd7e14; }
+.toast-danger   { background: #dc3545; }
+
+/* Utility */
+.btn-xs {
+  padding: 1px 6px;
+  font-size: .78rem;
+  line-height: 1.4;
+  border-radius: 3px;
+}
+.btn-xs.btn-close { padding: 2px; }
+
+/* Admin cards hover */
+.card:hover .card-body { background: #f0f4ff; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #999; }
+
+/* Permission table cells (click to toggle) */
+.perm-cell {
+  cursor: pointer;
+  user-select: none;
+}
+.perm-cell:hover { background: #f0f4ff; }
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .dm-sidebar { width: 200px; }
+  .dm-table tbody td { max-width: 120px; }
+}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}整批轉入 — 文件管理系統{% endblock %}
+{% block content %}
+<div class="container-fluid py-3" style="max-width:720px">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0"><i class="bi bi-upload me-2"></i>整批轉入</h5>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="alert alert-info py-2 small">
+        <i class="bi bi-info-circle me-1"></i>
+        一次選擇多個檔案上傳，系統會自動以檔名為主旨並建立文件記錄。
+      </div>
+      <form method="post" enctype="multipart/form-data">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">目標資料夾 <span class="text-danger">*</span></label>
+            <select class="form-select" name="folder_id" required>
+              <option value="">-- 請選擇 --</option>
+              {% for f in folders %}
+              <option value="{{ f.id }}">{{ f.tab_name }} / {{ f.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">預設類型</label>
+            <select class="form-select" name="file_type_id">
+              <option value="">-- 不指定 --</option>
+              {% for ft in file_types %}
+              <option value="{{ ft.id }}">{{ ft.code }} - {{ ft.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">預設部門</label>
+            <input type="text" class="form-control" name="department"
+                   value="{{ user.department or '' }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">選擇檔案（可多選）</label>
+            <input type="file" class="form-control" name="files" multiple id="filesInput"
+                   onchange="showFileList(this)">
+          </div>
+          <div class="col-12" id="fileListArea" style="display:none">
+            <label class="form-label">已選擇的檔案：</label>
+            <ul class="list-group" id="fileList"></ul>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">取消</a>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-cloud-upload me-1"></i>開始轉入
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showFileList(input) {
+  const files = Array.from(input.files);
+  const ul = document.getElementById('fileList');
+  const area = document.getElementById('fileListArea');
+  ul.innerHTML = '';
+  if (files.length) {
+    files.forEach(f => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item py-1 small';
+      li.textContent = `${f.name}  (${(f.size/1024).toFixed(1)} KB)`;
+      ul.appendChild(li);
+    });
+    area.style.display = '';
+  } else {
+    area.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

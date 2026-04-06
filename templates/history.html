@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}文件履歷 — {{ doc.doc_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3" style="max-width:860px">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h5 class="mb-0">文件履歷</h5>
+      <small class="text-muted">{{ doc.doc_number }} — {{ doc.subject }}</small>
+    </div>
+  </div>
+
+  <!-- 目前版本 -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header py-2 fw-semibold bg-primary text-white">
+      <i class="bi bi-file-earmark-check me-1"></i>目前版本（V{{ doc.version }}）
+    </div>
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-md-3"><small class="text-muted">案號</small><br>{{ doc.doc_number }}</div>
+        <div class="col-md-5"><small class="text-muted">主旨</small><br>{{ doc.subject }}</div>
+        <div class="col-md-2"><small class="text-muted">版本</small><br>{{ doc.version }}</div>
+        <div class="col-md-2 d-flex align-items-end">
+          {% if doc.stored_filename %}
+          <a href="{{ url_for('doc_download', doc_id=doc.id) }}"
+             class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download me-1"></i>下載
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 歷史版本 -->
+  <div class="card shadow-sm">
+    <div class="card-header py-2 fw-semibold">
+      <i class="bi bi-clock-history me-1"></i>歷史版本（{{ versions|length }} 筆）
+    </div>
+    {% if versions %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>版本</th>
+            <th>檔案名稱</th>
+            <th>建立者</th>
+            <th>建立時間</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in versions %}
+          <tr>
+            <td>V{{ v.version }}</td>
+            <td>{{ v.original_filename }}</td>
+            <td>{{ v.creator_name or '' }}</td>
+            <td>{{ (v.created_at or '')[:16] }}</td>
+            <td>
+              {% if v.stored_filename %}
+              <a href="{{ url_for('version_download', doc_id=doc.id, ver_id=v.id) }}"
+                 class="btn btn-xs btn-outline-secondary">
+                <i class="bi bi-download"></i>
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card-body text-muted text-center py-4">尚無歷史版本</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

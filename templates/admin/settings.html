@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}系統設定 — 文件管理系統{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <h5 class="mb-4"><i class="bi bi-gear me-2"></i>系統設定</h5>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_file_types') }}" class="card text-decoration-none text-dark h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-tag-fill text-primary" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">1. 檔案類型</div>
+              <small class="text-muted">管理文件分類代碼</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_groups') }}" class="card text-decoration-none text-dark h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-people-fill text-info" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">2. 群組資料</div>
+              <small class="text-muted">維護群組及成員關係</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_change_owner') }}" class="card text-decoration-none text-dark h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-person-check-fill text-warning" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">3. 更改擁有人</div>
+              <small class="text-muted">批次移轉文件擁有權</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_users') }}" class="card text-decoration-none text-dark h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-person-gear text-success" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">使用者管理</div>
+              <small class="text-muted">新增 / 修改 / 停用帳號</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_download_logs') }}" class="card text-decoration-none text-dark h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-download text-danger" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">5. 下載稽核紀錄</div>
+              <small class="text-muted">查閱所有檔案下載歷程</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

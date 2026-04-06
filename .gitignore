@@ -1,0 +1,27 @@
+# 資料庫（含敏感資料，不納入版本控制）
+*.db
+*.sqlite
+
+# 上傳的檔案
+uploads/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 虛擬環境
+venv/
+.venv/
+env/
+
+# 編輯器設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系統檔
+.DS_Store
+Thumbs.db

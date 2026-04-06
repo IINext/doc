@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}檔案類型 — 系統設定{% endblock %}
+{% block content %}
+<div class="container py-3" style="max-width:800px">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">檔案類型管理</h5>
+  </div>
+
+  <!-- 新增 -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header py-2 fw-semibold">新增檔案類型</div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="add">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-2">
+            <label class="form-label">代碼 *</label>
+            <input type="text" class="form-control form-control-sm" name="code" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">名稱 *</label>
+            <input type="text" class="form-control form-control-sm" name="name" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">說明</label>
+            <input type="text" class="form-control form-control-sm" name="description">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary btn-sm w-100" type="submit">
+              <i class="bi bi-plus-lg me-1"></i>新增
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 清單 -->
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr><th>代碼</th><th>名稱</th><th>說明</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for ft in file_types %}
+          <tr id="ftr-{{ ft.id }}">
+            <td class="fw-semibold">{{ ft.code }}</td>
+            <td>
+              <span class="view-name-{{ ft.id }}">{{ ft.name }}</span>
+              <input type="text" class="form-control form-control-sm d-none edit-name-{{ ft.id }}"
+                     value="{{ ft.name }}" style="width:150px">
+            </td>
+            <td>
+              <span class="view-desc-{{ ft.id }}">{{ ft.description }}</span>
+              <input type="text" class="form-control form-control-sm d-none edit-desc-{{ ft.id }}"
+                     value="{{ ft.description }}" style="width:200px">
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm view-btns-{{ ft.id }}">
+                <button class="btn btn-outline-primary btn-xs" onclick="editRow({{ ft.id }})">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form method="post" class="d-inline"
+                      onsubmit="return confirm('確定刪除？')">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="id" value="{{ ft.id }}">
+                  <button class="btn btn-outline-danger btn-xs" type="submit">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+              <div class="btn-group btn-group-sm d-none edit-btns-{{ ft.id }}">
+                <button class="btn btn-outline-success btn-xs" onclick="saveRow({{ ft.id }})">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-xs" onclick="cancelRow({{ ft.id }})">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted text-center py-3">尚無資料</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<form method="post" id="editForm" class="d-none">
+  <input type="hidden" name="action" value="edit">
+  <input type="hidden" name="id" id="editId">
+  <input type="hidden" name="name" id="editName">
+  <input type="hidden" name="description" id="editDesc">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editRow(id) {
+  $(`.view-name-${id}, .view-desc-${id}, .view-btns-${id}`).addClass('d-none');
+  $(`.edit-name-${id}, .edit-desc-${id}, .edit-btns-${id}`).removeClass('d-none');
+}
+function cancelRow(id) {
+  $(`.edit-name-${id}, .edit-desc-${id}, .edit-btns-${id}`).addClass('d-none');
+  $(`.view-name-${id}, .view-desc-${id}, .view-btns-${id}`).removeClass('d-none');
+}
+function saveRow(id) {
+  $('#editId').val(id);
+  $('#editName').val($(`.edit-name-${id}`).val());
+  $('#editDesc').val($(`.edit-desc-${id}`).val());
+  $('#editForm').submit();
+}
+</script>
+{% endblock %}

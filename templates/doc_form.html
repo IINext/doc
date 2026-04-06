@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% set _title = '查詢文件' if view_only else ('修改文件' if doc else '新增文件') %}
+{% block title %}{{ _title }} — 文件管理系統{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3" style="max-width:860px">
+  <div class="d-flex align-items-center mb-3">
+    {% if view_only %}
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    {% elif doc %}
+    <a href="#" onclick="cancelEdit({{ doc.id }})" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    {% else %}
+    <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    {% endif %}
+    <h5 class="mb-0">
+      {% if view_only %}<i class="bi bi-eye me-2 text-secondary"></i>查詢文件
+      {% elif doc %}修改文件
+      {% else %}新增文件{% endif %}
+    </h5>
+    {% if view_only %}
+    <span class="badge bg-secondary ms-2">唯讀</span>
+    {% endif %}
+  </div>
+
+{% set _ro = view_only %}
+  <form method="post" enctype="multipart/form-data" id="docForm">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row g-3">
+
+          <!-- 案號 -->
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">案號</label>
+            <div class="input-group">
+              <input type="text" class="form-control" name="doc_number" id="docNumber"
+                     value="{{ doc.doc_number if doc else doc_number }}"
+                     {{ 'readonly' if (doc or _ro) else '' }} required>
+              {% if not doc and not _ro %}
+              <button type="button" class="btn btn-outline-secondary" onclick="regenDocNo()" title="重新取號">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- 版本 -->
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">版本</label>
+            <input type="text" class="form-control" name="version"
+                   value="{{ doc.version if doc else '1' }}"
+                   {{ 'readonly' if _ro else '' }}>
+          </div>
+
+          <!-- 發行日期 -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">發行日期</label>
+            <input type="date" class="form-control" name="issue_date"
+                   value="{{ doc.issue_date if doc else today }}"
+                   {{ 'readonly' if _ro else '' }}>
+          </div>
+
+          <!-- 檔案類型 -->
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">檔案類型</label>
+            <select class="form-select" name="file_type_id" {{ 'disabled' if _ro else '' }}>
+              <option value="">-- 請選擇 --</option>
+              {% for ft in file_types %}
+              <option value="{{ ft.id }}"
+                {{ 'selected' if doc and doc.file_type_id == ft.id else '' }}>
+                {{ ft.code }} - {{ ft.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 主旨 -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">主旨</label>
+            <input type="text" class="form-control" name="subject" id="subjectInput"
+                   value="{{ doc.subject if doc else '' }}"
+                   {{ 'readonly' if _ro else 'required' }}>
+          </div>
+
+          <!-- 資料夾 -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">資料夾</label>
+            {% if folder_readonly %}
+              {# 唯讀（查詢模式 或 非擁有者修改）：灰底顯示，隱藏欄位送出原值 #}
+              {% if not _ro %}
+              <input type="hidden" name="folder_id" value="{{ doc.folder_id }}">
+              {% endif %}
+              <input type="text" class="form-control"
+                     value="{{ folder_display }}" disabled
+                     style="background:#e9ecef; color:#6c757d; cursor:default">
+            {% else %}
+              <select class="form-select" name="folder_id" required>
+                <option value="">-- 請選擇 --</option>
+                {% for f in folders %}
+                <option value="{{ f.id }}"
+                  {{ 'selected' if (doc and doc.folder_id == f.id) or (not doc and folder_id == f.id) else '' }}>
+                  {{ f.tab_name }} / {{ f.name }}
+                </option>
+                {% endfor %}
+              </select>
+            {% endif %}
+          </div>
+
+          <!-- 部門 -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">部門</label>
+            <input type="text" class="form-control" name="department"
+                   value="{{ doc.department if doc else (user.department or '') }}"
+                   {{ 'readonly' if _ro else '' }}>
+          </div>
+
+          <!-- 上傳檔案（查詢模式隱藏） -->
+          {% if not _ro %}
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              上傳檔案
+              {% if doc and doc.original_filename %}
+              <small class="text-muted ms-2">（目前：{{ doc.original_filename }}）</small>
+              {% endif %}
+            </label>
+            <input type="file" class="form-control" name="file" id="fileInput"
+                   onchange="autoFillSubject(this)">
+            <div class="form-text">選擇新檔案即可取代現有檔案。</div>
+          </div>
+          {% else %}
+          <!-- 查詢模式：僅顯示目前檔名 -->
+          {% if doc and doc.original_filename %}
+          <div class="col-12">
+            <label class="form-label fw-semibold">附加檔案</label>
+            <input type="text" class="form-control" value="{{ doc.original_filename }}" disabled
+                   style="background:#e9ecef; color:#6c757d">
+          </div>
+          {% endif %}
+          {% endif %}
+
+          {% if doc and not _ro %}
+          <!-- 更改版本（查詢模式隱藏） -->
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="version_bump" id="versionBump">
+              <label class="form-check-label" for="versionBump">
+                更改版本（版本號自動 +1，舊版存入履歷）
+              </label>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- 加密 -->
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="is_encrypted" id="isEncrypted"
+                     {% if not _ro %}onchange="toggleEncryptPw()"{% endif %}
+                     {% if doc and doc.is_encrypted %}checked{% endif %}
+                     {% if _ro %}disabled{% endif %}>
+              <label class="form-check-label" for="isEncrypted">
+                檔案加密
+                {% if _ro and doc and doc.is_encrypted %}
+                <span class="badge bg-warning text-dark ms-1">
+                  <i class="bi bi-lock-fill me-1"></i>下載時需輸入密碼
+                </span>
+                {% endif %}
+              </label>
+            </div>
+          </div>
+          {# 查詢模式：隱藏加密密碼欄位；修改/新增模式：正常顯示 #}
+          {% if not _ro %}
+          <div class="col-md-4" id="encryptPwDiv"
+               style="{{ '' if doc and doc.is_encrypted else 'display:none' }}">
+            <label class="form-label">加密密碼</label>
+            <input type="text" class="form-control"
+                   name="encrypt_password" id="encryptPassword"
+                   value="{{ doc.encrypt_password if doc else '' }}"
+                   placeholder="設定下載密碼">
+          </div>
+          {% endif %}
+
+          <!-- 備註 -->
+          <div class="col-12">
+            <label class="form-label fw-semibold">備註</label>
+            <textarea class="form-control" name="remarks" rows="3"
+                      {% if _ro %}readonly{% endif %}>{{ doc.remarks if doc else '' }}</textarea>
+          </div>
+
+        </div><!-- row -->
+      </div><!-- card-body -->
+
+      <div class="card-footer d-flex justify-content-between align-items-center">
+        <div>
+          {% if doc %}
+          <a href="{{ url_for('doc_download', doc_id=doc.id) }}"
+             class="btn btn-sm btn-outline-success me-2">
+            <i class="bi bi-download me-1"></i>下載檔案
+          </a>
+          <a href="{{ url_for('doc_history', doc_id=doc.id) }}"
+             class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-clock-history me-1"></i>履歷
+          </a>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          {% if _ro %}
+          {# 查詢模式：只有「關閉」，不觸發解鎖 #}
+          <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i>關閉
+          </a>
+          {% elif doc %}
+          <a href="#" onclick="cancelEdit({{ doc.id }})" class="btn btn-secondary btn-sm">取消</a>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-check-lg me-1"></i>更新
+          </button>
+          {% else %}
+          <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">取消</a>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-check-lg me-1"></i>新增
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function autoFillSubject(input) {
+  const subject = document.getElementById('subjectInput');
+  if (subject && !subject.value && input.files.length) {
+    const name = input.files[0].name;
+    subject.value = name.replace(/\.[^/.]+$/, '');
+  }
+}
+
+function toggleEncryptPw() {
+  const checked = document.getElementById('isEncrypted').checked;
+  const div = document.getElementById('encryptPwDiv');
+  const pw  = document.getElementById('encryptPassword');
+  if (checked) {
+    div.style.display = '';
+    pw.focus();
+  } else {
+    pw.value = '';          // 取消打勾時清空密碼
+    div.style.display = 'none';
+  }
+}
+
+function regenDocNo() {
+  fetch('{{ url_for("doc_new") }}?_regen=1')
+    .then(() => {})
+    .catch(() => {});
+  // Simple: reload to get a new number
+  fetch('{{ url_for("doc_new") }}')
+    .then(r => r.text())
+    .then(html => {
+      const m = html.match(/name="doc_number"[^>]*value="([^"]+)"/);
+      if (m) document.getElementById('docNumber').value = m[1];
+    });
+}
+
+// 取消編輯：先解鎖再返回
+function cancelEdit(docId) {
+  fetch(`/doc/${docId}/unlock`, { method: 'POST' })
+    .finally(() => { location.href = '{{ url_for("index") }}'; });
+}
+</script>
+{% endblock %}

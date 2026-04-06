@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}群組資料 — 系統設定{% endblock %}
+{% block content %}
+<div class="container py-3" style="max-width:900px">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">群組資料管理</h5>
+  </div>
+
+  <!-- 新增群組 -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header py-2 fw-semibold">新增群組</div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="add">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">群組名稱 *</label>
+            <input type="text" class="form-control form-control-sm" name="name" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">說明</label>
+            <input type="text" class="form-control form-control-sm" name="description">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary btn-sm w-100" type="submit">
+              <i class="bi bi-plus-lg"></i> 新增
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 群組列表 -->
+  {% for g in groups %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-header py-2 d-flex align-items-center">
+      <i class="bi bi-people-fill text-info me-2"></i>
+      <span class="fw-semibold">{{ g.name }}</span>
+      {% if g.description %}
+      <small class="text-muted ms-2">— {{ g.description }}</small>
+      {% endif %}
+      <div class="ms-auto">
+        <form method="post" class="d-inline" onsubmit="return confirm('確定刪除群組？')">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="{{ g.id }}">
+          <button class="btn btn-outline-danger btn-xs" type="submit">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <!-- 成員列表 -->
+        <div class="col-md-7">
+          <div class="small text-muted mb-1">成員（{{ g.members|length }} 人）</div>
+          {% if g.members %}
+          <div class="d-flex flex-wrap gap-1">
+            {% for m in g.members %}
+            <span class="badge bg-light text-dark border">
+              {{ m.name }}
+              <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="remove_member">
+                <input type="hidden" name="group_id" value="{{ g.id }}">
+                <input type="hidden" name="user_id" value="{{ m.id }}">
+                <button type="submit" class="btn-close btn-close-sm ms-1"
+                        style="width:.5rem;height:.5rem"
+                        title="移除 {{ m.name }}"></button>
+              </form>
+            </span>
+            {% endfor %}
+          </div>
+          {% else %}
+          <span class="text-muted small">（無成員）</span>
+          {% endif %}
+        </div>
+        <!-- 新增成員 -->
+        <div class="col-md-5">
+          <div class="small text-muted mb-1">新增成員</div>
+          <form method="post" class="d-flex gap-1">
+            <input type="hidden" name="action" value="add_member">
+            <input type="hidden" name="group_id" value="{{ g.id }}">
+            <select class="form-select form-select-sm" name="user_id">
+              {% for u in all_users %}
+              <option value="{{ u.id }}">{{ u.name }} ({{ u.username }})</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-outline-primary btn-sm" type="submit">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-muted text-center py-4">尚無群組</div>
+  {% endfor %}
+</div>
+{% endblock %}

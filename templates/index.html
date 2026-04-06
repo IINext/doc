@@ -1,0 +1,1066 @@
+{% extends 'base.html' %}
+{% block title %}主頁面 — 文件管理系統{% endblock %}
+
+{% block content %}
+<div class="dm-layout">
+  <!-- ══ 左側面板：頁籤 + 資料夾樹 ═══════════════════════════ -->
+  <div class="dm-sidebar" id="sidebar">
+    <div class="sidebar-header d-flex align-items-center px-2 py-2 border-bottom">
+      <span class="fw-bold small text-secondary flex-grow-1">
+        <i class="bi bi-diagram-3 me-1"></i>頁籤 / 資料夾
+      </span>
+      <button class="btn btn-sm btn-outline-primary" id="btnNewTab" title="新增個人頁籤">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+    <div class="sidebar-body" id="tabTree">
+      <!-- 公共文件 -->
+      {% for tab in public_tabs %}
+      <div class="tab-node" data-tab-id="{{ tab.id }}" data-tab-type="public">
+        <div class="tab-header d-flex align-items-center px-2 py-1" onclick="toggleTab({{ tab.id }})">
+          <i class="bi bi-chevron-right toggle-icon me-1"></i>
+          <i class="bi bi-folder-fill text-warning me-1"></i>
+          <span class="flex-grow-1 small fw-semibold">{{ tab.name }}</span>
+          {% if session.is_admin %}
+          <button class="btn btn-xs text-secondary" onclick="event.stopPropagation(); openNewFolderModal({{ tab.id }}, null)"
+                  title="新增資料夾"><i class="bi bi-folder-plus"></i></button>
+          {% endif %}
+        </div>
+        <div class="folder-tree d-none" id="tree-{{ tab.id }}"></div>
+      </div>
+      {% endfor %}
+
+      <!-- 個人文件 -->
+      {% for tab in personal_tabs %}
+      <div class="tab-node" data-tab-id="{{ tab.id }}" data-tab-type="personal">
+        <div class="tab-header d-flex align-items-center px-2 py-1" onclick="toggleTab({{ tab.id }})">
+          <i class="bi bi-chevron-right toggle-icon me-1"></i>
+          <i class="bi bi-person-fill text-info me-1"></i>
+          <span class="flex-grow-1 small fw-semibold">{{ tab.name }}</span>
+          <button class="btn btn-xs text-secondary" onclick="event.stopPropagation(); openNewFolderModal({{ tab.id }}, null)"
+                  title="新增資料夾"><i class="bi bi-folder-plus"></i></button>
+          <button class="btn btn-xs text-secondary" onclick="event.stopPropagation(); editTabModal({{ tab.id }}, '{{ tab.name }}')"
+                  title="重新命名"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-xs text-danger" onclick="event.stopPropagation(); deleteTab({{ tab.id }})"
+                  title="刪除頁籤"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="folder-tree d-none" id="tree-{{ tab.id }}"></div>
+      </div>
+      {% endfor %}
+
+      <!-- 別人分享 -->
+      <div class="tab-node" data-tab-id="shared">
+        <div class="tab-header d-flex align-items-center px-2 py-1"
+             onclick="toggleSharedTab()">
+          <i class="bi bi-chevron-right me-1 small" id="sharedChevron"
+             style="transition:transform .2s"></i>
+          <i class="bi bi-people-fill text-success me-2"></i>
+          <span class="flex-grow-1 small fw-semibold">別人分享</span>
+        </div>
+        <div id="sharedOwnerList" class="d-none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 右側主區 ════════════════════════════════════════════ -->
+  <div class="dm-main d-flex flex-column">
+    <!-- 工具列 -->
+    <div class="dm-toolbar d-flex align-items-center gap-2 px-3 py-2 border-bottom bg-light">
+      <span class="text-muted small me-auto" id="currentPath">請從左側選擇資料夾</span>
+      <button class="btn btn-sm btn-success" id="btnNewDoc" onclick="openNewDoc()" title="新增文件">
+        <i class="bi bi-plus-lg me-1"></i>新增
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="refreshDocs()" title="重新整理">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-info" onclick="exportSelected()" title="導出Excel">
+        <i class="bi bi-file-earmark-excel me-1"></i>導出
+      </button>
+    </div>
+
+    <!-- 文件清單 -->
+    <div class="dm-doc-list flex-grow-1 overflow-auto">
+      <table class="table table-hover table-sm dm-table mb-0" id="docTable">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="width:30px"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+            <th style="width:28px"></th>
+            <th class="sortable" data-col="doc_number">案號</th>
+            <th class="sortable" data-col="subject">主旨</th>
+            <th class="sortable" data-col="version" style="width:55px">版本</th>
+            <th class="sortable" data-col="issue_date" style="width:100px">發行日期</th>
+            <th style="width:90px">類型</th>
+            <th style="width:80px">部門</th>
+            <th class="sortable" data-col="sign_status" style="width:75px">狀態</th>
+            <th style="width:120px">擁有人</th>
+            <th class="sortable" data-col="created_at" style="width:130px">建立時間</th>
+          </tr>
+        </thead>
+        <tbody id="docBody">
+          <tr>
+            <td colspan="11" class="text-center text-muted py-5">
+              <i class="bi bi-folder2-open" style="font-size:2rem"></i>
+              <div class="mt-2">請從左側選擇資料夾以查看文件</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 狀態列 -->
+    <div class="dm-statusbar d-flex align-items-center gap-3 px-3 py-1 border-top bg-light">
+      <span id="statusCount" class="small text-muted">共 0 筆</span>
+      <span id="statusSelected" class="small text-primary d-none">已選 <span id="selCount">0</span> 筆</span>
+      <span class="ms-auto small text-muted" id="statusInfo"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 右鍵選單 ══════════════════════════════════════════════ -->
+<div id="ctxMenu" class="ctx-menu shadow d-none">
+  <div class="ctx-item" data-action="new"><i class="bi bi-plus-lg me-2 text-success"></i>新增</div>
+  <div class="ctx-item" data-action="edit"><i class="bi bi-pencil me-2 text-primary"></i>修改</div>
+  <div class="ctx-item" data-action="view"><i class="bi bi-eye me-2 text-secondary"></i>查詢</div>
+  <div class="ctx-item" data-action="delete"><i class="bi bi-trash me-2 text-danger"></i>刪除</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="lock"><i class="bi bi-lock me-2 text-warning"></i>鎖定</div>
+  <div class="ctx-item" data-action="unlock"><i class="bi bi-unlock me-2 text-warning"></i>解鎖</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="share"><i class="bi bi-share me-2 text-info"></i>授權/分享</div>
+  <div class="ctx-item" data-action="change_owner"><i class="bi bi-person-check me-2"></i>更改擁有人</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="download"><i class="bi bi-download me-2 text-success"></i>下載</div>
+  <div class="ctx-item" data-action="history"><i class="bi bi-clock-history me-2"></i>履歷</div>
+  <div class="ctx-item" data-action="properties"><i class="bi bi-info-circle me-2"></i>屬性</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="send_sign"><i class="bi bi-send me-2 text-primary"></i>單據送簽</div>
+  <div class="ctx-item" data-action="refresh"><i class="bi bi-arrow-clockwise me-2"></i>頁面更新</div>
+</div>
+
+<!-- ════ 資料夾右鍵選單 ════════════════════════════════════════ -->
+<div id="folderCtxMenu" class="ctx-menu shadow d-none">
+  <div class="ctx-item" data-action="newFolder"><i class="bi bi-folder-plus me-2 text-warning"></i>新增子資料夾</div>
+  <div class="ctx-item" data-action="editFolder"><i class="bi bi-pencil me-2 text-primary"></i>修改資料夾</div>
+  <div class="ctx-item" data-action="deleteFolder"><i class="bi bi-trash me-2 text-danger"></i>刪除資料夾</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="shareFolder"><i class="bi bi-share me-2 text-info"></i>授權資料夾</div>
+</div>
+
+<!-- ════ Modals ═══════════════════════════════════════════════ -->
+
+<!-- 新增頁籤 Modal -->
+<div class="modal fade" id="newTabModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2"><h6 class="modal-title">新增個人頁籤</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="text" class="form-control" id="newTabName" placeholder="頁籤名稱">
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="submitNewTab()">新增</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 編輯頁籤 Modal -->
+<div class="modal fade" id="editTabModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2"><h6 class="modal-title">修改頁籤名稱</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="editTabId">
+        <input type="text" class="form-control" id="editTabName" placeholder="頁籤名稱">
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="submitEditTab()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增/修改資料夾 Modal -->
+<div class="modal fade" id="folderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="folderModalTitle">新增資料夾</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="folderModalTabId">
+        <input type="hidden" id="folderModalParentId">
+        <input type="hidden" id="folderModalEditId">
+        <div class="mb-3">
+          <label class="form-label">名稱 <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="folderModalName">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">說明</label>
+          <input type="text" class="form-control" id="folderModalDesc">
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="submitFolderModal()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 授權文件 Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title">文件授權 / 分享</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="shareDocId">
+        <div class="row g-3">
+          <!-- 人員授權 -->
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 border-bottom pb-1">
+              <i class="bi bi-person-check me-1 text-primary"></i>人員授權
+            </div>
+            <div class="d-flex gap-1 align-items-center mb-1">
+              <select class="form-select form-select-sm flex-grow-1" id="shareUserId"></select>
+              <button class="btn btn-sm btn-outline-primary" onclick="addDocShare('user')" title="新增">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div class="d-flex gap-3 mb-2 ms-1 small text-muted">
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="uCanRead" checked>
+                <label class="form-check-label" for="uCanRead">讀取</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="uCanEdit">
+                <label class="form-check-label" for="uCanEdit">修改</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="uCanDelete">
+                <label class="form-check-label" for="uCanDelete">刪除</label>
+              </div>
+            </div>
+            <table class="table table-sm table-bordered mb-0" id="shareUserTable">
+              <thead class="table-light"><tr>
+                <th>人員</th>
+                <th class="text-center" style="width:42px">讀取</th>
+                <th class="text-center" style="width:42px">修改</th>
+                <th class="text-center" style="width:42px">刪除</th>
+                <th style="width:32px"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <!-- 群組授權 -->
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 border-bottom pb-1">
+              <i class="bi bi-people-fill me-1 text-info"></i>群組授權
+            </div>
+            <div class="d-flex gap-1 align-items-center mb-1">
+              <select class="form-select form-select-sm flex-grow-1" id="shareGroupId"></select>
+              <button class="btn btn-sm btn-outline-primary" onclick="addDocShare('group')" title="新增">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div class="d-flex gap-3 mb-2 ms-1 small text-muted">
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="gCanRead" checked>
+                <label class="form-check-label" for="gCanRead">讀取</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="gCanEdit">
+                <label class="form-check-label" for="gCanEdit">修改</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="checkbox" id="gCanDelete">
+                <label class="form-check-label" for="gCanDelete">刪除</label>
+              </div>
+            </div>
+            <table class="table table-sm table-bordered mb-0" id="shareGroupTable">
+              <thead class="table-light"><tr>
+                <th>群組</th>
+                <th class="text-center" style="width:42px">讀取</th>
+                <th class="text-center" style="width:42px">修改</th>
+                <th class="text-center" style="width:42px">刪除</th>
+                <th style="width:32px"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 更改擁有人 Modal -->
+<div class="modal fade" id="changeOwnerModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title">更改擁有人</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="changeOwnerDocId">
+        <label class="form-label">新擁有人</label>
+        <select class="form-select" id="changeOwnerUserId"></select>
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="submitChangeOwner()">確定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 屬性 Modal -->
+<div class="modal fade" id="propertiesModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title">文件屬性</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="propertiesBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 匯出表單（隱藏） -->
+<form id="exportForm" method="post" action="{{ url_for('export_excel') }}" class="d-none">
+  <input type="hidden" name="doc_ids" id="exportDocIds">
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const URLS = {
+  tabNew:   '{{ url_for("tab_new") }}',
+  tabEdit:  (id) => `/tab/${id}/edit`,
+  tabDel:   (id) => `/tab/${id}/delete`,
+  folderNew:   '{{ url_for("folder_new") }}',
+  folderEdit:  (id) => `/folder/${id}/edit`,
+  folderDel:   (id) => `/folder/${id}/delete`,
+  folderShare: (id) => `/folder/${id}/share`,
+  apiFolders:  (tid) => `/api/folders/${tid}`,
+  apiDocs:     (fid) => `/api/documents/${fid}`,
+  apiShared:      '{{ url_for("api_shared_docs") }}',
+  apiSharedOwners:'{{ url_for("api_shared_owners") }}',
+  apiFolderInfo: (fid) => `/api/folder_info/${fid}`,
+  apiUsers:    '{{ url_for("api_users") }}',
+  apiGroups:   '{{ url_for("api_groups") }}',
+  docNew:      '{{ url_for("doc_new") }}',
+  docEdit:     (id) => `/doc/${id}/edit`,
+  docDel:      (id) => `/doc/${id}/delete`,
+  docLock:     (id) => `/doc/${id}/lock`,
+  docUnlock:   (id) => `/doc/${id}/unlock`,
+  docDownload: (id) => `/doc/${id}/download`,
+  docHistory:  (id) => `/doc/${id}/history`,
+  docProps:    (id) => `/doc/${id}/properties`,
+  docShare:    (id) => `/doc/${id}/share`,
+  docShareList:(id) => `/doc/${id}/share_list`,
+  docOwner:    (id) => `/doc/${id}/change_owner`,
+  docSign:     (id) => `/doc/${id}/send_sign`,
+};
+
+let currentFolderId = null;
+let currentSort = { col: 'created_at', dir: 'DESC' };
+let isSharedView = false;
+let allUsers = [], allGroups = [];
+
+// 離開前儲存目前視圖狀態
+function saveViewState() {
+  let state = null;
+  if (isSharedView) {
+    const activeOwner = $('#sharedOwnerList .folder-item.active');
+    if (activeOwner.length) {
+      state = {
+        mode: 'shared',
+        ownerId: +activeOwner.data('owner-id'),
+        ownerName: activeOwner.find('span').text().trim()
+      };
+    }
+  } else if (currentFolderId) {
+    state = { mode: 'folder', folderId: currentFolderId };
+  }
+  if (state) sessionStorage.setItem('dmViewState', JSON.stringify(state));
+}
+
+// 初始化：載入使用者/群組、展開所有頁籤、還原上次視圖狀態
+$(function() {
+  $.getJSON(URLS.apiUsers,  data => { allUsers  = data; });
+  $.getJSON(URLS.apiGroups, data => { allGroups = data; });
+
+  // 讀取上次儲存的視圖狀態
+  let savedState = null;
+  try { savedState = JSON.parse(sessionStorage.getItem('dmViewState') || 'null'); }
+  catch(e) {}
+
+  // 收集所有頁籤 ID
+  const tabIds = [];
+  $('.tab-node[data-tab-id]').each(function() {
+    const tid = $(this).data('tab-id');
+    if (tid !== 'shared') tabIds.push(tid);
+  });
+
+  // 展開所有頁籤
+  let loaded = 0;
+  tabIds.forEach(tabId => {
+    const tree = $(`#tree-${tabId}`);
+    const icon = $(`.tab-node[data-tab-id="${tabId}"] .toggle-icon`);
+    tree.removeClass('d-none');
+    icon.removeClass('bi-chevron-right').addClass('bi-chevron-down');
+    $.getJSON(URLS.apiFolders(tabId), data => {
+      renderFolderTree(tree, data, tabId);
+      loaded++;
+      // 全部頁籤載入完畢後還原一般資料夾選取
+      if (loaded === tabIds.length && savedState && savedState.mode === 'folder') {
+        const node = $(`.folder-node[data-folder-id="${savedState.folderId}"]`);
+        if (node.length) selectFolder(savedState.folderId, node.data('tab-id'));
+      }
+    });
+  });
+
+  // 還原「別人分享」視圖
+  if (savedState && savedState.mode === 'shared') {
+    toggleSharedTab(savedState.ownerId);
+  }
+});
+
+// ── Tab ───────────────────────────────────────────────────────
+function toggleTab(tabId) {
+  const tree = $(`#tree-${tabId}`);
+  const icon = $(`.tab-node[data-tab-id="${tabId}"] .toggle-icon`);
+  if (tree.hasClass('d-none')) {
+    tree.removeClass('d-none');
+    icon.removeClass('bi-chevron-right').addClass('bi-chevron-down');
+    if (tree.is(':empty')) {
+      $.getJSON(URLS.apiFolders(tabId), data => renderFolderTree(tree, data, tabId));
+    }
+  } else {
+    tree.addClass('d-none');
+    icon.removeClass('bi-chevron-down').addClass('bi-chevron-right');
+  }
+}
+
+function renderFolderTree(container, folders, tabId, level=0) {
+  if (!folders || !folders.length) {
+    if (level === 0) container.html('<div class="px-4 py-1 text-muted small">（無資料夾）</div>');
+    return;
+  }
+  folders.forEach(f => {
+    const indent = (level + 1) * 14;
+    const hasChildren = f.children && f.children.length > 0;
+    const node = $(`
+      <div class="folder-node" data-folder-id="${f.id}" data-tab-id="${tabId}">
+        <div class="folder-item d-flex align-items-center py-1 px-2" style="padding-left:${indent}px"
+             data-folder-id="${f.id}">
+          ${hasChildren
+            ? `<i class="bi bi-chevron-right fld-toggle me-1" style="cursor:pointer"></i>`
+            : `<i class="bi bi-dot me-1 text-muted"></i>`}
+          <i class="bi bi-folder2 text-warning me-1"></i>
+          <span class="flex-grow-1 small folder-label" style="cursor:pointer">${escHtml(f.name)}</span>
+        </div>
+        <div class="folder-children d-none"></div>
+      </div>
+    `);
+
+    // Click folder label → load docs
+    node.find('.folder-label').on('click', () => selectFolder(f.id, tabId));
+
+    // Toggle children
+    node.find('.fld-toggle').on('click', function(e) {
+      e.stopPropagation();
+      const children = node.find('.folder-children').first();
+      if (children.hasClass('d-none')) {
+        children.removeClass('d-none');
+        $(this).removeClass('bi-chevron-right').addClass('bi-chevron-down');
+        if (children.is(':empty')) renderFolderTree(children, f.children, tabId, level + 1);
+      } else {
+        children.addClass('d-none');
+        $(this).removeClass('bi-chevron-down').addClass('bi-chevron-right');
+      }
+    });
+
+    // Right-click folder
+    node.find('.folder-item').on('contextmenu', function(e) {
+      e.preventDefault();
+      showFolderCtxMenu(e, f.id, tabId);
+    });
+
+    container.append(node);
+
+    // 預設展開子資料夾
+    if (hasChildren) {
+      const childContainer = node.find('.folder-children').first();
+      childContainer.removeClass('d-none');
+      node.find('.fld-toggle').first().removeClass('bi-chevron-right').addClass('bi-chevron-down');
+      renderFolderTree(childContainer, f.children, tabId, level + 1);
+    }
+
+  });
+}
+
+function selectFolder(folderId, tabId) {
+  isSharedView = false;
+  currentFolderId = folderId;
+  $('.folder-item').removeClass('active');
+  $(`.folder-item[data-folder-id="${folderId}"]`).addClass('active');
+  $('#btnNewDoc').prop('disabled', false).removeClass('opacity-50');
+  $.getJSON(URLS.apiFolderInfo(folderId), info => {
+    $('#currentPath').text(info.breadcrumb || '');
+  });
+  loadDocs();
+}
+
+// ── Shared Docs ───────────────────────────────────────────────
+let sharedTabOpen = false;
+
+function toggleSharedTab(autoOwnerId) {
+  const list    = $('#sharedOwnerList');
+  const chevron = $('#sharedChevron');
+  if (sharedTabOpen && !autoOwnerId) {
+    list.addClass('d-none');
+    chevron.css('transform', '');
+    sharedTabOpen = false;
+  } else {
+    chevron.css('transform', 'rotate(90deg)');
+    sharedTabOpen = true;
+    // 載入分享者清單
+    $.getJSON(URLS.apiSharedOwners, owners => {
+      list.empty().removeClass('d-none');
+      if (!owners.length) {
+        list.append('<div class="text-muted small px-4 py-1">尚無分享</div>');
+        return;
+      }
+      owners.forEach(o => {
+        const item = $(`
+          <div class="folder-item d-flex align-items-center py-1"
+               style="padding-left:28px" data-owner-id="${o.id}">
+            <i class="bi bi-person-fill text-secondary me-2 small"></i>
+            <span class="small flex-grow-1">${escHtml(o.name)}</span>
+          </div>`);
+        item.on('click', () => loadSharedByOwner(o.id, o.name, item));
+        list.append(item);
+        // 還原時自動選取上次的分享者
+        if (autoOwnerId && o.id === autoOwnerId) {
+          loadSharedByOwner(o.id, o.name, item);
+        }
+      });
+    });
+  }
+}
+
+function loadSharedByOwner(ownerId, ownerName, $item) {
+  isSharedView = true;
+  currentFolderId = null;
+  // 取消其他高亮
+  $('.folder-item').removeClass('active');
+  $item.addClass('active');
+  $('#currentPath').text(`別人分享 › ${ownerName}`);
+  $('#btnNewDoc').prop('disabled', true).addClass('opacity-50');
+  $.getJSON(URLS.apiShared + `?owner_id=${ownerId}`, docs => renderDocs(docs));
+}
+
+function loadSharedDocs() {
+  // 相容舊呼叫：展開並顯示全部
+  toggleSharedTab();
+}
+
+// ── Document List ──────────────────────────────────────────────
+function loadDocs() {
+  if (!currentFolderId) return;
+  const url = URLS.apiDocs(currentFolderId) +
+    `?sort=${currentSort.col}&dir=${currentSort.dir}`;
+  $.getJSON(url, docs => renderDocs(docs));
+}
+
+function refreshDocs() {
+  if (isSharedView) loadSharedDocs();
+  else loadDocs();
+}
+
+const STATUS_MAP = { '': '草稿', 'pending': '待簽核', 'signed': '已簽核' };
+const STATUS_BADGE = { '': 'secondary', 'pending': 'warning', 'signed': 'success' };
+
+function renderDocs(docs) {
+  const tbody = $('#docBody');
+  tbody.empty();
+  $('#statusCount').text(`共 ${docs.length} 筆`);
+  if (!docs.length) {
+    tbody.html('<tr><td colspan="11" class="text-center text-muted py-4">（此資料夾沒有文件）</td></tr>');
+    return;
+  }
+  docs.forEach(d => {
+    const lock = d.is_locked ? '<i class="bi bi-lock-fill text-warning" title="已鎖定"></i>' : '<i class="bi bi-file-text text-secondary"></i>';
+    const status = d.sign_status || '';
+    const badge = `<span class="badge bg-${STATUS_BADGE[status]}">${STATUS_MAP[status]}</span>`;
+    const row = $(`
+      <tr data-id="${d.id}" data-owner="${d.is_owner ? 1 : 0}" class="doc-row">
+        <td><input type="checkbox" class="doc-check" value="${d.id}"></td>
+        <td class="text-center">${lock}</td>
+        <td class="fw-semibold">${escHtml(d.doc_number)}</td>
+        <td>${escHtml(d.subject)}</td>
+        <td class="text-center">${d.version}</td>
+        <td>${d.issue_date || ''}</td>
+        <td>${escHtml(d.file_type_name || '')}</td>
+        <td>${escHtml(d.department || '')}</td>
+        <td>${badge}</td>
+        <td>${escHtml(d.owner_name || '')}</td>
+        <td class="text-muted">${(d.created_at || '').substring(0,16)}</td>
+      </tr>
+    `);
+    row.on('contextmenu', function(e) {
+      e.preventDefault();
+      selectRow($(this));
+      showDocCtxMenu(e, d);
+    });
+    row.on('click', function() { selectRow($(this)); });
+    row.on('dblclick', function() { openDocEdit(d.id); });
+    tbody.append(row);
+  });
+  updateSelCount();
+}
+
+function selectRow(row) {
+  $('.doc-row').removeClass('table-active');
+  row.addClass('table-active');
+  const d = getRowData(row);
+  if (d) {
+    $('#statusInfo').text(`案號: ${d.doc_number}  主旨: ${d.subject}`);
+  }
+}
+
+function getRowData(row) {
+  const id = row.data('id');
+  return id ? { id, doc_number: row.find('td:eq(2)').text(), subject: row.find('td:eq(3)').text() } : null;
+}
+
+function getSelectedId() {
+  const active = $('.doc-row.table-active');
+  return active.length ? active.data('id') : null;
+}
+
+function getSelectedIds() {
+  return $('.doc-check:checked').map((_, el) => parseInt(el.value)).get();
+}
+
+function toggleAll(cb) {
+  $('.doc-check').prop('checked', cb.checked);
+  updateSelCount();
+}
+
+function updateSelCount() {
+  const n = $('.doc-check:checked').length;
+  if (n > 0) {
+    $('#statusSelected').removeClass('d-none');
+    $('#selCount').text(n);
+  } else {
+    $('#statusSelected').addClass('d-none');
+  }
+}
+
+$(document).on('change', '.doc-check', updateSelCount);
+
+// ── Sort ──────────────────────────────────────────────────────
+$(document).on('click', '.sortable', function() {
+  const col = $(this).data('col');
+  if (currentSort.col === col) {
+    currentSort.dir = currentSort.dir === 'ASC' ? 'DESC' : 'ASC';
+  } else {
+    currentSort.col = col;
+    currentSort.dir = 'DESC';
+  }
+  $('.sortable').find('.sort-icon').remove();
+  const icon = currentSort.dir === 'ASC' ? '↑' : '↓';
+  $(this).append(`<small class="sort-icon ms-1">${icon}</small>`);
+  loadDocs();
+});
+
+// ── Context Menu (Document) ───────────────────────────────────
+function showDocCtxMenu(e, doc) {
+  const menu = $('#ctxMenu');
+  // 別人分享頁籤無法新增；依授權與鎖定狀態決定修改/刪除是否可用
+  const lockedByOther = doc.is_locked && !doc.locked_by_me;
+  const canEdit   = (doc.is_owner || doc.can_edit) && !lockedByOther;
+  const canDelete = (doc.is_owner || doc.can_delete);
+  // 解鎖只有鎖定者本人或管理員才能操作（前端僅用 locked_by_me 判斷）
+  menu.find('[data-action="new"]').toggleClass('ctx-disabled', isSharedView);
+  menu.find('[data-action="edit"]').toggleClass('ctx-disabled', !canEdit);
+  menu.find('[data-action="delete"]').toggleClass('ctx-disabled', !canDelete);
+  menu.find('[data-action="unlock"]').toggleClass('ctx-disabled', !doc.locked_by_me);
+  menu.find('[data-action="lock"]').toggleClass('ctx-disabled', lockedByOther);
+  menu.css({ top: e.clientY, left: e.clientX }).removeClass('d-none');
+  menu.data('doc', doc);
+}
+
+$(document).on('click', function(e) {
+  if (!$(e.target).closest('#ctxMenu').length) $('#ctxMenu').addClass('d-none');
+  if (!$(e.target).closest('#folderCtxMenu').length) $('#folderCtxMenu').addClass('d-none');
+});
+
+$('#ctxMenu').on('click', '.ctx-item', function() {
+  if ($(this).hasClass('ctx-disabled')) return;
+  const action = $(this).data('action');
+  const doc = $('#ctxMenu').data('doc');
+  $('#ctxMenu').addClass('d-none');
+  handleDocAction(action, doc);
+});
+
+function handleDocAction(action, doc) {
+  const id = doc ? doc.id : getSelectedId();
+  if (!id && action !== 'new' && action !== 'refresh') return;
+  switch (action) {
+    case 'new':      openNewDoc(); break;
+    case 'edit':     openDocEdit(id); break;
+    case 'view':     openDocView(id); break;
+    case 'delete':   deleteDoc(id); break;
+    case 'lock':     lockDoc(id, true); break;
+    case 'unlock':   lockDoc(id, false); break;
+    case 'share':    openShareModal(id); break;
+    case 'change_owner': openChangeOwnerModal(id); break;
+    case 'download': downloadDoc(id); break;
+    case 'history':  location.href = URLS.docHistory(id); break;
+    case 'properties': openPropertiesModal(id); break;
+    case 'send_sign': sendSign(id); break;
+    case 'refresh':  refreshDocs(); break;
+  }
+}
+
+// ── Context Menu (Folder) ─────────────────────────────────────
+let ctxFolderId = null, ctxTabId = null;
+function showFolderCtxMenu(e, folderId, tabId) {
+  ctxFolderId = folderId; ctxTabId = tabId;
+  const menu = $('#folderCtxMenu');
+  // 公共頁籤：非管理員所有資料夾操作皆灰色
+  const tabNode = $(`.tab-node[data-tab-id="${tabId}"]`);
+  const isPublic = tabNode.data('tab-type') === 'public';
+  const isAdmin  = {{ 'true' if session.is_admin else 'false' }};
+  const disabled = isPublic && !isAdmin;
+  menu.find('.ctx-item').toggleClass('ctx-disabled', disabled);
+  menu.css({ top: e.clientY, left: e.clientX }).removeClass('d-none');
+}
+
+$('#folderCtxMenu').on('click', '.ctx-item', function() {
+  if ($(this).hasClass('ctx-disabled')) return;
+  const action = $(this).data('action');
+  $('#folderCtxMenu').addClass('d-none');
+  switch (action) {
+    case 'newFolder':    openNewFolderModal(ctxTabId, ctxFolderId); break;
+    case 'editFolder':   openEditFolderModal(ctxFolderId); break;
+    case 'deleteFolder': deleteFolder(ctxFolderId); break;
+    case 'shareFolder':  alert('資料夾授權功能（功能預留）'); break;
+  }
+});
+
+// ── Tab Actions ───────────────────────────────────────────────
+$('#btnNewTab').on('click', () => {
+  $('#newTabName').val('');
+  new bootstrap.Modal('#newTabModal').show();
+});
+
+function submitNewTab() {
+  const name = $('#newTabName').val().trim();
+  if (!name) return;
+  $.post(URLS.tabNew, { name }, res => {
+    if (res.success) {
+      location.reload();
+    } else alert(res.msg);
+  });
+}
+
+function editTabModal(id, name) {
+  $('#editTabId').val(id);
+  $('#editTabName').val(name);
+  new bootstrap.Modal('#editTabModal').show();
+}
+
+function submitEditTab() {
+  const id = $('#editTabId').val();
+  const name = $('#editTabName').val().trim();
+  if (!name) return;
+  $.post(URLS.tabEdit(id), { name }, res => {
+    if (res.success) location.reload();
+    else alert(res.msg);
+  });
+}
+
+function deleteTab(id) {
+  if (!confirm('確定要刪除此頁籤？')) return;
+  $.post(URLS.tabDel(id), {}, res => {
+    if (res.success) location.reload();
+    else alert(res.msg);
+  });
+}
+
+// ── Folder Actions ────────────────────────────────────────────
+function openNewFolderModal(tabId, parentId) {
+  $('#folderModalTitle').text('新增資料夾');
+  $('#folderModalTabId').val(tabId);
+  $('#folderModalParentId').val(parentId || '');
+  $('#folderModalEditId').val('');
+  $('#folderModalName').val('');
+  $('#folderModalDesc').val('');
+  new bootstrap.Modal('#folderModal').show();
+}
+
+function openEditFolderModal(folderId) {
+  const label = $(`.folder-item[data-folder-id="${folderId}"] .folder-label`).text();
+  $('#folderModalTitle').text('修改資料夾');
+  $('#folderModalEditId').val(folderId);
+  $('#folderModalName').val(label);
+  $('#folderModalDesc').val('');
+  new bootstrap.Modal('#folderModal').show();
+}
+
+function submitFolderModal() {
+  const editId = $('#folderModalEditId').val();
+  const name = $('#folderModalName').val().trim();
+  const desc = $('#folderModalDesc').val().trim();
+  if (!name) return;
+
+  if (editId) {
+    $.post(URLS.folderEdit(editId), { name, description: desc }, res => {
+      if (res.success) { bootstrap.Modal.getInstance('#folderModal').hide(); refreshFolderTree(); }
+      else alert(res.msg);
+    });
+  } else {
+    $.post(URLS.folderNew, {
+      name, description: desc,
+      tab_id: $('#folderModalTabId').val(),
+      parent_id: $('#folderModalParentId').val() || ''
+    }, res => {
+      if (res.success) { bootstrap.Modal.getInstance('#folderModal').hide(); refreshFolderTree(); }
+      else alert(res.msg);
+    });
+  }
+}
+
+function deleteFolder(folderId) {
+  if (!confirm('確定要刪除此資料夾？')) return;
+  $.post(URLS.folderDel(folderId), {}, res => {
+    if (res.success) refreshFolderTree();
+    else alert(res.msg);
+  });
+}
+
+function refreshFolderTree() {
+  // Reload by refreshing all open tabs
+  $('.tab-node').each(function() {
+    const tabId = $(this).data('tab-id');
+    const tree = $(`#tree-${tabId}`);
+    if (!tree.hasClass('d-none') && tabId !== 'shared') {
+      tree.empty();
+      $.getJSON(URLS.apiFolders(tabId), data => renderFolderTree(tree, data, tabId));
+    }
+  });
+}
+
+// ── Doc Actions ───────────────────────────────────────────────
+function openNewDoc() {
+  saveViewState();
+  const fid = currentFolderId || '';
+  location.href = URLS.docNew + (fid ? `?folder_id=${fid}` : '');
+}
+
+function openDocEdit(id) {
+  saveViewState();
+  location.href = URLS.docEdit(id);
+}
+
+function openDocView(id) {
+  saveViewState();
+  location.href = URLS.docEdit(id) + '?view=1';
+}
+
+function deleteDoc(id) {
+  if (!confirm('確定要刪除此文件？（將移至回收夾）')) return;
+  $.post(URLS.docDel(id), {}, res => {
+    if (res.success) { refreshDocs(); showToast('已移至回收夾'); }
+    else alert(res.msg);
+  });
+}
+
+function lockDoc(id, lock) {
+  const url = lock ? URLS.docLock(id) : URLS.docUnlock(id);
+  $.post(url, {}, res => {
+    if (res.success) { refreshDocs(); showToast(lock ? '已鎖定' : '已解鎖'); }
+    else alert(res.msg);
+  });
+}
+
+function downloadDoc(id) {
+  location.href = URLS.docDownload(id);
+}
+
+function sendSign(id) {
+  if (!confirm('確定要送簽？')) return;
+  $.post(URLS.docSign(id), {}, res => {
+    if (res.success) { refreshDocs(); showToast(res.msg); }
+    else alert(res.msg);
+  });
+}
+
+function openShareModal(id) {
+  $('#shareDocId').val(id);
+  // Populate user/group selects
+  const uSel = $('#shareUserId').empty();
+  const gSel = $('#shareGroupId').empty();
+  allUsers.forEach(u => uSel.append(`<option value="${u.id}">${escHtml(u.name)} (${escHtml(u.username)})</option>`));
+  allGroups.forEach(g => gSel.append(`<option value="${g.id}">${escHtml(g.name)}</option>`));
+  loadShareList(id);
+  new bootstrap.Modal('#shareModal').show();
+}
+
+function loadShareList(id) {
+  $.getJSON(URLS.docShareList(id), res => {
+    if (res.success) renderShareList(res.permissions);
+  });
+}
+
+function chkIcon(v) {
+  return v ? '<i class="bi bi-check-lg text-success"></i>' : '<span class="text-muted">—</span>';
+}
+
+function renderShareList(perms) {
+  const uTbody = $('#shareUserTable tbody').empty();
+  const gTbody = $('#shareGroupTable tbody').empty();
+  const docId  = $('#shareDocId').val();
+  const users  = perms.filter(p => p.user_id);
+  const groups = perms.filter(p => p.group_id);
+
+  function makeRow(p, nameField) {
+    const tr = $(`<tr>
+      <td class="small">${escHtml(p[nameField] || '')}</td>
+      <td class="text-center perm-cell" data-field="can_read">${chkIcon(p.can_read)}</td>
+      <td class="text-center perm-cell" data-field="can_edit">${chkIcon(p.can_edit)}</td>
+      <td class="text-center perm-cell" data-field="can_delete">${chkIcon(p.can_delete)}</td>
+      <td class="text-center">
+        <button class="btn btn-xs text-danger" title="移除">✕</button>
+      </td>
+    </tr>`);
+    // 點擊權限格子 → 切換後送 update
+    tr.find('.perm-cell').on('click', function() {
+      const field = $(this).data('field');
+      const cur   = p[field] ? 1 : 0;
+      p[field]    = cur ? 0 : 1;
+      $(this).html(chkIcon(p[field]));
+      const data = { action: 'update', perm_id: p.id,
+                     can_read: p.can_read, can_edit: p.can_edit, can_delete: p.can_delete };
+      $.post(URLS.docShare(docId), data, res => {
+        if (!res.success) { p[field] = cur; $(this).html(chkIcon(cur)); }
+      });
+    });
+    tr.find('button').on('click', () => {
+      const data = { action: 'remove', perm_id: p.id };
+      $.post(URLS.docShare(docId), data, res => {
+        if (res.success) renderShareList(res.permissions);
+      });
+    });
+    return tr;
+  }
+
+  if (!users.length)  uTbody.append('<tr><td colspan="5" class="text-muted small text-center">尚未授權任何人員</td></tr>');
+  else users.forEach(p => uTbody.append(makeRow(p, 'user_name')));
+
+  if (!groups.length) gTbody.append('<tr><td colspan="5" class="text-muted small text-center">尚未授權任何群組</td></tr>');
+  else groups.forEach(p => gTbody.append(makeRow(p, 'group_name')));
+}
+
+function addDocShare(type) {
+  const id = $('#shareDocId').val();
+  let data;
+  if (type === 'user') {
+    data = { action: 'add', user_id: $('#shareUserId').val(),
+             can_read:   $('#uCanRead').is(':checked')   ? 1 : 0,
+             can_edit:   $('#uCanEdit').is(':checked')   ? 1 : 0,
+             can_delete: $('#uCanDelete').is(':checked') ? 1 : 0 };
+  } else {
+    data = { action: 'add', group_id: $('#shareGroupId').val(),
+             can_read:   $('#gCanRead').is(':checked')   ? 1 : 0,
+             can_edit:   $('#gCanEdit').is(':checked')   ? 1 : 0,
+             can_delete: $('#gCanDelete').is(':checked') ? 1 : 0 };
+  }
+  $.post(URLS.docShare(id), data, res => {
+    if (res.success) renderShareList(res.permissions);
+    else alert(res.msg);
+  });
+}
+
+function openChangeOwnerModal(id) {
+  $('#changeOwnerDocId').val(id);
+  const sel = $('#changeOwnerUserId').empty();
+  allUsers.forEach(u => sel.append(`<option value="${u.id}">${escHtml(u.name)} (${escHtml(u.username)})</option>`));
+  new bootstrap.Modal('#changeOwnerModal').show();
+}
+
+function submitChangeOwner() {
+  const id = $('#changeOwnerDocId').val();
+  const uid = $('#changeOwnerUserId').val();
+  $.post(URLS.docOwner(id), { new_owner_id: uid }, res => {
+    if (res.success) {
+      bootstrap.Modal.getInstance('#changeOwnerModal').hide();
+      refreshDocs();
+      showToast('擁有人已更改');
+    } else alert(res.msg);
+  });
+}
+
+function openPropertiesModal(id) {
+  $.getJSON(URLS.docProps(id), d => {
+    const statusMap = { '': '草稿', 'pending': '待簽核', 'signed': '已簽核' };
+    $('#propertiesBody').html(`
+      <table class="table table-sm table-bordered mb-0">
+        <tr><th style="width:100px">案號</th><td>${escHtml(d.doc_number)}</td></tr>
+        <tr><th>主旨</th><td>${escHtml(d.subject)}</td></tr>
+        <tr><th>版本</th><td>${d.version}</td></tr>
+        <tr><th>發行日期</th><td>${d.issue_date}</td></tr>
+        <tr><th>類型</th><td>${escHtml(d.file_type_name || '')}</td></tr>
+        <tr><th>部門</th><td>${escHtml(d.department || '')}</td></tr>
+        <tr><th>擁有人</th><td>${escHtml(d.owner_name || '')}</td></tr>
+        <tr><th>資料夾</th><td>${escHtml(d.tab_name || '')} / ${escHtml(d.folder_name || '')}</td></tr>
+        <tr><th>狀態</th><td>${statusMap[d.sign_status || '']}</td></tr>
+        <tr><th>加密</th><td>${d.is_encrypted ? '是' : '否'}</td></tr>
+        <tr><th>備註</th><td>${escHtml(d.remarks || '')}</td></tr>
+        <tr><th>建立時間</th><td>${d.created_at}</td></tr>
+        <tr><th>更新時間</th><td>${d.updated_at}</td></tr>
+      </table>
+    `);
+    new bootstrap.Modal('#propertiesModal').show();
+  });
+}
+
+function exportSelected() {
+  const ids = getSelectedIds();
+  if (!ids.length) { showToast('請先勾選文件', 'warning'); return; }
+  $('#exportDocIds').val(ids.join(','));
+  $('#exportForm').submit();
+}
+
+// ── Utility ───────────────────────────────────────────────────
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function showToast(msg, type='success') {
+  const t = $(`<div class="toast-msg toast-${type}">${msg}</div>`);
+  $('body').append(t);
+  setTimeout(() => t.fadeOut(400, () => t.remove()), 2000);
+}
+
+// (公共頁籤展開已由主初始化統一處理)
+</script>
+{% endblock %}
