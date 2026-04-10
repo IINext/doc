@@ -35,6 +35,12 @@ try:
 except ImportError:
     PYPDF_AVAILABLE = False
 
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except ImportError:
+    PYMUPDF_AVAILABLE = False
+
 # ── App Config ────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'doc-manager-secret-2024')
@@ -51,6 +57,12 @@ CONVERTIBLE_EXTS = {
     '.xls', '.xlsx', '.ods', '.csv',           # Excel 類
     '.ppt', '.pptx', '.odp',                   # PowerPoint 類
     '.txt',                                    # 純文字
+}
+
+# 查詢權限下載時需轉 PDF 並加浮水印的副檔名（Word / PowerPoint）
+WATERMARK_EXTS = {
+    '.doc', '.docx', '.odt', '.rtf',          # Word 類
+    '.ppt', '.pptx', '.pps', '.ppsx', '.odp', # PowerPoint 類
 }
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -204,13 +216,15 @@ def get_folder_breadcrumb(folder_id):
     return ' / '.join(parts)
 
 # ── PDF Watermark Helpers ──────────────────────────────────────
-def _build_watermark_page(user_name):
-    """以 reportlab 建立一頁僅含浮水印文字的 PDF BytesIO。"""
+def _build_watermark_page(user_name, width=None, height=None):
+    """以 reportlab 建立一頁僅含浮水印文字的 PDF BytesIO（pypdf fallback 用）。"""
     buf = io.BytesIO()
     if not REPORTLAB_AVAILABLE:
         return buf
-    c = rl_canvas.Canvas(buf, pagesize=A4)
-    w, h = A4
+    if width is None or height is None:
+        width, height = A4
+    c = rl_canvas.Canvas(buf, pagesize=(width, height))
+    w, h = width, height
     wm = f'{COMPANY_NAME}  {user_name}  {datetime.now().strftime("%Y-%m-%d %H:%M")}'
     c.setFillColorRGB(0.75, 0.75, 0.75, alpha=0.45)
     c.setFont(CHINESE_FONT, 20)
@@ -226,21 +240,83 @@ def _build_watermark_page(user_name):
     return buf
 
 
+def _find_cjk_font():
+    """搜尋系統上可用的中文 TTF/TTC 字型路徑。"""
+    candidates = [
+        r'C:\Windows\Fonts\msyh.ttc',       # 微軟正黑體
+        r'C:\Windows\Fonts\msjh.ttc',
+        r'C:\Windows\Fonts\simsun.ttc',      # 新細明體
+        r'C:\Windows\Fonts\mingliu.ttc',
+        r'C:\Windows\Fonts\kaiu.ttf',        # 標楷體
+        r'/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+        r'/usr/share/fonts/truetype/arphic/uming.ttc',
+        r'/System/Library/Fonts/PingFang.ttc',
+    ]
+    for fp in candidates:
+        if os.path.exists(fp):
+            return fp
+    return None
+
+
 def _overlay_watermark(src_pdf_path, user_name):
     """將浮水印疊加到現有 PDF 的每一頁，回傳 BytesIO。
-    需要 pypdf；失敗時回傳空 BytesIO。"""
+
+    方案 A（PyMuPDF + reportlab）：
+      - PyMuPDF 負責逐頁輸出，show_pdf_page 疊加；
+        reportlab 負責建立中文浮水印頁（透明底色 + 中文字）。
+      - 可正確處理旋轉頁、複雜排版，不受 pypdf merge_page 限制。
+    方案 B（pypdf + reportlab fallback）：
+      - 未安裝 PyMuPDF 時使用。
+    """
+    # ── 方案 A：PyMuPDF + reportlab ──────────────────────────────
+    if PYMUPDF_AVAILABLE and REPORTLAB_AVAILABLE:
+        out = io.BytesIO()
+        try:
+            src_doc = fitz.open(src_pdf_path)
+            out_doc = fitz.open()
+
+            for pno in range(len(src_doc)):
+                sp   = src_doc[pno]
+                pw   = sp.rect.width       # PyMuPDF rect 已考慮旋轉，是實際顯示尺寸
+                ph   = sp.rect.height
+
+                # 建立同尺寸輸出頁
+                op = out_doc.new_page(width=pw, height=ph)
+
+                # 第一層：原始頁面
+                op.show_pdf_page(op.rect, src_doc, pno)
+
+                # 第二層：浮水印（reportlab 產生，透明底色 + 中文字）
+                wm_buf = _build_watermark_page(user_name, pw, ph)
+                wm_doc = fitz.open(stream=wm_buf.getvalue(), filetype='pdf')
+                op.show_pdf_page(op.rect, wm_doc, 0, overlay=True)
+                wm_doc.close()
+
+            pdf_bytes = out_doc.tobytes(garbage=4, deflate=True)
+            out = io.BytesIO(pdf_bytes)
+            out.seek(0)
+            src_doc.close()
+            out_doc.close()
+        except Exception:
+            out = io.BytesIO()
+        return out
+
+    # ── 方案 B：pypdf + reportlab（fallback）────────────────────
     out = io.BytesIO()
     if not (REPORTLAB_AVAILABLE and PYPDF_AVAILABLE):
         return out
     try:
-        wm_buf = _build_watermark_page(user_name)
-        wm_reader = PdfReader(wm_buf)
-        wm_page  = wm_reader.pages[0]
-
         reader = PdfReader(src_pdf_path)
         writer = PdfWriter()
         for page in reader.pages:
-            page.merge_page(wm_page)
+            try:
+                pw = float(page.mediabox.width)
+                ph = float(page.mediabox.height)
+                wm_buf = _build_watermark_page(user_name, pw, ph)
+                wm_page = PdfReader(wm_buf).pages[0]
+                page.merge_page(wm_page)
+            except Exception:
+                pass
             writer.add_page(page)
         writer.write(out)
         out.seek(0)
@@ -282,9 +358,9 @@ def _libreoffice_to_pdf(src_path):
 
 def download_for_shared_user(doc, user_name):
     """分享者（查詢）下載邏輯：
-    - 可轉 PDF 的 Office 類型 → LibreOffice 轉 PDF + 浮水印疊加
+    - Word / PowerPoint → LibreOffice 轉 PDF + 浮水印疊加
     - PDF 原檔 → 直接疊加浮水印
-    - 其他（圖片、壓縮檔…）→ 直接給原檔，不加浮水印
+    - 其他（Excel、圖片、壓縮檔…）→ 直接給原檔，不加浮水印
     """
     src_path = os.path.join(UPLOAD_FOLDER, doc['stored_filename'])
     if not os.path.exists(src_path):
@@ -302,8 +378,8 @@ def download_for_shared_user(doc, user_name):
         # 疊加失敗 → 原檔
         return send_file(src_path, download_name=doc['original_filename'], as_attachment=True)
 
-    if ext in CONVERTIBLE_EXTS:
-        # 先轉 PDF，再疊加浮水印
+    if ext in WATERMARK_EXTS:
+        # Word / PowerPoint：先轉 PDF，再疊加浮水印
         pdf_path = _libreoffice_to_pdf(src_path)
         if pdf_path:
             buf = _overlay_watermark(pdf_path, user_name)
@@ -314,7 +390,7 @@ def download_for_shared_user(doc, user_name):
         # 轉換失敗 → 原檔
         return send_file(src_path, download_name=doc['original_filename'], as_attachment=True)
 
-    # 不可轉換的類型（圖片、ZIP 等）→ 原檔，不加浮水印
+    # Excel、圖片、ZIP 等其他類型 → 原檔，不加浮水印
     return send_file(src_path, download_name=doc['original_filename'], as_attachment=True)
 
 # ════════════════════════════════════════════════════════════════
@@ -1647,4 +1723,10 @@ def enter_password(doc_id):
 # ════════════════════════════════════════════════════════════════
 if __name__ == '__main__':
     init_db()   # idempotent — uses IF NOT EXISTS; also fixes admin hash if needed
-    app.run(debug=True, host='0.0.0.0', port=5100)
+    ssl_context = None
+    if os.path.exists('cert.pem') and os.path.exists('key.pem'):
+        import ssl
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain('cert.pem', 'key.pem')
+        print(' * SSL enabled (cert.pem / key.pem)')
+    app.run(debug=False, host='0.0.0.0', port=5100, ssl_context=ssl_context)

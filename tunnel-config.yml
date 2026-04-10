@@ -1,0 +1,8 @@
+tunnel: a985cd1e-1da7-43f8-8358-a32304de5a3d
+credentials-file: C:/Users/kaunado/.cloudflared/a985cd1e-1da7-43f8-8358-a32304de5a3d.json
+ingress:
+  - hostname: doc.mobime.tw
+    service: https://127.0.0.1:5100
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404
