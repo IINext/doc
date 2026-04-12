@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}簽核流程範本{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:960px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-diagram-3 me-1"></i>簽核流程範本</h5>
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> 返回設定
+    </a>
+  </div>
+  <div class="alert alert-info py-2 small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    設定好的範本可在送審時選用，系統自動代入審核人員與順序。
+    標記為<strong>「預設」</strong>的範本，送審時若未手動選擇，系統將自動套用。
+    <strong>初審</strong>人員核准後才進入<strong>核准</strong>步驟。
+  </div>
+
+  <!-- 新增範本 -->
+  <div class="card mb-4 border-primary">
+    <div class="card-header bg-primary bg-opacity-10 fw-semibold">
+      <i class="bi bi-plus-circle me-1"></i>新增簽核範本
+    </div>
+    <div class="card-body">
+      <form method="post" class="row g-2 align-items-end">
+        <input type="hidden" name="action" value="add_template">
+        <div class="col-md-4">
+          <label class="form-label small mb-1">範本名稱 <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm" name="name" required placeholder="例：一般文件審核">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small mb-1">說明</label>
+          <input class="form-control form-control-sm" name="description" placeholder="簡短說明此範本適用情境">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary btn-sm w-100" type="submit">新增</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 範本列表 -->
+  {% if templates %}
+  <div class="accordion" id="tmplAccordion">
+    {% for tmpl in templates %}
+    <div class="accordion-item border mb-3 rounded shadow-sm">
+      <h2 class="accordion-header">
+        <button class="accordion-button {% if not loop.first %}collapsed{% endif %} py-2"
+                type="button" data-bs-toggle="collapse"
+                data-bs-target="#tmpl{{ tmpl.id }}">
+          <span class="fw-semibold me-2">{{ tmpl.name }}</span>
+          {% if tmpl.is_default %}<span class="badge bg-warning text-dark me-2">預設</span>{% endif %}
+          {% if tmpl.is_active %}
+            <span class="badge bg-success me-2">啟用</span>
+          {% else %}
+            <span class="badge bg-secondary me-2">停用</span>
+          {% endif %}
+          <small class="text-muted">{{ tmpl.steps|length }} 個步驟 {% if tmpl.description %}— {{ tmpl.description }}{% endif %}</small>
+        </button>
+      </h2>
+      <div id="tmpl{{ tmpl.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}">
+        <div class="accordion-body p-3">
+
+          <!-- 編輯範本基本資料 -->
+          <form method="post" class="row g-2 align-items-end mb-3 pb-3 border-bottom">
+            <input type="hidden" name="action" value="edit_template">
+            <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+            <div class="col-md-4">
+              <label class="form-label small mb-1">範本名稱</label>
+              <input class="form-control form-control-sm" name="name" value="{{ tmpl.name }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small mb-1">說明</label>
+              <input class="form-control form-control-sm" name="description" value="{{ tmpl.description }}">
+            </div>
+            <div class="col-md-2">
+              <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" name="is_active" id="active_{{ tmpl.id }}"
+                       {% if tmpl.is_active %}checked{% endif %}>
+                <label class="form-check-label small" for="active_{{ tmpl.id }}">啟用</label>
+              </div>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+              <button class="btn btn-sm btn-outline-primary flex-fill" type="submit">儲存</button>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      onclick="deleteTmpl({{ tmpl.id }}, '{{ tmpl.name }}')">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+            {% if not tmpl.is_default %}
+            <div class="col-12">
+              <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="set_default">
+                <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+                <button class="btn btn-sm btn-outline-warning" type="submit">
+                  <i class="bi bi-star me-1"></i>設為預設送審範本
+                </button>
+              </form>
+            </div>
+            {% else %}
+            <div class="col-12">
+              <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>目前預設範本</span>
+              <small class="text-muted ms-2">送審時若未手動選擇，將自動套用此範本</small>
+            </div>
+            {% endif %}
+          </form>
+
+          <!-- 步驟清單 -->
+          <div class="mb-2 fw-semibold small text-muted">審核步驟（依順序執行）</div>
+          {% if tmpl.steps %}
+          <table class="table table-sm table-bordered mb-3">
+            <thead class="table-light">
+              <tr>
+                <th style="width:55px">順序</th>
+                <th style="width:80px">類型</th>
+                <th>負責人</th>
+                <th style="width:80px">部門</th>
+                <th style="width:110px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in tmpl.steps %}
+              <tr>
+                <td class="text-center">{{ s.step_order }}</td>
+                <td>
+                  {% if s.step_type == 'review' %}
+                    <span class="badge bg-primary">初審</span>
+                  {% else %}
+                    <span class="badge bg-success">核准</span>
+                  {% endif %}
+                </td>
+                <td>{{ s.user_name }}</td>
+                <td class="text-muted small">{{ s.department }}</td>
+                <td class="text-center">
+                  <!-- 上移 -->
+                  {% if not loop.first %}
+                  <form method="post" class="d-inline">
+                    <input type="hidden" name="action" value="move_step">
+                    <input type="hidden" name="step_id" value="{{ s.id }}">
+                    <input type="hidden" name="direction" value="up">
+                    <button class="btn btn-xs btn-outline-secondary" title="上移">↑</button>
+                  </form>
+                  {% endif %}
+                  <!-- 下移 -->
+                  {% if not loop.last %}
+                  <form method="post" class="d-inline">
+                    <input type="hidden" name="action" value="move_step">
+                    <input type="hidden" name="step_id" value="{{ s.id }}">
+                    <input type="hidden" name="direction" value="down">
+                    <button class="btn btn-xs btn-outline-secondary" title="下移">↓</button>
+                  </form>
+                  {% endif %}
+                  <!-- 刪除 -->
+                  <form method="post" class="d-inline">
+                    <input type="hidden" name="action" value="delete_step">
+                    <input type="hidden" name="step_id" value="{{ s.id }}">
+                    <button class="btn btn-xs btn-outline-danger"
+                            onclick="return confirm('確定刪除此步驟？')">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-muted small mb-3">尚未設定步驟，請新增。</div>
+          {% endif %}
+
+          <!-- 新增步驟 -->
+          <form method="post" class="row g-2 align-items-end bg-light p-2 rounded">
+            <input type="hidden" name="action" value="add_step">
+            <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+            <div class="col-md-3">
+              <label class="form-label small mb-1">步驟類型</label>
+              <select class="form-select form-select-sm" name="step_type" required>
+                <option value="review">初審（Reviewer）</option>
+                <option value="approve">核准（Approver）</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small mb-1">負責人</label>
+              <select class="form-select form-select-sm" name="user_id" required>
+                <option value="">選擇使用者…</option>
+                {% for u in all_users %}
+                <option value="{{ u.id }}">{{ u.name }}（{{ u.department }}）</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-sm btn-success w-100" type="submit">
+                <i class="bi bi-plus-lg me-1"></i>新增步驟
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-diagram-3 fs-1"></i>
+    <p class="mt-2">尚未建立任何簽核範本</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 刪除範本隱藏表單 -->
+<form id="deleteTmplForm" method="post" class="d-none">
+  <input type="hidden" name="action" value="delete_template">
+  <input type="hidden" name="template_id" id="deleteTmplId">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteTmpl(id, name) {
+  if (!confirm(`確定刪除範本「${name}」？此動作無法復原，範本內的所有步驟也將一併刪除。`)) return;
+  document.getElementById('deleteTmplId').value = id;
+  document.getElementById('deleteTmplForm').submit();
+}
+</script>
+{% endblock %}

@@ -48,6 +48,9 @@
             <th>檔案名稱</th>
             <th>建立者</th>
             <th>建立時間</th>
+            <th>變更摘要</th>
+            <th>核准者</th>
+            <th>核准時間</th>
             <th></th>
           </tr>
         </thead>
@@ -58,6 +61,9 @@
             <td>{{ v.original_filename }}</td>
             <td>{{ v.creator_name or '' }}</td>
             <td>{{ (v.created_at or '')[:16] }}</td>
+            <td class="small text-muted">{{ v.change_summary if v.get('change_summary') else '—' }}</td>
+            <td class="small">{{ v.approved_by_name if v.get('approved_by_name') else '—' }}</td>
+            <td class="small text-muted">{{ (v.approved_at or '')[:16] or '—' }}</td>
             <td>
               {% if v.stored_filename %}
               <a href="{{ url_for('version_download', doc_id=doc.id, ver_id=v.id) }}"
@@ -74,6 +80,11 @@
     {% else %}
     <div class="card-body text-muted text-center py-4">尚無歷史版本</div>
     {% endif %}
+    <div class="card-footer text-end">
+      <a href="{{ url_for('doc_audit_trail', doc_id=doc.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-shield-check me-1"></i>稽核軌跡
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

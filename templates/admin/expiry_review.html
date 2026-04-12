@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}到期文件預警{% endblock %}
+{% block content %}
+<div class="container-fluid py-3" style="max-width:1100px">
+
+  <!-- 標頭 -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h5 class="mb-0"><i class="bi bi-calendar-x me-1 text-warning"></i>到期文件預警</h5>
+    <div class="d-flex gap-2 align-items-center">
+      <!-- 天數篩選 -->
+      <form class="d-flex gap-1 align-items-center" method="get">
+        <label class="small text-muted mb-0">預警範圍</label>
+        <select name="days" class="form-select form-select-sm" style="width:90px" onchange="this.form.submit()">
+          {% for d in [7, 14, 30, 60, 90] %}
+          <option value="{{ d }}" {% if d == days %}selected{% endif %}>{{ d }} 天</option>
+          {% endfor %}
+        </select>
+      </form>
+      <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回設定
+      </a>
+    </div>
+  </div>
+
+  <!-- 統計卡片 -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <div class="card border-danger text-center py-3">
+        <div class="fs-2 fw-bold text-danger">{{ overdue|length }}</div>
+        <div class="small text-muted">已逾期</div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-warning text-center py-3">
+        <div class="fs-2 fw-bold text-warning">{{ upcoming|selectattr('days_left', 'le', 7)|list|length }}</div>
+        <div class="small text-muted">7 天內到期</div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-info text-center py-3">
+        <div class="fs-2 fw-bold text-info">{{ upcoming|length }}</div>
+        <div class="small text-muted">{{ days }} 天內到期</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 已逾期 -->
+  {% if overdue %}
+  <div class="card mb-3 border-danger">
+    <div class="card-header bg-danger text-white fw-bold">
+      <i class="bi bi-exclamation-triangle-fill me-1"></i>已逾期（{{ overdue|length }} 筆）
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>案號</th><th>主旨</th><th>狀態</th>
+            <th>到期日</th><th>逾期天數</th><th>部門</th><th>擁有者</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in overdue %}
+          <tr class="table-danger">
+            <td class="fw-bold">{{ d.doc_number }}</td>
+            <td>{{ d.subject }}</td>
+            <td>
+              {% set s = d.doc_status or 'draft' %}
+              <span class="badge bg-{{ {'draft':'secondary','in_review':'info','released':'success'}.get(s,'secondary') }}
+                           {{ 'text-dark' if s=='in_review' else '' }}">
+                {{ doc_status_label.get(s, s) }}
+              </span>
+            </td>
+            <td class="text-danger fw-bold">{{ (d.expiry_date or '')[:10] }}</td>
+            <td><span class="badge bg-danger">已逾 {{ (d.days_left or 0)|abs }} 天</span></td>
+            <td>{{ d.department or '—' }}</td>
+            <td>{{ d.owner_name or '—' }}</td>
+            <td class="text-nowrap">
+              <a href="{{ url_for('doc_edit', doc_id=d.id, view=1) }}"
+                 class="btn btn-xs btn-outline-primary me-1">查看</a>
+              <button class="btn btn-xs btn-outline-warning me-1"
+                      onclick="notifyOwner({{ d.id }}, '{{ d.doc_number }}')">通知</button>
+              <button class="btn btn-xs btn-outline-secondary"
+                      onclick="archiveDoc({{ d.id }}, '{{ d.doc_number }}')">封存</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 即將到期 -->
+  {% if upcoming %}
+  <div class="card border-warning">
+    <div class="card-header bg-warning text-dark fw-bold">
+      <i class="bi bi-clock-history me-1"></i>{{ days }} 天內到期（{{ upcoming|length }} 筆）
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>案號</th><th>主旨</th><th>狀態</th>
+            <th>到期日</th><th>剩餘天數</th><th>部門</th><th>擁有者</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in upcoming %}
+          {% set dl = d.days_left or 0 %}
+          <tr class="{{ 'table-warning' if dl <= 7 else '' }}">
+            <td class="fw-bold">{{ d.doc_number }}</td>
+            <td>{{ d.subject }}</td>
+            <td>
+              {% set s = d.doc_status or 'draft' %}
+              <span class="badge bg-{{ {'draft':'secondary','in_review':'info','released':'success'}.get(s,'secondary') }}
+                           {{ 'text-dark' if s=='in_review' else '' }}">
+                {{ doc_status_label.get(s, s) }}
+              </span>
+            </td>
+            <td class="{{ 'text-danger fw-bold' if dl <= 7 else 'text-warning fw-bold' if dl <= 14 else '' }}">
+              {{ (d.expiry_date or '')[:10] }}
+            </td>
+            <td>
+              {% if dl <= 7 %}
+                <span class="badge bg-danger">剩 {{ dl }} 天</span>
+              {% elif dl <= 14 %}
+                <span class="badge bg-warning text-dark">剩 {{ dl }} 天</span>
+              {% else %}
+                <span class="badge bg-info text-dark">剩 {{ dl }} 天</span>
+              {% endif %}
+            </td>
+            <td>{{ d.department or '—' }}</td>
+            <td>{{ d.owner_name or '—' }}</td>
+            <td class="text-nowrap">
+              <a href="{{ url_for('doc_edit', doc_id=d.id, view=1) }}"
+                 class="btn btn-xs btn-outline-primary me-1">查看</a>
+              <button class="btn btn-xs btn-outline-warning me-1"
+                      onclick="notifyOwner({{ d.id }}, '{{ d.doc_number }}')">通知</button>
+              <button class="btn btn-xs btn-outline-secondary"
+                      onclick="archiveDoc({{ d.id }}, '{{ d.doc_number }}')">封存</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not overdue and not upcoming %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-calendar-check fs-1 text-success"></i>
+    <p class="mt-2 fs-5">未來 {{ days }} 天內沒有即將到期的文件</p>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.btn-xs { padding: .15rem .4rem; font-size: .75rem; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function archiveDoc(docId, docNumber) {
+  if (!confirm(`確定要封存文件 ${docNumber}？`)) return;
+  fetch(`/doc/${docId}/archive`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (d.success) location.reload(); else alert(d.msg); });
+}
+function notifyOwner(docId, docNumber) {
+  fetch(`/doc/${docId}/notify_expiry`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => alert(d.msg));
+}
+</script>
+{% endblock %}

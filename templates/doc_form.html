@@ -32,6 +32,27 @@
   <form method="post" enctype="multipart/form-data" id="docForm">
     <div class="card shadow-sm">
       <div class="card-body">
+
+        {# ── ISO 文件狀態徽章 ── #}
+        {% if doc %}
+        {% set s = doc.doc_status or 'draft' %}
+        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+          <span class="text-muted small">文件狀態：</span>
+          {% if s == 'draft' %}<span class="badge bg-secondary fs-6">草稿</span>
+          {% elif s == 'in_review' %}<span class="badge bg-info text-dark fs-6">審核中</span>
+          {% elif s == 'released' %}<span class="badge bg-success fs-6">已發行</span>
+          {% elif s == 'superseded' %}<span class="badge bg-warning text-dark fs-6">已取代</span>
+          {% elif s == 'archived' %}<span class="badge bg-dark fs-6">已封存</span>
+          {% endif %}
+          <a href="{{ url_for('doc_workflow', doc_id=doc.id) }}" class="btn btn-sm btn-outline-info ms-1">
+            <i class="bi bi-diagram-3 me-1"></i>審核流程
+          </a>
+          <a href="{{ url_for('doc_audit_trail', doc_id=doc.id) }}" class="btn btn-sm btn-outline-secondary ms-1">
+            <i class="bi bi-shield-check me-1"></i>稽核軌跡
+          </a>
+        </div>
+        {% endif %}
+
         <div class="row g-3">
 
           <!-- 案號 -->
@@ -104,7 +125,7 @@
                 {% for f in folders %}
                 <option value="{{ f.id }}"
                   {{ 'selected' if (doc and doc.folder_id == f.id) or (not doc and folder_id == f.id) else '' }}>
-                  {{ f.tab_name }} / {{ f.name }}
+                  {{ f.tab_name }} / {{ (f.parent_name ~ ' / ') if f.parent_name else '' }}{{ f.name }}
                 </option>
                 {% endfor %}
               </select>
@@ -147,12 +168,52 @@
           <!-- 更改版本（查詢模式隱藏） -->
           <div class="col-12">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="version_bump" id="versionBump">
+              <input class="form-check-input" type="checkbox" name="version_bump" id="versionBump"
+                     onchange="toggleChangeSummary(this)">
               <label class="form-check-label" for="versionBump">
                 更改版本（版本號自動 +1，舊版存入履歷）
               </label>
             </div>
           </div>
+          <!-- 變更摘要（升版必填，ISO 7.5） -->
+          <div class="col-12" id="changeSummaryDiv" style="display:none">
+            <label class="form-label fw-semibold text-danger">
+              <i class="bi bi-pencil-square me-1"></i>變更摘要
+              <span class="text-danger">*</span>
+              <small class="text-muted fw-normal ms-1">（升版時必填，ISO 7.5）</small>
+            </label>
+            <textarea class="form-control" name="change_summary" id="changeSummary"
+                      rows="2" placeholder="請說明本次修訂的變更內容…"></textarea>
+          </div>
+          {% endif %}
+
+          <!-- 複查到期日 / 保存到期日（ISO 7.5.3） -->
+          {% if not _ro %}
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">複查到期日
+              <small class="text-muted fw-normal">（定期審查）</small>
+            </label>
+            <input type="date" class="form-control" name="review_due_date"
+                   value="{{ doc.review_due_date if doc and doc.review_due_date else '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">文件到期日
+              <small class="text-muted fw-normal">（保存期限）</small>
+            </label>
+            <input type="date" class="form-control" name="expiry_date"
+                   value="{{ doc.expiry_date if doc and doc.expiry_date else '' }}">
+          </div>
+          {% else %}
+          {% if doc and (doc.review_due_date or doc.expiry_date) %}
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">複查到期日</label>
+            <input type="text" class="form-control" value="{{ doc.review_due_date or '—' }}" disabled>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">文件到期日</label>
+            <input type="text" class="form-control" value="{{ doc.expiry_date or '—' }}" disabled>
+          </div>
+          {% endif %}
           {% endif %}
 
           <!-- 加密 -->
@@ -194,22 +255,37 @@
         </div><!-- row -->
       </div><!-- card-body -->
 
-      <div class="card-footer d-flex justify-content-between align-items-center">
-        <div>
+      <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-2 flex-wrap">
           {% if doc %}
           <a href="{{ url_for('doc_download', doc_id=doc.id) }}"
-             class="btn btn-sm btn-outline-success me-2">
+             class="btn btn-sm btn-outline-success">
             <i class="bi bi-download me-1"></i>下載檔案
           </a>
           <a href="{{ url_for('doc_history', doc_id=doc.id) }}"
              class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-clock-history me-1"></i>履歷
           </a>
+          <a href="{{ url_for('doc_workflow', doc_id=doc.id) }}"
+             class="btn btn-sm btn-outline-info">
+            <i class="bi bi-diagram-3 me-1"></i>審核流程
+          </a>
+          <a href="{{ url_for('doc_sign_record_pdf', doc_id=doc.id) }}"
+             class="btn btn-sm btn-outline-danger" title="匯出含簽核記錄的 PDF（稽核用）">
+            <i class="bi bi-file-earmark-pdf me-1"></i>簽核記錄 PDF
+          </a>
+          {% endif %}
+          {# 封存按鈕：已發行且為擁有者 / 管理員 #}
+          {% if doc and (doc.doc_status or 'draft') == 'released' and
+                (doc.owner_id == session.get('user_id') or session.get('is_admin')) %}
+          <button type="button" class="btn btn-sm btn-outline-dark"
+                  onclick="archiveDoc({{ doc.id }})">
+            <i class="bi bi-archive me-1"></i>封存
+          </button>
           {% endif %}
         </div>
         <div class="d-flex gap-2">
           {% if _ro %}
-          {# 查詢模式：只有「關閉」，不觸發解鎖 #}
           <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">
             <i class="bi bi-x-lg me-1"></i>關閉
           </a>
@@ -230,6 +306,35 @@
   </form>
 </div>
 {% endblock %}
+
+<!-- 送審範本選擇 Modal -->
+<div class="modal fade" id="wfTmplModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-diagram-3 me-1"></i>選擇簽核流程範本</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="wfSubmitDocId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">簽核範本</label>
+          <select class="form-select" id="wfTmplSelect">
+            <option value="">── 使用全域審核人員 ──</option>
+          </select>
+        </div>
+        <div id="wfTmplSummary" class="text-muted small px-1"
+             style="min-height:1.4em;word-break:break-all"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-warning" onclick="confirmSubmitWorkflow()">
+          <i class="bi bi-send me-1"></i>確認送審
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% block scripts %}
 <script>
@@ -271,6 +376,80 @@ function regenDocNo() {
 function cancelEdit(docId) {
   fetch(`/doc/${docId}/unlock`, { method: 'POST' })
     .finally(() => { location.href = '{{ url_for("index") }}'; });
+}
+
+// 升版時切換變更摘要必填
+function toggleChangeSummary(cb) {
+  const div = document.getElementById('changeSummaryDiv');
+  const ta  = document.getElementById('changeSummary');
+  if (cb.checked) {
+    div.style.display = '';
+    ta.required = true;
+    ta.focus();
+  } else {
+    div.style.display = 'none';
+    ta.required = false;
+    ta.value = '';
+  }
+}
+
+// 送審 — 先載入範本選單再顯示 Modal
+function submitWorkflow(docId) {
+  fetch('/api/workflow_templates')
+    .then(r => r.json())
+    .then(templates => {
+      // 填入範本選項
+      const sel = document.getElementById('wfTmplSelect');
+      sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
+      templates.forEach(t => {
+        const stepSummary = t.steps.map(s =>
+          (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
+        ).join(' → ');
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.name;
+        opt.dataset.summary = stepSummary || '（尚無步驟）';
+        sel.appendChild(opt);
+      });
+      document.getElementById('wfTmplSummary').textContent = '';
+      document.getElementById('wfSubmitDocId').value = docId;
+      new bootstrap.Modal(document.getElementById('wfTmplModal')).show();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('wfTmplSelect');
+  if (sel) {
+    sel.addEventListener('change', () => {
+      const opt = sel.options[sel.selectedIndex];
+      document.getElementById('wfTmplSummary').textContent = opt.dataset.summary || '';
+    });
+  }
+});
+
+function confirmSubmitWorkflow() {
+  const docId     = document.getElementById('wfSubmitDocId').value;
+  const tmplId    = document.getElementById('wfTmplSelect').value;
+  const fd = new FormData();
+  if (tmplId) fd.append('template_id', tmplId);
+  bootstrap.Modal.getInstance(document.getElementById('wfTmplModal')).hide();
+  fetch(`/doc/${docId}/submit_workflow`, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      alert(d.msg);
+      if (d.success) location.reload();
+    });
+}
+
+// 封存
+function archiveDoc(docId) {
+  if (!confirm('確定封存此文件？封存後無法直接編輯。')) return;
+  fetch(`/doc/${docId}/archive`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      alert(d.msg);
+      if (d.success) location.reload();
+    });
 }
 </script>
 {% endblock %}

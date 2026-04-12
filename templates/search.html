@@ -2,20 +2,68 @@
 {% block title %}搜尋結果 — 文件管理系統{% endblock %}
 {% block content %}
 <div class="container-fluid py-3">
-  <div class="d-flex align-items-center mb-3 gap-3">
+
+  <!-- ── 搜尋列 ─────────────────────────────────────── -->
+  <form class="card shadow-sm mb-3 p-3" action="{{ url_for('search') }}" method="get">
+    <div class="row g-2 align-items-end">
+      <!-- 關鍵字 -->
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">關鍵字（案號 / 主旨 / 備註 / 部門 / 資料夾）</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" name="q" value="{{ q }}" autofocus placeholder="輸入關鍵字…">
+        </div>
+      </div>
+      <!-- 部門 -->
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">部門</label>
+        <input type="text" class="form-control" name="dept" value="{{ dept }}" placeholder="全部">
+      </div>
+      <!-- 文件類型 -->
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">文件類型</label>
+        <select class="form-select" name="ftype">
+          <option value="">全部</option>
+          {% for ft in file_types %}
+          <option value="{{ ft.id }}" {% if ftype == ft.id|string %}selected{% endif %}>{{ ft.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- 狀態 -->
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">狀態</label>
+        <select class="form-select" name="status">
+          <option value="">全部</option>
+          {% for k, v in doc_status_label.items() %}
+          <option value="{{ k }}" {% if status_f == k %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- 按鈕 -->
+      <div class="col-6 col-md-2 d-flex gap-2">
+        <button class="btn btn-primary flex-fill" type="submit">
+          <i class="bi bi-search me-1"></i>搜尋
+        </button>
+        <a href="{{ url_for('search') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <!-- ── 結果標頭 ────────────────────────────────────── -->
+  {% if q or dept or ftype or status_f %}
+  <div class="d-flex align-items-center mb-2 gap-3">
     <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i>
+      <i class="bi bi-arrow-left me-1"></i>返回
     </a>
-    <form class="d-flex gap-2" action="{{ url_for('search') }}" method="get">
-      <input type="text" class="form-control" name="q" value="{{ q }}" style="width:300px" autofocus>
-      <button class="btn btn-primary btn-sm" type="submit">
-        <i class="bi bi-search me-1"></i>搜尋
-      </button>
-    </form>
-    <span class="text-muted small">共 {{ results|length }} 筆結果</span>
+    <span class="text-muted small">
+      找到 <strong>{{ results|length }}</strong> 筆結果
+      {% if q %} — 關鍵字「<strong>{{ q }}</strong>」{% endif %}
+    </span>
   </div>
 
-  {% if q %}
+  <!-- ── 結果表格 ────────────────────────────────────── -->
   <div class="card shadow-sm">
     <div class="table-responsive">
       <table class="table table-hover table-sm mb-0">
@@ -23,58 +71,91 @@
           <tr>
             <th>案號</th>
             <th>主旨</th>
-            <th>版本</th>
+            <th class="text-center">版本</th>
             <th>類型</th>
             <th>部門</th>
             <th>資料夾</th>
             <th>頁籤</th>
             <th>狀態</th>
             <th>擁有人</th>
-            <th>建立時間</th>
+            <th>更新時間</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for d in results %}
-          {% set status_map = {'': '草稿', 'pending': '待簽核', 'signed': '已簽核'} %}
-          {% set badge_map  = {'': 'secondary', 'pending': 'warning', 'signed': 'success'} %}
-          {% set s = d.sign_status or '' %}
+          {% set s = d.doc_status or 'draft' %}
+          {% set badge_map = {'draft':'secondary','in_review':'warning','released':'success','superseded':'info','archived':'dark'} %}
           <tr>
-            <td class="fw-semibold">{{ d.doc_number }}</td>
+            <td class="fw-semibold text-nowrap">
+              {% if d.relevance and d.relevance > 0 %}
+              <i class="bi bi-star-fill text-warning me-1" title="相關度 {{ '%.2f'|format(d.relevance) }}"></i>
+              {% endif %}
+              {{ d.doc_number }}
+            </td>
             <td>
               {% if d.is_locked %}<i class="bi bi-lock-fill text-warning me-1"></i>{% endif %}
-              {{ d.subject }}
+              {# 高亮關鍵字 #}
+              {% if q and q|lower in d.subject|lower %}
+                {% set lo = d.subject|lower %}
+                {% set ql = q|lower %}
+                {% set idx = lo.find(ql) %}
+                {{ d.subject[:idx] }}<mark>{{ d.subject[idx:idx+q|length] }}</mark>{{ d.subject[idx+q|length:] }}
+              {% else %}
+                {{ d.subject }}
+              {% endif %}
             </td>
             <td class="text-center">{{ d.version }}</td>
-            <td>{{ d.file_type_name or '' }}</td>
-            <td>{{ d.department or '' }}</td>
-            <td>{{ d.folder_name or '' }}</td>
-            <td>{{ d.tab_name or '' }}</td>
-            <td><span class="badge bg-{{ badge_map[s] }}">{{ status_map[s] }}</span></td>
-            <td>{{ d.owner_name or '' }}</td>
-            <td class="text-muted">{{ (d.created_at or '')[:16] }}</td>
+            <td class="text-nowrap">{{ d.file_type_name or '—' }}</td>
+            <td>{{ d.department or '—' }}</td>
+            <td class="text-muted small">{{ d.folder_name or '—' }}</td>
+            <td class="text-muted small">{{ d.tab_name or '—' }}</td>
             <td>
+              <span class="badge bg-{{ badge_map.get(s, 'secondary') }}">
+                {{ doc_status_label.get(s, s) }}
+              </span>
+            </td>
+            <td class="small">{{ d.owner_name or '—' }}</td>
+            <td class="text-muted small text-nowrap">{{ (d.updated_at or '')[:16] }}</td>
+            <td class="text-nowrap">
               <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('doc_edit', doc_id=d.id) }}" class="btn btn-outline-primary btn-xs" title="修改">
+                <a href="{{ url_for('doc_edit', doc_id=d.id) }}?view=1"
+                   class="btn btn-outline-secondary" title="查詢">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{{ url_for('doc_edit', doc_id=d.id) }}"
+                   class="btn btn-outline-primary" title="修改">
                   <i class="bi bi-pencil"></i>
                 </a>
-                <a href="{{ url_for('doc_download', doc_id=d.id) }}" class="btn btn-outline-success btn-xs" title="下載">
+                <a href="{{ url_for('doc_download', doc_id=d.id) }}"
+                   class="btn btn-outline-success" title="下載">
                   <i class="bi bi-download"></i>
                 </a>
-                <a href="{{ url_for('doc_history', doc_id=d.id) }}" class="btn btn-outline-secondary btn-xs" title="履歷">
-                  <i class="bi bi-clock-history"></i>
+                <a href="{{ url_for('doc_workflow', doc_id=d.id) }}"
+                   class="btn btn-outline-info" title="審核流程">
+                  <i class="bi bi-diagram-3"></i>
                 </a>
               </div>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="11" class="text-center text-muted py-4">找不到符合「{{ q }}」的文件</td>
+            <td colspan="11" class="text-center text-muted py-5">
+              <i class="bi bi-search" style="font-size:2rem"></i>
+              <div class="mt-2">找不到符合條件的文件</div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+  </div>
+  {% else %}
+  <!-- 空狀態提示 -->
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-search" style="font-size:3rem"></i>
+    <div class="mt-3 fs-5">跨資料夾全文搜尋</div>
+    <div class="small mt-2">支援案號、主旨、備註、部門、資料夾名稱，可搭配篩選條件縮小範圍</div>
   </div>
   {% endif %}
 </div>

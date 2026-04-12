@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block title %}審核流程 — {{ doc.doc_number }}{% endblock %}
+{% block content %}
+<div class="container py-3 px-2 px-sm-3" style="max-width:900px">
+
+  <!-- 文件資訊 -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span class="fw-semibold"><i class="bi bi-file-earmark-check me-1"></i>審核工作流程</span>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('doc_sign_record_pdf', doc_id=doc.id) }}"
+           class="btn btn-sm btn-outline-danger" title="匯出含簽核記錄的 PDF">
+          <i class="bi bi-file-earmark-pdf"></i>
+          <span class="d-none d-sm-inline ms-1">簽核記錄 PDF</span>
+        </a>
+        <a href="{{ url_for('doc_edit', doc_id=doc.id, view=1) }}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i>
+          <span class="d-none d-sm-inline ms-1">返回文件</span>
+        </a>
+      </div>
+    </div>
+    <div class="card-body py-2">
+      <div class="row g-1">
+        <div class="col-4 col-sm-3 text-muted small">案號</div>
+        <div class="col-8 col-sm-9 fw-bold small">{{ doc.doc_number }}</div>
+        <div class="col-4 col-sm-3 text-muted small">主旨</div>
+        <div class="col-8 col-sm-9 small">{{ doc.subject }}</div>
+        <div class="col-4 col-sm-3 text-muted small">狀態</div>
+        <div class="col-8 col-sm-9">
+          {% set s = doc.doc_status or 'draft' %}
+          {% if s == 'draft' %}<span class="badge bg-secondary">草稿</span>
+          {% elif s == 'in_review' %}<span class="badge bg-info text-dark">審核中</span>
+          {% elif s == 'released' %}<span class="badge bg-success">已發行</span>
+          {% elif s == 'superseded' %}<span class="badge bg-warning text-dark">已取代</span>
+          {% elif s == 'archived' %}<span class="badge bg-dark">已封存</span>
+          {% else %}<span class="badge bg-secondary">{{ s }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 目前進行中的工作流程 -->
+  {% if active_wf %}
+  {# 計算目前最小待審順序 #}
+  {% set ns = namespace(min_order=999) %}
+  {% for s in active_steps %}
+    {% if s.status == 'pending' and s.step_order < ns.min_order %}
+      {% set ns.min_order = s.step_order %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="card mb-3 border-info">
+    <div class="card-header bg-info bg-opacity-10 d-flex flex-wrap justify-content-between gap-1">
+      <span><i class="bi bi-hourglass-split me-1"></i><strong>目前審核流程</strong></span>
+      <small class="text-muted">送審人：{{ initiator }}，{{ active_wf.initiated_at[:16] }}</small>
+    </div>
+
+    <!-- 桌面版表格（sm 以上顯示） -->
+    <div class="d-none d-sm-block">
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:50px">順序</th>
+            <th>類型</th><th>負責人</th><th>狀態</th>
+            <th>處理時間</th><th>意見</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for step in active_steps %}
+          <tr>
+            <td class="text-center">{{ step.step_order }}</td>
+            <td>{% if step.step_type == 'review' %}<span class="badge bg-primary">初審</span>
+                {% else %}<span class="badge bg-success">核准</span>{% endif %}</td>
+            <td>{{ step.assignee_name }}</td>
+            <td>{% if step.status == 'pending' %}<span class="badge bg-warning text-dark">待審</span>
+                {% elif step.status == 'approved' %}<span class="badge bg-success">已核准</span>
+                {% elif step.status == 'rejected' %}<span class="badge bg-danger">已退回</span>
+                {% else %}<span class="badge bg-secondary">{{ step.status }}</span>{% endif %}</td>
+            <td class="text-nowrap small">{{ step.acted_at[:16] if step.acted_at else '—' }}</td>
+            <td class="small">{{ step.comments or '—' }}</td>
+            <td class="text-nowrap">
+              {% if step.status == 'pending'
+                   and step.assignee_id == session.get('user_id')
+                   and step.step_order == ns.min_order %}
+              <button class="btn btn-sm btn-success me-1" onclick="actStep({{ step.id }}, 'approve')">
+                <i class="bi bi-check-lg"></i> 核准
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="actStep({{ step.id }}, 'reject')">
+                <i class="bi bi-x-lg"></i> 退回
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 行動版卡片列表（sm 以下顯示） -->
+    <div class="d-sm-none p-2">
+      {% for step in active_steps %}
+      {% set is_my_turn = step.status == 'pending'
+                          and step.assignee_id == session.get('user_id')
+                          and step.step_order == ns.min_order %}
+      <div class="card mb-2 {{ 'border-primary' if is_my_turn else '' }}">
+        <div class="card-body py-2 px-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <span class="fw-semibold">{{ step.step_order }}.</span>
+              {% if step.step_type == 'review' %}<span class="badge bg-primary ms-1">初審</span>
+              {% else %}<span class="badge bg-success ms-1">核准</span>{% endif %}
+              <span class="ms-2">{{ step.assignee_name }}</span>
+            </div>
+            <div>
+              {% if step.status == 'pending' %}<span class="badge bg-warning text-dark">待審</span>
+              {% elif step.status == 'approved' %}<span class="badge bg-success">已核准</span>
+              {% elif step.status == 'rejected' %}<span class="badge bg-danger">已退回</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if step.acted_at or step.comments %}
+          <div class="mt-1 small text-muted">
+            {% if step.acted_at %}{{ step.acted_at[:16] }}{% endif %}
+            {% if step.comments %} — {{ step.comments }}{% endif %}
+          </div>
+          {% endif %}
+          {% if is_my_turn %}
+          <div class="d-grid gap-2 d-flex mt-2">
+            <button class="btn btn-success flex-fill py-2" onclick="actStep({{ step.id }}, 'approve')">
+              <i class="bi bi-check-lg me-1"></i>核准
+            </button>
+            <button class="btn btn-danger flex-fill py-2" onclick="actStep({{ step.id }}, 'reject')">
+              <i class="bi bi-x-lg me-1"></i>退回
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if doc.owner_id == session.get('user_id') or session.get('is_admin') %}
+    <div class="card-footer text-end">
+      <button class="btn btn-sm btn-outline-secondary" onclick="withdrawWf()">
+        <i class="bi bi-arrow-counterclockwise"></i> 撤回送審
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% elif doc.doc_status == 'draft' and (doc.owner_id == session.get('user_id') or session.get('is_admin')) %}
+  <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <span><i class="bi bi-info-circle me-1"></i>此文件尚未送審。</span>
+    <button class="btn btn-primary" onclick="openSubmitModal()">
+      <i class="bi bi-send me-1"></i>送審
+    </button>
+  </div>
+  {% endif %}
+
+  <!-- 歷史工作流程 -->
+  {% if past_wfs %}
+  <div class="card">
+    <div class="card-header"><i class="bi bi-clock-history me-1"></i>歷史審核記錄</div>
+    <div class="accordion accordion-flush" id="pastWfAccordion">
+      {% for wf in past_wfs %}
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed py-2 small" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#wf{{ wf.id }}">
+            {% if wf.status == 'approved' %}<span class="badge bg-success me-2">已核准</span>
+            {% elif wf.status == 'rejected' %}<span class="badge bg-danger me-2">已退回</span>
+            {% elif wf.status == 'withdrawn' %}<span class="badge bg-secondary me-2">已撤回</span>
+            {% endif %}
+            {{ wf.initiated_at[:16] }} — {{ wf.initiator_name }}
+            {% if wf.closed_at %}<span class="d-none d-sm-inline">，結束：{{ wf.closed_at[:16] }}</span>{% endif %}
+          </button>
+        </h2>
+        <div id="wf{{ wf.id }}" class="accordion-collapse collapse">
+          <div class="accordion-body p-0">
+            <!-- 桌面 -->
+            <div class="d-none d-sm-block">
+              <table class="table table-sm mb-0">
+                <thead class="table-light"><tr>
+                  <th>順序</th><th>類型</th><th>負責人</th>
+                  <th>狀態</th><th>處理時間</th><th>意見</th>
+                </tr></thead>
+                <tbody>
+                {% for step in wf.steps %}
+                <tr>
+                  <td>{{ step.step_order }}</td>
+                  <td>{% if step.step_type=='review' %}<span class="badge bg-primary">初審</span>
+                      {% else %}<span class="badge bg-success">核准</span>{% endif %}</td>
+                  <td>{{ step.assignee_name }}</td>
+                  <td>{% if step.status=='approved' %}<span class="badge bg-success">已核准</span>
+                      {% elif step.status=='rejected' %}<span class="badge bg-danger">已退回</span>
+                      {% elif step.status=='pending' %}<span class="badge bg-warning text-dark">未處理</span>
+                      {% else %}<span class="badge bg-secondary">{{ step.status }}</span>{% endif %}</td>
+                  <td class="small text-nowrap">{{ step.acted_at[:16] if step.acted_at else '—' }}</td>
+                  <td class="small">{{ step.comments or '—' }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <!-- 行動版 -->
+            <div class="d-sm-none p-2">
+              {% for step in wf.steps %}
+              <div class="d-flex justify-content-between align-items-start py-1 border-bottom small">
+                <div>
+                  <span class="fw-semibold">{{ step.step_order }}.</span>
+                  {% if step.step_type=='review' %}<span class="badge bg-primary ms-1">初審</span>
+                  {% else %}<span class="badge bg-success ms-1">核准</span>{% endif %}
+                  <span class="ms-1">{{ step.assignee_name }}</span>
+                  {% if step.comments %}<div class="text-muted mt-1">{{ step.comments }}</div>{% endif %}
+                </div>
+                <div class="text-end">
+                  {% if step.status=='approved' %}<span class="badge bg-success">已核准</span>
+                  {% elif step.status=='rejected' %}<span class="badge bg-danger">已退回</span>
+                  {% elif step.status=='pending' %}<span class="badge bg-warning text-dark">未處理</span>
+                  {% endif %}
+                  {% if step.acted_at %}<div class="text-muted" style="font-size:.7rem">{{ step.acted_at[:10] }}</div>{% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- 送審 Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-send me-1"></i>送審</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">簽核範本</label>
+        <select class="form-select" id="submitTemplateId" onchange="updateTemplateInfo()">
+          <option value="">— 自動（使用預設範本）—</option>
+        </select>
+        <div class="form-text mt-2" id="submitTemplateInfo"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-primary" onclick="confirmSubmit()">
+          <i class="bi bi-send me-1"></i>確認送審
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 審核動作 Modal -->
+<div class="modal fade" id="actModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="actModalTitle">審核決定</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">意見 <small class="text-muted">（退回時建議填寫）</small></label>
+        <textarea class="form-control" id="actComments" rows="4"></textarea>
+      </div>
+      <div class="modal-footer d-grid gap-2 d-sm-flex">
+        <button class="btn btn-secondary order-sm-0" data-bs-dismiss="modal">取消</button>
+        <button class="btn flex-sm-fill" id="actConfirmBtn" onclick="confirmAct()">確認</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let _pendingStepId = null, _pendingAction = null, _templates = [];
+
+function actStep(stepId, action) {
+  _pendingStepId = stepId; _pendingAction = action;
+  document.getElementById('actComments').value = '';
+  document.getElementById('actModalTitle').textContent = action === 'approve' ? '確認核准' : '確認退回';
+  const btn = document.getElementById('actConfirmBtn');
+  btn.textContent = action === 'approve' ? '核准' : '退回';
+  btn.className = 'btn flex-sm-fill ' + (action === 'approve' ? 'btn-success' : 'btn-danger');
+  new bootstrap.Modal(document.getElementById('actModal')).show();
+}
+
+function confirmAct() {
+  const fd = new FormData();
+  fd.append('action', _pendingAction);
+  fd.append('comments', document.getElementById('actComments').value);
+  fetch(`/doc/{{ doc.id }}/workflow/${_pendingStepId}/act`, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      bootstrap.Modal.getInstance(document.getElementById('actModal'))?.hide();
+      alert(d.msg);
+      if (d.success) location.reload();
+    });
+}
+
+function withdrawWf() {
+  if (!confirm('確定要撤回送審嗎？文件將回到草稿狀態。')) return;
+  fetch('/doc/{{ doc.id }}/workflow/withdraw', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { alert(d.msg); if (d.success) location.reload(); });
+}
+
+async function openSubmitModal() {
+  const sel = document.getElementById('submitTemplateId');
+  sel.innerHTML = '<option value="">— 自動（使用預設範本）—</option>';
+  try {
+    const data = await fetch('/api/workflow_templates').then(r => r.json());
+    _templates = data;
+    data.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name + (t.is_default ? ' ★ 預設' : '') + ` （${t.steps.length} 步驟）`;
+      if (t.is_default) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    updateTemplateInfo();
+  } catch(e) {}
+  new bootstrap.Modal(document.getElementById('submitModal')).show();
+}
+
+function updateTemplateInfo() {
+  const tid = parseInt(document.getElementById('submitTemplateId').value);
+  const info = document.getElementById('submitTemplateInfo');
+  if (!tid) { info.textContent = '將自動套用管理員設定的預設範本'; return; }
+  const t = _templates.find(x => x.id === tid);
+  if (t) info.innerHTML = t.steps.map((s, i) =>
+    `${i+1}. <span class="badge bg-${s.step_type==='review'?'primary':'success'}">${s.step_type==='review'?'初審':'核准'}</span> ${s.user_name}`
+  ).join('　');
+}
+
+function confirmSubmit() {
+  const fd = new FormData();
+  const tid = document.getElementById('submitTemplateId').value;
+  if (tid) fd.append('template_id', tid);
+  fetch('/doc/{{ doc.id }}/submit_workflow', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      bootstrap.Modal.getInstance(document.getElementById('submitModal'))?.hide();
+      alert(d.msg);
+      if (d.success) location.reload();
+    });
+}
+
+function submitWf() { openSubmitModal(); }
+</script>
+{% endblock %}

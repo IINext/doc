@@ -69,6 +69,111 @@
         </div>
       </a>
     </div>
+
+    <!-- 儀表板 -->
+    <div class="col-12 mt-2">
+      <h6 class="text-muted border-bottom pb-1">
+        <i class="bi bi-bar-chart-line me-1"></i>管理總覽
+      </h6>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_dashboard') }}" class="card text-decoration-none text-dark h-100 shadow-sm border-primary">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-bar-chart-line text-primary" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">管理儀表板</div>
+              <small class="text-muted">文件健康狀況、待審統計、發行趨勢</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- ISO 9001:2015 功能 -->
+    <div class="col-12 mt-2">
+      <h6 class="text-muted border-bottom pb-1">
+        <i class="bi bi-shield-check me-1"></i>ISO 9001:2015 文件管控
+      </h6>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_approvers') }}" class="card text-decoration-none text-dark h-100 shadow-sm border-primary">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-person-check-fill text-primary" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">審核人員設定</div>
+              <small class="text-muted">設定全域初審 / 核准人員角色</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_workflow_templates') }}" class="card text-decoration-none text-dark h-100 shadow-sm border-primary">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-diagram-3 text-primary" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">簽核流程範本</div>
+              <small class="text-muted">預設審核步驟，送審時自動代入</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_audit_log') }}" class="card text-decoration-none text-dark h-100 shadow-sm border-success">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-journal-check text-success" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">完整稽核日誌</div>
+              <small class="text-muted">所有文件操作紀錄（ISO 7.5）</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_expiry_review') }}" class="card text-decoration-none text-dark h-100 shadow-sm border-warning">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-calendar-x text-warning" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">到期文件預警</div>
+              <small class="text-muted">30 天內即將到期的文件清單</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-secondary">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-arrow-repeat text-secondary" style="font-size:2rem"></i>
+            <div>
+              <div class="fw-semibold">舊資料狀態遷移</div>
+              <small class="text-muted">將 sign_status 對應至新文件狀態（執行一次）</small>
+            </div>
+          </div>
+          <form method="post" action="{{ url_for('admin_migrate_legacy_status') }}" class="mt-2">
+            <button class="btn btn-sm btn-outline-secondary"
+                    onclick="return confirm('確定執行遷移？此操作將更新既有文件狀態。')">
+              <i class="bi bi-play-circle me-1"></i>執行遷移
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}

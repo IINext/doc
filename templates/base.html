@@ -27,6 +27,11 @@
           <i class="bi bi-search"></i>
         </button>
       </form>
+      <a href="{{ url_for('my_tasks') }}" class="btn btn-outline-light btn-sm position-relative">
+        <i class="bi bi-inbox"></i> 待審
+        <span id="taskBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="display:none;font-size:0.65rem"></span>
+      </a>
       <a href="{{ url_for('recycle') }}" class="btn btn-outline-light btn-sm">
         <i class="bi bi-trash3"></i> 回收夾
       </a>
@@ -34,6 +39,11 @@
         <i class="bi bi-upload"></i> 整批轉入
       </a>
       {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin_expiry_review') }}" class="btn btn-outline-warning btn-sm position-relative" title="到期文件預警">
+        <i class="bi bi-calendar-x"></i>
+        <span id="expiryBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="display:none;font-size:0.65rem"></span>
+      </a>
       <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-warning btn-sm">
         <i class="bi bi-gear"></i> 設定
       </a>
@@ -71,5 +81,23 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block scripts %}{% endblock %}
+{% if session.get('user_id') %}
+<script>
+fetch('/api/my_pending_count').then(r=>r.json()).then(d=>{
+  if(d.count>0){
+    const b=document.getElementById('taskBadge');
+    if(b){b.textContent=d.count;b.style.display='';}
+  }
+}).catch(()=>{});
+{% if session.get('is_admin') %}
+fetch('/api/expiry_count').then(r=>r.json()).then(d=>{
+  if(d.count>0){
+    const b=document.getElementById('expiryBadge');
+    if(b){b.textContent=d.count>99?'99+':d.count;b.style.display='';}
+  }
+}).catch(()=>{});
+{% endif %}
+</script>
+{% endif %}
 </body>
 </html>

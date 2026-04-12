@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}我的待審任務{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:900px">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-inbox me-1"></i>我的待審任務</span>
+      <span class="badge bg-danger">{{ tasks|length }}</span>
+    </div>
+    <div class="card-body p-0">
+      {% if tasks %}
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>案號</th>
+            <th>主旨</th>
+            <th>類型</th>
+            <th>送審人</th>
+            <th>送審時間</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tasks %}
+          <tr>
+            <td><span class="fw-bold">{{ t.doc_number }}</span></td>
+            <td>{{ t.subject }}</td>
+            <td>
+              {% if t.step_type == 'review' %}
+                <span class="badge bg-primary">初審</span>
+              {% else %}
+                <span class="badge bg-success">核准</span>
+              {% endif %}
+            </td>
+            <td>{{ t.initiator_name }}</td>
+            <td>{{ t.initiated_at[:16] }}</td>
+            <td>
+              <a href="{{ url_for('doc_workflow', doc_id=t.document_id) }}"
+                 class="btn btn-sm btn-primary">
+                <i class="bi bi-check2-circle"></i> 前往審核
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-check2-all fs-1"></i>
+        <p class="mt-2">目前沒有待審任務</p>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">返回首頁</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

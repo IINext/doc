@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}審核人員設定{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-person-check me-1"></i>審核人員設定</h5>
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> 返回設定
+    </a>
+  </div>
+  <p class="text-muted small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>初審人員</strong>（Reviewer）：送審後第一關審核。
+    <strong>核准人員</strong>（Approver）：最終核准，完成後文件狀態變為「已發行」。
+    若未設定任何人員，系統將以管理員帳號作為核准人員。
+  </p>
+
+  <div class="row g-3">
+    <!-- 初審人員 -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-primary bg-opacity-10">
+          <i class="bi bi-eye me-1"></i>初審人員（Reviewer）
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            {% for r in reviewers %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ r.name }}</strong>
+                <small class="text-muted ms-2">{{ r.department }}</small>
+              </div>
+              <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="role_id" value="{{ r.id }}">
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('確定移除？')">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </form>
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted text-center py-3">尚未設定初審人員</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="card-footer">
+          <form method="post" class="d-flex gap-2">
+            <input type="hidden" name="action" value="add">
+            <input type="hidden" name="role_type" value="reviewer">
+            <select class="form-select form-select-sm" name="user_id" required>
+              <option value="">選擇使用者…</option>
+              {% for u in all_users %}
+              <option value="{{ u.id }}">{{ u.name }}（{{ u.department }}）</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary" type="submit">新增</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 核准人員 -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-success bg-opacity-10">
+          <i class="bi bi-check2-square me-1"></i>核准人員（Approver）
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            {% for a in approvers %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ a.name }}</strong>
+                <small class="text-muted ms-2">{{ a.department }}</small>
+              </div>
+              <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="role_id" value="{{ a.id }}">
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('確定移除？')">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </form>
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted text-center py-3">尚未設定核准人員</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="card-footer">
+          <form method="post" class="d-flex gap-2">
+            <input type="hidden" name="action" value="add">
+            <input type="hidden" name="role_type" value="approver">
+            <select class="form-select form-select-sm" name="user_id" required>
+              <option value="">選擇使用者…</option>
+              {% for u in all_users %}
+              <option value="{{ u.id }}">{{ u.name }}（{{ u.department }}）</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-success" type="submit">新增</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

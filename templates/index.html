@@ -91,7 +91,7 @@
             <th class="sortable" data-col="issue_date" style="width:100px">發行日期</th>
             <th style="width:90px">類型</th>
             <th style="width:80px">部門</th>
-            <th class="sortable" data-col="sign_status" style="width:75px">狀態</th>
+            <th class="sortable" data-col="doc_status" style="width:75px">狀態</th>
             <th style="width:120px">擁有人</th>
             <th class="sortable" data-col="created_at" style="width:130px">建立時間</th>
           </tr>
@@ -133,7 +133,8 @@
   <div class="ctx-item" data-action="history"><i class="bi bi-clock-history me-2"></i>履歷</div>
   <div class="ctx-item" data-action="properties"><i class="bi bi-info-circle me-2"></i>屬性</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item" data-action="send_sign"><i class="bi bi-send me-2 text-primary"></i>單據送簽</div>
+  <div class="ctx-item" data-action="send_sign"><i class="bi bi-send me-2 text-primary"></i>送審</div>
+  <div class="ctx-item" data-action="withdraw_workflow"><i class="bi bi-arrow-counterclockwise me-2 text-warning"></i>撤回送審</div>
   <div class="ctx-item" data-action="refresh"><i class="bi bi-arrow-clockwise me-2"></i>頁面更新</div>
 </div>
 
@@ -301,6 +302,35 @@
   </div>
 </div>
 
+<!-- 送審範本選擇 Modal（首頁右鍵選單用） -->
+<div class="modal fade" id="idxWfTmplModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-diagram-3 me-1"></i>選擇簽核流程範本</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="idxWfDocId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">簽核範本</label>
+          <select class="form-select" id="idxWfTmplSelect">
+            <option value="">── 使用全域審核人員 ──</option>
+          </select>
+        </div>
+        <div id="idxWfTmplSummary" class="text-muted small px-1"
+             style="min-height:1.4em;word-break:break-all"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button class="btn btn-warning" onclick="confirmIdxSubmitWorkflow()">
+          <i class="bi bi-send me-1"></i>確認送審
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 更改擁有人 Modal -->
 <div class="modal fade" id="changeOwnerModal" tabindex="-1">
   <div class="modal-dialog modal-sm">
@@ -370,7 +400,8 @@ const URLS = {
   docShare:    (id) => `/doc/${id}/share`,
   docShareList:(id) => `/doc/${id}/share_list`,
   docOwner:    (id) => `/doc/${id}/change_owner`,
-  docSign:     (id) => `/doc/${id}/send_sign`,
+  docSign:     (id) => `/doc/${id}/submit_workflow`,
+  docWithdraw: (id) => `/doc/${id}/workflow/withdraw`,
 };
 
 let currentFolderId = null;
@@ -590,8 +621,22 @@ function refreshDocs() {
   else loadDocs();
 }
 
-const STATUS_MAP = { '': '草稿', 'pending': '待簽核', 'signed': '已簽核' };
-const STATUS_BADGE = { '': 'secondary', 'pending': 'warning', 'signed': 'success' };
+const STATUS_MAP = {
+  'draft': '草稿', '': '草稿',
+  'in_review': '審核中',
+  'released': '已發行',
+  'superseded': '已取代',
+  'archived': '已封存',
+  'pending': '待簽核', 'signed': '已簽核'  // 舊值相容
+};
+const STATUS_BADGE = {
+  'draft': 'secondary', '': 'secondary',
+  'in_review': 'info',
+  'released': 'success',
+  'superseded': 'warning',
+  'archived': 'dark',
+  'pending': 'warning', 'signed': 'success'  // 舊值相容
+};
 
 function renderDocs(docs) {
   const tbody = $('#docBody');
@@ -603,8 +648,14 @@ function renderDocs(docs) {
   }
   docs.forEach(d => {
     const lock = d.is_locked ? '<i class="bi bi-lock-fill text-warning" title="已鎖定"></i>' : '<i class="bi bi-file-text text-secondary"></i>';
-    const status = d.sign_status || '';
-    const badge = `<span class="badge bg-${STATUS_BADGE[status]}">${STATUS_MAP[status]}</span>`;
+    const status = d.doc_status || d.sign_status || 'draft';
+    const badgeClass = STATUS_BADGE[status] || 'secondary';
+    const badgeText  = STATUS_MAP[status]  || status;
+    const badgeLink = (status === 'in_review' || status === 'released' || status === 'superseded' || status === 'archived')
+      ? `href="/doc/${d.id}/workflow"` : '';
+    const badge = badgeLink
+      ? `<a ${badgeLink} class="badge bg-${badgeClass} ${badgeClass==='info'?'text-dark':''} text-decoration-none" title="查看簽核流程">${badgeText}</a>`
+      : `<span class="badge bg-${badgeClass} ${badgeClass==='info'?'text-dark':''}">${badgeText}</span>`;
     const row = $(`
       <tr data-id="${d.id}" data-owner="${d.is_owner ? 1 : 0}" class="doc-row">
         <td><input type="checkbox" class="doc-check" value="${d.id}"></td>
@@ -692,14 +743,18 @@ function showDocCtxMenu(e, doc) {
   const menu = $('#ctxMenu');
   // 別人分享頁籤無法新增；依授權與鎖定狀態決定修改/刪除是否可用
   const lockedByOther = doc.is_locked && !doc.locked_by_me;
-  const canEdit   = (doc.is_owner || doc.can_edit) && !lockedByOther;
-  const canDelete = (doc.is_owner || doc.can_delete);
+  const inReview  = doc.doc_status === 'in_review';
+  const canEdit   = (doc.is_owner || doc.can_edit) && !lockedByOther && !inReview;
+  const canDelete = (doc.is_owner || doc.can_delete) && !inReview;
   // 解鎖只有鎖定者本人或管理員才能操作（前端僅用 locked_by_me 判斷）
   menu.find('[data-action="new"]').toggleClass('ctx-disabled', isSharedView);
   menu.find('[data-action="edit"]').toggleClass('ctx-disabled', !canEdit);
   menu.find('[data-action="delete"]').toggleClass('ctx-disabled', !canDelete);
   menu.find('[data-action="unlock"]').toggleClass('ctx-disabled', !doc.locked_by_me);
   menu.find('[data-action="lock"]').toggleClass('ctx-disabled', lockedByOther);
+  const inReviewOwner = doc.doc_status === 'in_review' && doc.is_owner;
+  menu.find('[data-action="send_sign"]').toggleClass('ctx-disabled', doc.doc_status !== 'draft');
+  menu.find('[data-action="withdraw_workflow"]').toggleClass('ctx-disabled', !inReviewOwner);
   menu.css({ top: e.clientY, left: e.clientX }).removeClass('d-none');
   menu.data('doc', doc);
 }
@@ -733,6 +788,7 @@ function handleDocAction(action, doc) {
     case 'history':  location.href = URLS.docHistory(id); break;
     case 'properties': openPropertiesModal(id); break;
     case 'send_sign': sendSign(id); break;
+    case 'withdraw_workflow': withdrawWorkflow(id); break;
     case 'refresh':  refreshDocs(); break;
   }
 }
@@ -904,11 +960,55 @@ function downloadDoc(id) {
 }
 
 function sendSign(id) {
-  if (!confirm('確定要送簽？')) return;
-  $.post(URLS.docSign(id), {}, res => {
-    if (res.success) { refreshDocs(); showToast(res.msg); }
-    else alert(res.msg);
-  });
+  // 載入範本清單，開啟選擇 Modal
+  fetch('/api/workflow_templates')
+    .then(r => r.json())
+    .then(templates => {
+      const sel = document.getElementById('idxWfTmplSelect');
+      sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
+      templates.forEach(t => {
+        const stepSummary = t.steps.map(s =>
+          (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
+        ).join(' → ');
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.name;
+        opt.dataset.summary = stepSummary || '（尚無步驟）';
+        sel.appendChild(opt);
+      });
+      document.getElementById('idxWfTmplSummary').textContent = '';
+      document.getElementById('idxWfDocId').value = id;
+      new bootstrap.Modal(document.getElementById('idxWfTmplModal')).show();
+    });
+}
+
+document.getElementById('idxWfTmplSelect')?.addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  document.getElementById('idxWfTmplSummary').textContent = opt.dataset.summary || '';
+});
+
+function withdrawWorkflow(id) {
+  if (!confirm('確定撤回送審？文件將退回草稿狀態。')) return;
+  fetch(URLS.docWithdraw(id), { method: 'POST' })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) { refreshDocs(); showToast(res.msg); }
+      else alert(res.msg);
+    });
+}
+
+function confirmIdxSubmitWorkflow() {
+  const docId  = document.getElementById('idxWfDocId').value;
+  const tmplId = document.getElementById('idxWfTmplSelect').value;
+  const fd = new FormData();
+  if (tmplId) fd.append('template_id', tmplId);
+  bootstrap.Modal.getInstance(document.getElementById('idxWfTmplModal')).hide();
+  fetch(URLS.docSign(docId), { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) { refreshDocs(); showToast(res.msg); }
+      else alert(res.msg);
+    });
 }
 
 function openShareModal(id) {
@@ -1018,7 +1118,9 @@ function submitChangeOwner() {
 
 function openPropertiesModal(id) {
   $.getJSON(URLS.docProps(id), d => {
-    const statusMap = { '': '草稿', 'pending': '待簽核', 'signed': '已簽核' };
+    const docStatus = d.doc_status || d.sign_status || 'draft';
+    const docStatusLabel = STATUS_MAP[docStatus] || docStatus;
+    const docStatusBadge = STATUS_BADGE[docStatus] || 'secondary';
     $('#propertiesBody').html(`
       <table class="table table-sm table-bordered mb-0">
         <tr><th style="width:100px">案號</th><td>${escHtml(d.doc_number)}</td></tr>
@@ -1029,7 +1131,7 @@ function openPropertiesModal(id) {
         <tr><th>部門</th><td>${escHtml(d.department || '')}</td></tr>
         <tr><th>擁有人</th><td>${escHtml(d.owner_name || '')}</td></tr>
         <tr><th>資料夾</th><td>${escHtml(d.tab_name || '')} / ${escHtml(d.folder_name || '')}</td></tr>
-        <tr><th>狀態</th><td>${statusMap[d.sign_status || '']}</td></tr>
+        <tr><th>狀態</th><td><span class="badge bg-${docStatusBadge} ${docStatusBadge==='info'?'text-dark':''}">${docStatusLabel}</span></td></tr>
         <tr><th>加密</th><td>${d.is_encrypted ? '是' : '否'}</td></tr>
         <tr><th>備註</th><td>${escHtml(d.remarks || '')}</td></tr>
         <tr><th>建立時間</th><td>${d.created_at}</td></tr>

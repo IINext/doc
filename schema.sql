@@ -166,3 +166,79 @@ CREATE TABLE IF NOT EXISTS download_logs (
 CREATE INDEX IF NOT EXISTS idx_dl_logs_user ON download_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_dl_logs_doc  ON download_logs(doc_id);
 CREATE INDEX IF NOT EXISTS idx_dl_logs_ts   ON download_logs(downloaded_at);
+
+-- ═══════════════════════════════════════════════════════════════
+-- ISO 9001:2015 — 審核工作流程
+-- ═══════════════════════════════════════════════════════════════
+
+-- 審核人員角色池（管理員設定）
+CREATE TABLE IF NOT EXISTS approver_roles (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_type  TEXT NOT NULL CHECK(role_type IN ('reviewer','approver')),
+    UNIQUE(user_id, role_type)
+);
+
+-- 工作流程（每次送審一筆）
+CREATE TABLE IF NOT EXISTS approval_workflows (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id   INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    initiated_by  INTEGER NOT NULL REFERENCES users(id),
+    initiated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status        TEXT NOT NULL DEFAULT 'open'
+                  CHECK(status IN ('open','approved','rejected','withdrawn')),
+    closed_at     TIMESTAMP DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_wf_doc    ON approval_workflows(document_id);
+CREATE INDEX IF NOT EXISTS idx_wf_status ON approval_workflows(status);
+
+-- 工作流程步驟
+CREATE TABLE IF NOT EXISTS workflow_steps (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    workflow_id  INTEGER NOT NULL REFERENCES approval_workflows(id) ON DELETE CASCADE,
+    step_order   INTEGER NOT NULL,
+    step_type    TEXT NOT NULL CHECK(step_type IN ('review','approve')),
+    assignee_id  INTEGER NOT NULL REFERENCES users(id),
+    status       TEXT NOT NULL DEFAULT 'pending'
+                 CHECK(status IN ('pending','approved','rejected','skipped')),
+    comments     TEXT DEFAULT '',
+    acted_at     TIMESTAMP DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ws_workflow ON workflow_steps(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_ws_assignee ON workflow_steps(assignee_id, status);
+
+-- 簽核流程範本
+CREATE TABLE IF NOT EXISTS workflow_templates (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    is_active   INTEGER DEFAULT 1,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 簽核流程範本步驟
+CREATE TABLE IF NOT EXISTS workflow_template_steps (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NOT NULL REFERENCES workflow_templates(id) ON DELETE CASCADE,
+    step_order  INTEGER NOT NULL,
+    step_type   TEXT NOT NULL CHECK(step_type IN ('review','approve')),
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_wts_template ON workflow_template_steps(template_id);
+
+-- 完整稽核日誌（ISO 7.5 要求）
+CREATE TABLE IF NOT EXISTS audit_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id      INTEGER REFERENCES documents(id) ON DELETE SET NULL,
+    doc_number  TEXT NOT NULL DEFAULT '',
+    action      TEXT NOT NULL,
+    actor_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    actor_name  TEXT NOT NULL DEFAULT '',
+    details     TEXT DEFAULT '',
+    ip_address  TEXT DEFAULT '',
+    logged_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_al_doc    ON audit_log(doc_id);
+CREATE INDEX IF NOT EXISTS idx_al_actor  ON audit_log(actor_id);
+CREATE INDEX IF NOT EXISTS idx_al_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_al_ts     ON audit_log(logged_at);
