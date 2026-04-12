@@ -394,27 +394,45 @@ function toggleChangeSummary(cb) {
 }
 
 // 送審 — 先載入範本選單再顯示 Modal
-function submitWorkflow(docId) {
-  fetch('/api/workflow_templates')
-    .then(r => r.json())
-    .then(templates => {
-      // 填入範本選項
-      const sel = document.getElementById('wfTmplSelect');
-      sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
-      templates.forEach(t => {
-        const stepSummary = t.steps.map(s =>
-          (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
-        ).join(' → ');
-        const opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = t.name;
-        opt.dataset.summary = stepSummary || '（尚無步驟）';
-        sel.appendChild(opt);
-      });
-      document.getElementById('wfTmplSummary').textContent = '';
-      document.getElementById('wfSubmitDocId').value = docId;
-      new bootstrap.Modal(document.getElementById('wfTmplModal')).show();
-    });
+async function submitWorkflow(docId) {
+  const fileTypeId = parseInt(document.querySelector('[name="file_type_id"]')?.value) || null;
+
+  // 同時查詢：範本清單 + 此檔案類型的預設範本
+  const [templates, ftRes] = await Promise.all([
+    fetch('/api/workflow_templates').then(r => r.json()).catch(() => []),
+    fileTypeId
+      ? fetch(`/api/file_type_template?file_type_id=${fileTypeId}`).then(r => r.json()).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  // autoId：檔案類型預設範本 → 全域預設範本 → 無
+  let autoId = ftRes.template_id || null;
+  if (!autoId) {
+    const def = templates.find(t => t.is_default);
+    if (def) autoId = def.id;
+  }
+
+  const sel = document.getElementById('wfTmplSelect');
+  sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
+  templates.forEach(t => {
+    const stepSummary = t.steps.map(s =>
+      (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
+    ).join(' → ');
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    let label = t.name;
+    if (t.id === autoId && fileTypeId) label += ' ★ 此類型';
+    else if (t.is_default)             label += ' ★ 預設';
+    opt.textContent = label;
+    opt.dataset.summary = stepSummary || '（尚無步驟）';
+    if (t.id === autoId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  const picked = sel.options[sel.selectedIndex];
+  document.getElementById('wfTmplSummary').textContent = picked?.dataset.summary || '';
+  document.getElementById('wfSubmitDocId').value = docId;
+  new bootstrap.Modal(document.getElementById('wfTmplModal')).show();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

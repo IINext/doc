@@ -316,27 +316,47 @@ function withdrawWf() {
 async function openSubmitModal() {
   const sel = document.getElementById('submitTemplateId');
   sel.innerHTML = '<option value="">— 自動（使用預設範本）—</option>';
-  try {
-    const data = await fetch('/api/workflow_templates').then(r => r.json());
-    _templates = data;
-    data.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.id;
-      opt.textContent = t.name + (t.is_default ? ' ★ 預設' : '') + ` （${t.steps.length} 步驟）`;
-      if (t.is_default) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    updateTemplateInfo();
-  } catch(e) {}
+  const docFileTypeId = {{ doc.file_type_id | tojson }};
+
+  const [data, ftRes] = await Promise.all([
+    fetch('/api/workflow_templates').then(r => r.json()).catch(() => []),
+    docFileTypeId
+      ? fetch(`/api/file_type_template?file_type_id=${docFileTypeId}`).then(r => r.json()).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  _templates = data;
+  let autoId = ftRes.template_id || null;
+  if (!autoId) { const def = data.find(t => t.is_default); if (def) autoId = def.id; }
+
+  data.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    let label = t.name;
+    if (t.id === autoId && docFileTypeId) label += ' ★ 此類型';
+    else if (t.is_default)                label += ' ★ 預設';
+    label += ` （${t.steps.length} 步驟）`;
+    opt.textContent = label;
+    if (t.id === autoId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  updateTemplateInfo();
   new bootstrap.Modal(document.getElementById('submitModal')).show();
 }
 
 function updateTemplateInfo() {
   const tid = parseInt(document.getElementById('submitTemplateId').value);
   const info = document.getElementById('submitTemplateInfo');
+  const docFileTypeId = {{ doc.file_type_id | tojson }};
   if (!tid) { info.textContent = '將自動套用管理員設定的預設範本'; return; }
   const t = _templates.find(x => x.id === tid);
-  if (t) info.innerHTML = t.steps.map((s, i) =>
+  if (!t) return;
+  let hint = '';
+  if (t.file_type_id && t.file_type_id === docFileTypeId)
+    hint = `<div class="text-info small mb-1"><i class="bi bi-tag me-1"></i>此範本專為「${t.file_type_name}」類型文件設定，將自動套用</div>`;
+  else if (t.is_default && !t.file_type_id)
+    hint = `<div class="text-muted small mb-1"><i class="bi bi-star me-1"></i>全域預設範本</div>`;
+  info.innerHTML = hint + t.steps.map((s, i) =>
     `${i+1}. <span class="badge bg-${s.step_type==='review'?'primary':'success'}">${s.step_type==='review'?'初審':'核准'}</span> ${s.user_name}`
   ).join('　');
 }

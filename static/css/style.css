@@ -171,8 +171,63 @@
 }
 .perm-cell:hover { background: #f0f4ff; }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .dm-sidebar { width: 200px; }
-  .dm-table tbody td { max-width: 120px; }
+/* ── Mobile layout (< 768px) ── */
+@media (max-width: 767px) {
+
+  /* 整體 layout 改為相對定位容器 */
+  .dm-layout {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 側欄：佔滿全寬，覆蓋在主區上方 */
+  .dm-sidebar {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    z-index: 20;
+    border-right: none;
+    transition: transform .25s ease;
+  }
+  .dm-sidebar.mobile-hidden {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  /* 主區改為全寬 */
+  .dm-main { width: 100%; }
+
+  /* 工具列返回按鈕（桌面隱藏） */
+  #btnMobileBack { display: inline-flex !important; }
+
+  /* 路徑文字縮短 */
+  #currentPath { font-size: .75rem; max-width: 50vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* 精簡表格：只保留案號、主旨、狀態 */
+  #docTable th:nth-child(1),
+  #docTable td:nth-child(1) { display: none; }   /* checkbox */
+  #docTable th:nth-child(5),
+  #docTable td:nth-child(5),
+  #docTable th:nth-child(6),
+  #docTable td:nth-child(6),
+  #docTable th:nth-child(7),
+  #docTable td:nth-child(7),
+  #docTable th:nth-child(8),
+  #docTable td:nth-child(8),
+  #docTable th:nth-child(10),
+  #docTable td:nth-child(10),
+  #docTable th:nth-child(11),
+  #docTable td:nth-child(11) { display: none; }
+
+  /* 案號欄不換行，主旨允許截斷 */
+  #docTable td:nth-child(3) { white-space: nowrap; font-size: .8rem; }
+  #docTable td:nth-child(4) { max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* 點擊整列可操作 */
+  #docTable tbody tr { cursor: pointer; }
+
+  /* 工具列按鈕文字隱藏，只留圖示 */
+  .dm-toolbar .btn-label { display: none; }
 }

@@ -23,11 +23,11 @@
     <div class="card-body">
       <form method="post" class="row g-2 align-items-end">
         <input type="hidden" name="action" value="add_template">
-        <div class="col-md-4">
+        <div class="col-md-5">
           <label class="form-label small mb-1">範本名稱 <span class="text-danger">*</span></label>
           <input class="form-control form-control-sm" name="name" required placeholder="例：一般文件審核">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-5">
           <label class="form-label small mb-1">說明</label>
           <input class="form-control form-control-sm" name="description" placeholder="簡短說明此範本適用情境">
         </div>
@@ -68,11 +68,11 @@
               <label class="form-label small mb-1">範本名稱</label>
               <input class="form-control form-control-sm" name="name" value="{{ tmpl.name }}" required>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-5">
               <label class="form-label small mb-1">說明</label>
               <input class="form-control form-control-sm" name="description" value="{{ tmpl.description }}">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
               <div class="form-check mt-3">
                 <input class="form-check-input" type="checkbox" name="is_active" id="active_{{ tmpl.id }}"
                        {% if tmpl.is_active %}checked{% endif %}>
