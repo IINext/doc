@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文件管理系統 — IINext 企業文件平台</title>
+<link rel="icon" href="https://doc.mobime.tw/static/favicon.ico" onerror="this.remove()">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f7f4;color:#1a2e1a;min-height:100vh}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#0d3b2e 0%,#1a5c45 55%,#0e6655 100%);color:#fff;padding:72px 20px 90px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-tag{display:inline-block;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.45);color:#6ee7b7;font-size:.82rem;font-weight:700;padding:5px 16px;border-radius:20px;margin-bottom:20px;letter-spacing:.5px}
+.hero h1{font-size:2.7rem;font-weight:800;letter-spacing:-1px;margin-bottom:14px;line-height:1.15}
+.hero h1 em{color:#6ee7b7;font-style:normal}
+.hero p{font-size:1.1rem;opacity:.88;max-width:580px;margin:0 auto 36px;line-height:1.7}
+.btn{display:inline-block;padding:13px 34px;border-radius:10px;font-size:.98rem;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;border:none}
+.btn-primary{background:#10b981;color:#fff;box-shadow:0 4px 20px rgba(16,185,129,.4)}
+.btn-primary:hover{background:#059669;transform:translateY(-1px)}
+.btn-ghost{border:2px solid rgba(255,255,255,.5);color:#fff;margin-left:14px;background:transparent}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.hero-note{margin-top:18px;font-size:.85rem;opacity:.6}
+
+/* ── Stats ── */
+.stats{background:#fff;padding:40px 20px;border-bottom:1px solid #e5e7eb}
+.stats-inner{max-width:860px;margin:0 auto;display:flex;justify-content:center;gap:60px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat .num{font-size:2.2rem;font-weight:800;color:#059669}
+.stat .lbl{font-size:.88rem;color:#6b7280;margin-top:4px}
+
+/* ── Features ── */
+.section{padding:64px 20px}
+.section-inner{max-width:960px;margin:0 auto}
+.section-title{text-align:center;margin-bottom:44px}
+.section-title h2{font-size:1.7rem;font-weight:700;margin-bottom:8px}
+.section-title p{color:#6b7280;font-size:.95rem}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:24px}
+.feat-card{background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 2px 16px rgba(16,185,129,.07);border:1px solid #d1fae5}
+.feat-card .icon{font-size:2.2rem;margin-bottom:14px}
+.feat-card h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:#065f46}
+.feat-card p{font-size:.87rem;color:#4b5563;line-height:1.65}
+.feat-card ul{list-style:none;margin-top:8px}
+.feat-card ul li{font-size:.85rem;color:#374151;padding:3px 0;display:flex;gap:6px}
+.feat-card ul li::before{content:'✓';color:#10b981;font-weight:700;flex-shrink:0}
+
+/* ── Workflow ── */
+.workflow-section{background:#fff;padding:64px 20px}
+.wf-steps{max-width:860px;margin:32px auto 0;display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center}
+.wf-step{background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:18px 22px;text-align:center;min-width:140px;flex:1}
+.wf-step .wf-icon{font-size:1.8rem;margin-bottom:6px}
+.wf-step .wf-name{font-size:.88rem;font-weight:700;color:#065f46}
+.wf-step .wf-desc{font-size:.78rem;color:#6b7280;margin-top:3px}
+.wf-arrow{font-size:1.4rem;color:#10b981;padding:0 6px;flex-shrink:0}
+
+/* ── Pricing ── */
+.pricing{background:#f0f7f4;padding:70px 20px}
+.price-grid{max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
+.price-card{border:2px solid #d1fae5;border-radius:18px;padding:32px 24px;background:#fff;position:relative}
+.price-card.featured{border-color:#10b981;box-shadow:0 8px 40px rgba(16,185,129,.15)}
+.price-card.featured::before{content:'推薦';position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:3px 18px;border-radius:20px;font-size:.78rem;font-weight:700}
+.price-name{font-weight:700;font-size:.9rem;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.price-amount{font-size:2.1rem;font-weight:800;color:#0d3b2e;margin-bottom:4px;line-height:1}
+.price-amount span{font-size:.95rem;color:#6b7280;font-weight:400}
+.price-desc{font-size:.87rem;color:#6b7280;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f0f0f0}
+.price-feat{list-style:none;font-size:.87rem;color:#374151;margin-bottom:22px}
+.price-feat li{padding:5px 0;display:flex;gap:8px;align-items:flex-start}
+.price-feat li::before{content:'✓';color:#10b981;font-weight:700;flex-shrink:0;margin-top:1px}
+.price-btn{display:block;padding:11px;border-radius:10px;background:#0d3b2e;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%;font-size:.93rem;text-align:center;text-decoration:none;transition:.2s}
+.price-btn:hover{background:#1a5c45}
+.price-btn.green{background:#10b981}.price-btn.green:hover{background:#059669}
+.price-btn.gray{background:#f3f4f6;color:#6b7280}.price-btn.gray:hover{background:#e5e7eb;color:#374151}
+
+/* ── CTA ── */
+.cta{background:linear-gradient(135deg,#0d3b2e,#0e6655);color:#fff;padding:60px 20px;text-align:center}
+.cta h2{font-size:1.7rem;font-weight:700;margin-bottom:10px}
+.cta p{opacity:.8;margin-bottom:28px;font-size:.95rem}
+
+/* ── Footer ── */
+footer{background:#0a2318;color:#6b7280;text-align:center;padding:28px;font-size:.84rem}
+footer a{color:#9ca3af;text-decoration:none}
+
+@media(max-width:600px){
+  .hero h1{font-size:1.9rem}
+  .btn-ghost{margin:12px 0 0;display:block;text-align:center}
+  .wf-arrow{transform:rotate(90deg)}
+  .stats-inner{gap:32px}
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-tag">📁 企業文件管理平台</div>
+  <h1>文件不再<em>找不到</em><br>流程不再<em>搞不清</em></h1>
+  <p>集中管理公司所有文件，內建多層簽核流程、稽核紀錄、到期提醒，<br>讓文件管理符合 ISO 規範要求。</p>
+  <a href="https://doc.mobime.tw" target="_blank" class="btn btn-primary">📂 立即試用系統</a>
+  <a href="https://2next.com.tw" target="_blank" class="btn btn-ghost">洽詢導入</a>
+  <div class="hero-note">可部署於自有伺服器 · 資料完全自主</div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="num">多層</div><div class="lbl">簽核流程設計</div></div>
+    <div class="stat"><div class="num">100%</div><div class="lbl">操作紀錄可追溯</div></div>
+    <div class="stat"><div class="num">自動</div><div class="lbl">到期提醒通知</div></div>
+    <div class="stat"><div class="num">ISO</div><div class="lbl">文件管制規範支援</div></div>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="section">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>完整功能，開箱即用</h2>
+      <p>從文件上傳到簽核完成，全流程線上管理</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="icon">🗂️</div>
+        <h3>階層式資料夾管理</h3>
+        <p>支援公共文件與個人文件區，資料夾可多層巢狀，找文件快速直覺。</p>
+        <ul>
+          <li>公共 / 個人 / 分享區三區並存</li>
+          <li>個人頁籤自由新增、命名</li>
+          <li>批次匯入既有文件</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="icon">✍️</div>
+        <h3>多步驟簽核流程</h3>
+        <p>自訂簽核範本，支援初審→核准多層流程，指定審核人員，簽核進度即時追蹤。</p>
+        <ul>
+          <li>簽核範本一鍵套用</li>
+          <li>流程中可撤回重送</li>
+          <li>我的待辦任務集中顯示</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="icon">🔍</div>
+        <h3>稽核軌跡 & 下載紀錄</h3>
+        <p>每一筆操作都有紀錄，包含上傳、修改、下載、簽核，完整符合 ISO 稽核要求。</p>
+        <ul>
+          <li>全操作歷程追蹤</li>
+          <li>下載紀錄 + 稽核日誌</li>
+          <li>匯出 Excel 月報</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="icon">⏰</div>
+        <h3>文件到期管理</h3>
+        <p>設定文件有效期限，系統自動提醒即將到期或已逾期的文件，避免使用過時版本。</p>
+        <ul>
+          <li>30 天前自動預警</li>
+          <li>管理員集中到期審查</li>
+          <li>版本歷程完整保留</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="icon">🔒</div>
+        <h3>權限與加密管控</h3>
+        <p>群組權限設定，重要文件可加密保護，分享範圍精細控制。</p>
+        <ul>
+          <li>群組 / 個人分享控管</li>
+          <li>檔案加密保護</li>
+          <li>帳號停用即時生效</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="icon">📊</div>
+        <h3>管理儀表板</h3>
+        <p>一眼掌握文件總數、待審件數、逾期狀況，管理者即時了解全局。</p>
+        <ul>
+          <li>KPI 數字即時呈現</li>
+          <li>待辦任務快速入口</li>
+          <li>Excel 月報一鍵匯出</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workflow -->
+<div class="workflow-section">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>簽核流程，清晰透明</h2>
+      <p>從上傳到歸檔，每個步驟都有跡可查</p>
+    </div>
+    <div class="wf-steps">
+      <div class="wf-step"><div class="wf-icon">📤</div><div class="wf-name">上傳文件</div><div class="wf-desc">建立文件資料</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">📋</div><div class="wf-name">送審</div><div class="wf-desc">選擇簽核範本</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">👁️</div><div class="wf-name">初審</div><div class="wf-desc">初審人員審閱</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">✅</div><div class="wf-name">核准</div><div class="wf-desc">主管核准簽署</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">📁</div><div class="wf-name">歸檔</div><div class="wf-desc">自動更新狀態</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Pricing -->
+<div class="pricing">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>導入方案</h2>
+      <p>線上試用，確認符合需求後再洽談正式導入</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-name">線上試用</div>
+        <div class="price-amount">免費 <span></span></div>
+        <div class="price-desc">在我們的伺服器上體驗完整功能</div>
+        <ul class="price-feat">
+          <li>完整文件管理功能</li>
+          <li>簽核流程試用</li>
+          <li>稽核紀錄查閱</li>
+          <li>最多 10 位使用者</li>
+          <li>資料保留 90 天</li>
+        </ul>
+        <a href="https://doc.mobime.tw" target="_blank" class="price-btn green">立即試用</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-name">正式導入</div>
+        <div class="price-amount">洽詢 <span>一次性費用</span></div>
+        <div class="price-desc">部署於您自己的伺服器，資料完全自主</div>
+        <ul class="price-feat">
+          <li>無使用者數量限制</li>
+          <li>部署於客戶自有伺服器</li>
+          <li>原始碼授權</li>
+          <li>安裝設定 & 教育訓練</li>
+          <li>客製化分類與流程設定</li>
+          <li>一年技術支援</li>
+        </ul>
+        <a href="https://2next.com.tw" target="_blank" class="price-btn green">聯繫洽詢</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">客製整合</div>
+        <div class="price-amount">洽詢 <span></span></div>
+        <div class="price-desc">與現有系統整合開發</div>
+        <ul class="price-feat">
+          <li>ERP / OA 系統串接</li>
+          <li>API 整合開發</li>
+          <li>客製化簽核流程</li>
+          <li>品牌 UI 客製化</li>
+          <li>長期維護合約</li>
+        </ul>
+        <a href="https://2next.com.tw" target="_blank" class="price-btn">聯繫洽詢</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h2>準備好讓文件管理上軌道了嗎？</h2>
+  <p>線上試用免費，導入由 IINext 全程協助，讓您的組織快速上手</p>
+  <a href="https://doc.mobime.tw" target="_blank" class="btn btn-primary" style="margin-right:12px">📂 免費試用</a>
+  <a href="https://2next.com.tw" target="_blank" class="btn btn-ghost">洽詢 IINext</a>
+</div>
+
+<footer>
+  &copy; 2026 <a href="https://2next.com.tw">IINext 文件管理系統</a> &nbsp;|&nbsp; 讓企業文件管制從此不再是難題
+</footer>
+</body>
+</html>
