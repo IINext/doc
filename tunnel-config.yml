@@ -5,4 +5,12 @@ ingress:
     service: https://127.0.0.1:5100
     originRequest:
       noTLSVerify: true
+  - hostname: 2next.com.tw
+    service: https://127.0.0.1:5200
+    originRequest:
+      noTLSVerify: true
+  - hostname: www.2next.com.tw
+    service: https://127.0.0.1:5200
+    originRequest:
+      noTLSVerify: true
   - service: http_status:404

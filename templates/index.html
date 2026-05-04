@@ -919,9 +919,17 @@ function submitFolderModal() {
 
 function deleteFolder(folderId) {
   if (!confirm('確定要刪除此資料夾？')) return;
-  $.post(URLS.folderDel(folderId), {}, res => {
-    if (res.success) refreshFolderTree();
-    else alert(res.msg);
+  $.ajax({
+    url: URLS.folderDel(folderId),
+    type: 'POST',
+    dataType: 'json',
+    success: res => {
+      if (res.success) refreshFolderTree();
+      else alert(res.msg);
+    },
+    error: (xhr) => {
+      alert('刪除失敗：' + (xhr.responseJSON?.msg || xhr.statusText || '伺服器錯誤'));
+    }
   });
 }
 
