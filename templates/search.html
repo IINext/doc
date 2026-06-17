@@ -123,10 +123,21 @@
                    class="btn btn-outline-secondary" title="查詢">
                   <i class="bi bi-eye"></i>
                 </a>
+                {% if not session.is_admin and s in ('in_review', 'released', 'superseded', 'archived') %}
+                  {% if s == 'in_review' %}
+                  <button class="btn btn-outline-primary" disabled title="審核中，無法修改">
+                  {% elif s == 'released' %}
+                  <button class="btn btn-outline-primary" disabled title="已發行，無法修改">
+                  {% else %}
+                  <button class="btn btn-outline-primary" disabled title="文件已封存/取代，無法修改">
+                  {% endif %}
+                  <i class="bi bi-pencil"></i></button>
+                {% else %}
                 <a href="{{ url_for('doc_edit', doc_id=d.id) }}"
                    class="btn btn-outline-primary" title="修改">
                   <i class="bi bi-pencil"></i>
                 </a>
+                {% endif %}
                 <a href="{{ url_for('doc_download', doc_id=d.id) }}"
                    class="btn btn-outline-success" title="下載">
                   <i class="bi bi-download"></i>

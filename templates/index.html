@@ -66,6 +66,9 @@
   <div class="dm-main d-flex flex-column">
     <!-- 工具列 -->
     <div class="dm-toolbar d-flex align-items-center gap-2 px-3 py-2 border-bottom bg-light">
+      <button class="btn btn-sm btn-outline-secondary" id="btnMobileBack" onclick="mobileShowSidebar()" style="display:none" title="返回資料夾">
+        <i class="bi bi-arrow-left me-1"></i><span class="btn-label">資料夾</span>
+      </button>
       <span class="text-muted small me-auto" id="currentPath">請從左側選擇資料夾</span>
       <button class="btn btn-sm btn-success" id="btnNewDoc" onclick="openNewDoc()" title="新增文件">
         <i class="bi bi-plus-lg me-1"></i>新增
@@ -542,6 +545,17 @@ function renderFolderTree(container, folders, tabId, level=0) {
   });
 }
 
+function mobileShowSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-hidden');
+  document.getElementById('btnMobileBack').style.display = 'none';
+}
+function mobileHideSidebar() {
+  if (window.innerWidth < 768) {
+    document.getElementById('sidebar').classList.add('mobile-hidden');
+    document.getElementById('btnMobileBack').style.display = '';
+  }
+}
+
 function selectFolder(folderId, tabId) {
   isSharedView = false;
   currentFolderId = folderId;
@@ -552,6 +566,7 @@ function selectFolder(folderId, tabId) {
     $('#currentPath').text(info.breadcrumb || '');
   });
   loadDocs();
+  mobileHideSidebar();
 }
 
 // ── Shared Docs ───────────────────────────────────────────────
@@ -581,7 +596,7 @@ function toggleSharedTab(autoOwnerId) {
             <i class="bi bi-person-fill text-secondary me-2 small"></i>
             <span class="small flex-grow-1">${escHtml(o.name)}</span>
           </div>`);
-        item.on('click', () => loadSharedByOwner(o.id, o.name, item));
+        item.on('click', () => { loadSharedByOwner(o.id, o.name, item); mobileHideSidebar(); });
         list.append(item);
         // 還原時自動選取上次的分享者
         if (autoOwnerId && o.id === autoOwnerId) {
@@ -787,7 +802,7 @@ function handleDocAction(action, doc) {
     case 'download': downloadDoc(id); break;
     case 'history':  location.href = URLS.docHistory(id); break;
     case 'properties': openPropertiesModal(id); break;
-    case 'send_sign': sendSign(id); break;
+    case 'send_sign': sendSign(id, doc?.file_type_id); break;
     case 'withdraw_workflow': withdrawWorkflow(id); break;
     case 'refresh':  refreshDocs(); break;
   }
@@ -904,9 +919,17 @@ function submitFolderModal() {
 
 function deleteFolder(folderId) {
   if (!confirm('確定要刪除此資料夾？')) return;
-  $.post(URLS.folderDel(folderId), {}, res => {
-    if (res.success) refreshFolderTree();
-    else alert(res.msg);
+  $.ajax({
+    url: URLS.folderDel(folderId),
+    type: 'POST',
+    dataType: 'json',
+    success: res => {
+      if (res.success) refreshFolderTree();
+      else alert(res.msg);
+    },
+    error: (xhr) => {
+      alert('刪除失敗：' + (xhr.responseJSON?.msg || xhr.statusText || '伺服器錯誤'));
+    }
   });
 }
 
@@ -959,27 +982,38 @@ function downloadDoc(id) {
   location.href = URLS.docDownload(id);
 }
 
-function sendSign(id) {
-  // 載入範本清單，開啟選擇 Modal
-  fetch('/api/workflow_templates')
-    .then(r => r.json())
-    .then(templates => {
-      const sel = document.getElementById('idxWfTmplSelect');
-      sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
-      templates.forEach(t => {
-        const stepSummary = t.steps.map(s =>
-          (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
-        ).join(' → ');
-        const opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = t.name;
-        opt.dataset.summary = stepSummary || '（尚無步驟）';
-        sel.appendChild(opt);
-      });
-      document.getElementById('idxWfTmplSummary').textContent = '';
-      document.getElementById('idxWfDocId').value = id;
-      new bootstrap.Modal(document.getElementById('idxWfTmplModal')).show();
-    });
+async function sendSign(id, fileTypeId) {
+  const [templates, ftRes] = await Promise.all([
+    fetch('/api/workflow_templates').then(r => r.json()).catch(() => []),
+    fileTypeId
+      ? fetch(`/api/file_type_template?file_type_id=${fileTypeId}`).then(r => r.json()).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  let autoId = ftRes.template_id || null;
+  if (!autoId) { const def = templates.find(t => t.is_default); if (def) autoId = def.id; }
+
+  const sel = document.getElementById('idxWfTmplSelect');
+  sel.innerHTML = '<option value="">── 使用全域審核人員 ──</option>';
+  templates.forEach(t => {
+    const stepSummary = t.steps.map(s =>
+      (s.step_type === 'review' ? '初審' : '核准') + ':' + s.user_name
+    ).join(' → ');
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    let label = t.name;
+    if (t.id === autoId && fileTypeId) label += ' ★ 此類型';
+    else if (t.is_default)             label += ' ★ 預設';
+    opt.textContent = label;
+    opt.dataset.summary = stepSummary || '（尚無步驟）';
+    if (t.id === autoId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  const picked = sel.options[sel.selectedIndex];
+  document.getElementById('idxWfTmplSummary').textContent = picked?.dataset.summary || '';
+  document.getElementById('idxWfDocId').value = id;
+  new bootstrap.Modal(document.getElementById('idxWfTmplModal')).show();
 }
 
 document.getElementById('idxWfTmplSelect')?.addEventListener('change', function() {

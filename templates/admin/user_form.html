@@ -11,19 +11,20 @@
 
   <div class="card shadow-sm">
     <div class="card-body">
-      <form method="post">
+      <form method="post" autocomplete="off">
         {% if not edit_user %}
         <div class="mb-3">
           <label class="form-label fw-semibold">帳號 <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" name="username" required autofocus>
+          <input type="text" class="form-control" name="new_uname" id="f_username"
+                 required autocomplete="off">
         </div>
         {% endif %}
         <div class="mb-3">
           <label class="form-label fw-semibold">
             密碼 {% if not edit_user %}<span class="text-danger">*</span>{% else %}<small class="text-muted">（留空不修改）</small>{% endif %}
           </label>
-          <input type="password" class="form-control" name="password"
-                 {{ 'required' if not edit_user else '' }}>
+          <input type="password" class="form-control" name="new_pwd" id="f_password"
+                 {{ 'required' if not edit_user else '' }} autocomplete="new-password">
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">姓名 <span class="text-danger">*</span></label>
@@ -57,4 +58,21 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if not edit_user %}
+<script>
+  /* Chrome 會在 DOMContentLoaded 後才填入 autocomplete，用 setTimeout 強制清空 */
+  function clearAutoFill() {
+    const u = document.getElementById('f_username');
+    const p = document.getElementById('f_password');
+    if (u) u.value = '';
+    if (p) p.value = '';
+  }
+  clearAutoFill();
+  setTimeout(clearAutoFill, 100);
+  setTimeout(clearAutoFill, 300);
+</script>
+{% endif %}
 {% endblock %}

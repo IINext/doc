@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}檔案類型 — 系統設定{% endblock %}
 {% block content %}
-<div class="container py-3" style="max-width:800px">
+<div class="container py-3" style="max-width:900px">
   <div class="d-flex align-items-center mb-3">
     <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
       <i class="bi bi-arrow-left"></i>
@@ -41,9 +41,15 @@
   <!-- 清單 -->
   <div class="card shadow-sm">
     <div class="table-responsive">
-      <table class="table table-hover table-sm mb-0">
+      <table class="table table-hover table-sm mb-0 align-middle">
         <thead class="table-light">
-          <tr><th>代碼</th><th>名稱</th><th>說明</th><th></th></tr>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th>說明</th>
+            <th>適用簽核範本</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {% for ft in file_types %}
@@ -52,12 +58,27 @@
             <td>
               <span class="view-name-{{ ft.id }}">{{ ft.name }}</span>
               <input type="text" class="form-control form-control-sm d-none edit-name-{{ ft.id }}"
-                     value="{{ ft.name }}" style="width:150px">
+                     value="{{ ft.name }}" style="width:140px">
             </td>
             <td>
               <span class="view-desc-{{ ft.id }}">{{ ft.description }}</span>
               <input type="text" class="form-control form-control-sm d-none edit-desc-{{ ft.id }}"
-                     value="{{ ft.description }}" style="width:200px">
+                     value="{{ ft.description }}" style="width:180px">
+            </td>
+            <td style="min-width:200px">
+              <form method="post" id="tmplForm-{{ ft.id }}">
+                <input type="hidden" name="action" value="set_template">
+                <input type="hidden" name="id" value="{{ ft.id }}">
+                <select class="form-select form-select-sm" name="template_id"
+                        onchange="document.getElementById('tmplForm-{{ ft.id }}').submit()">
+                  <option value="">— 不指定 —</option>
+                  {% for t in templates %}
+                  <option value="{{ t.id }}" {% if ft.tmpl_id == t.id %}selected{% endif %}>
+                    {{ t.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </form>
             </td>
             <td>
               <div class="btn-group btn-group-sm view-btns-{{ ft.id }}">
@@ -84,11 +105,14 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="4" class="text-muted text-center py-3">尚無資料</td></tr>
+          <tr><td colspan="5" class="text-muted text-center py-3">尚無資料</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+  </div>
+  <div class="form-text mt-2">
+    <i class="bi bi-info-circle me-1"></i>「適用簽核範本」欄選擇後立即儲存；送審時系統將依文件類型自動套用對應範本。
   </div>
 </div>
 
@@ -116,5 +140,6 @@ function saveRow(id) {
   $('#editDesc').val($(`.edit-desc-${id}`).val());
   $('#editForm').submit();
 }
+
 </script>
 {% endblock %}

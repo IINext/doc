@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}使用者管理 — 系統設定{% endblock %}
 {% block content %}
+{% set _uid = session.get('user_id') %}
 <div class="container py-3">
   <div class="d-flex align-items-center mb-3">
     <a href="{{ url_for('admin_settings') }}" class="btn btn-sm btn-outline-secondary me-2">
@@ -43,11 +44,18 @@
               {% endif %}
             </td>
             <td class="text-muted">{{ (u.created_at or '')[:10] }}</td>
-            <td>
+            <td class="text-nowrap">
               <a href="{{ url_for('admin_user_edit', uid=u.id) }}"
-                 class="btn btn-xs btn-outline-primary">
+                 class="btn btn-xs btn-outline-primary me-1" title="修改">
                 <i class="bi bi-pencil"></i>
               </a>
+              {% if u.id != user.id %}
+              <button class="btn btn-xs btn-outline-danger btn-delete-user"
+                      data-uid="{{ u.id }}" data-name="{{ u.name }}"
+                      title="刪除">
+                <i class="bi bi-trash"></i>
+              </button>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -56,4 +64,30 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).on('click', '.btn-delete-user', function() {
+  const uid  = $(this).data('uid');
+  const name = $(this).data('name');
+  if (!confirm(`確定要刪除使用者「${name}」？\n\n該使用者的文件與資料夾將轉移給目前管理員。`)) return;
+  const $row = $(this).closest('tr');
+  $.ajax({
+    url: `/admin/users/${uid}/delete`,
+    type: 'POST',
+    dataType: 'json',
+    success: res => {
+      if (res.success) {
+        $row.fadeOut(300, () => $row.remove());
+      } else {
+        alert('刪除失敗：' + res.msg);
+      }
+    },
+    error: xhr => {
+      alert('刪除失敗：' + (xhr.responseJSON?.msg || '伺服器錯誤'));
+    }
+  });
+});
+</script>
 {% endblock %}

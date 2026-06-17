@@ -100,6 +100,19 @@ def _pg_sql(sql):
 
 def get_db():
     db = getattr(g, '_database', None)
+    if db is not None:
+        # 檢查連線是否仍然有效（closed=0 表示正常）
+        if db.closed:
+            db = None
+        else:
+            try:
+                db.cursor().execute('SELECT 1')
+            except Exception:
+                try:
+                    db.close()
+                except Exception:
+                    pass
+                db = None
     if db is None:
         db = g._database = psycopg2.connect(
             PG_DSN,
@@ -283,8 +296,41 @@ def init_db():
 
 
 def migrate_db():
-    """PostgreSQL 版本：schema 已透過 pg_schema.sql 管理，此函式為空操作。"""
-    pass
+    """執行增量 schema 變更（冪等）。使用獨立 psycopg2 連線，不依賴 Flask request context。"""
+    try:
+        conn = psycopg2.connect(PG_DSN)
+        conn.autocommit = False
+        cur = conn.cursor()
+
+        # 1. 加 default_template_id 欄位到 file_types
+        try:
+            cur.execute(
+                'ALTER TABLE file_types ADD COLUMN default_template_id INTEGER REFERENCES workflow_templates(id) ON DELETE SET NULL'
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()  # 欄位已存在，忽略
+
+        # 2. 把舊的 workflow_templates.file_type_id 資料遷移過來
+        try:
+            cur.execute('''
+                UPDATE file_types ft
+                SET default_template_id = sub.wt_id
+                FROM (
+                    SELECT wt.file_type_id AS ft_id, MIN(wt.id) AS wt_id
+                    FROM workflow_templates wt
+                    WHERE wt.file_type_id IS NOT NULL AND wt.is_active = TRUE
+                    GROUP BY wt.file_type_id
+                ) sub
+                WHERE ft.id = sub.ft_id AND ft.default_template_id IS NULL
+            ''')
+            conn.commit()
+        except Exception:
+            conn.rollback()
+
+        conn.close()
+    except Exception:
+        pass
 
 # ── Auth Decorators ───────────────────────────────────────────
 def login_required(f):
@@ -560,6 +606,14 @@ def download_for_shared_user(doc, user_name):
     return send_file(src_path, download_name=doc['original_filename'], as_attachment=True)
 
 # ════════════════════════════════════════════════════════════════
+# Landing Page
+# ════════════════════════════════════════════════════════════════
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
+
+# ════════════════════════════════════════════════════════════════
 # Auth Routes
 # ════════════════════════════════════════════════════════════════
 @app.route('/login', methods=['GET', 'POST'])
@@ -570,7 +624,21 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         user = query_db('SELECT * FROM users WHERE username=?', [username], one=True)
-        if user and check_password_hash(user['password_hash'], password):
+        pw_ok = False
+        if user:
+            h = user['password_hash'] or ''
+            try:
+                pw_ok = check_password_hash(h, password)
+            except (ValueError, Exception):
+                # 相容即時通產生的 bcrypt 格式 ($2b$...)
+                if h.startswith('$2b$') or h.startswith('$2a$'):
+                    try:
+                        from passlib.context import CryptContext
+                        _bcrypt_ctx = CryptContext(schemes=['bcrypt'], deprecated='auto')
+                        pw_ok = _bcrypt_ctx.verify(password, h)
+                    except Exception:
+                        pw_ok = False
+        if pw_ok:
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['is_admin'] = bool(user['is_admin'])
@@ -858,7 +926,8 @@ def folder_delete(folder_id):
     if _is_public_folder(folder_id) and not user['is_admin']:
         return jsonify({'success': False, 'msg': '公共頁籤的資料夾需要管理員權限'})
     if folder['owner_id'] != user['id'] and not user['is_admin']:
-        return jsonify({'success': False, 'msg': '無權限'})
+        return jsonify({'success': False, 'msg': '無權限，只能刪除自己建立的資料夾'})
+    # 不允許刪除有作用中文件的資料夾
     doc_cnt = query_db(
         'SELECT COUNT(*) AS c FROM documents WHERE folder_id=? AND is_deleted=0',
         [folder_id], one=True
@@ -869,6 +938,21 @@ def folder_delete(folder_id):
                          [folder_id], one=True)
     if child_cnt and child_cnt['c'] > 0:
         return jsonify({'success': False, 'msg': '資料夾內有子資料夾，請先刪除'})
+    # 永久清除此資料夾回收夾中的文件（is_deleted=1），解除 FK 約束後再刪資料夾
+    trashed = query_db(
+        'SELECT stored_filename FROM documents WHERE folder_id=? AND is_deleted=1',
+        [folder_id]
+    )
+    for doc in trashed:
+        fn = doc['stored_filename']
+        if fn:
+            fp = os.path.join(UPLOAD_FOLDER, fn)
+            if os.path.exists(fp):
+                try:
+                    os.remove(fp)
+                except OSError:
+                    pass
+    execute_db('DELETE FROM documents WHERE folder_id=? AND is_deleted=1', [folder_id])
     execute_db('DELETE FROM folders WHERE id=?', [folder_id])
     return jsonify({'success': True})
 
@@ -1802,18 +1886,36 @@ def doc_submit_workflow(doc_id):
         return jsonify({'success': False,
                         'msg': f'送審前請完善以下欄位：{", ".join(missing)}'})
 
-    # 取得步驟來源：優先使用指定範本 → 預設範本 → 全域角色池
+    # 取得步驟來源：指定範本 → 文件類型對應範本 → 全域預設範本 → 全域角色池
     template_id = request.form.get('template_id', type=int)
     steps_src = []  # list of (step_type, user_id)
 
     if not template_id:
-        # 自動套用預設範本（管理員在範本管理頁設定）
-        default_tmpl = query_db(
-            "SELECT id FROM workflow_templates WHERE is_default=1 AND is_active=1 LIMIT 1",
-            one=True
-        )
-        if default_tmpl:
-            template_id = default_tmpl['id']
+        doc_file_type_id = doc['file_type_id']
+        if doc_file_type_id:
+            # 優先找檔案類型設定的預設範本
+            type_tmpl = query_db(
+                '''SELECT wt.id FROM file_types ft
+                   JOIN workflow_templates wt ON ft.default_template_id = wt.id
+                   WHERE ft.id=? AND wt.is_active=1''',
+                [doc_file_type_id], one=True
+            )
+            if type_tmpl:
+                template_id = type_tmpl['id']
+        if not template_id:
+            # 再找全域預設範本（is_default=1 且無綁定文件類型）
+            default_tmpl = query_db(
+                "SELECT id FROM workflow_templates WHERE is_default=1 AND is_active=1 AND file_type_id IS NULL LIMIT 1",
+                one=True
+            )
+            if not default_tmpl:
+                # 最後找任一 is_default=1
+                default_tmpl = query_db(
+                    "SELECT id FROM workflow_templates WHERE is_default=1 AND is_active=1 LIMIT 1",
+                    one=True
+                )
+            if default_tmpl:
+                template_id = default_tmpl['id']
 
     if template_id:
         tmpl = query_db(
@@ -2330,9 +2432,7 @@ def admin_approvers():
 @login_required
 def api_workflow_templates():
     """回傳啟用中的簽核範本清單（含步驟），供前端選擇用。"""
-    tmpls = query_db(
-        'SELECT * FROM workflow_templates WHERE is_active=1 ORDER BY name'
-    )
+    tmpls = query_db('SELECT * FROM workflow_templates WHERE is_active=1 ORDER BY name')
     result = []
     for t in tmpls:
         steps = query_db('''
@@ -2452,7 +2552,12 @@ def admin_workflow_templates():
         return redirect(url_for('admin_workflow_templates'))
 
     # GET：讀取所有範本及其步驟
-    tmpls = query_db('SELECT * FROM workflow_templates ORDER BY name')
+    tmpls = query_db('''
+        SELECT wt.*, ft.name AS file_type_name
+        FROM workflow_templates wt
+        LEFT JOIN file_types ft ON wt.file_type_id=ft.id
+        ORDER BY wt.name
+    ''')
     template_list = []
     for t in tmpls:
         steps = query_db('''
@@ -2466,15 +2571,30 @@ def admin_workflow_templates():
         template_list.append(item)
 
     all_users = query_db('SELECT id, name, department FROM users ORDER BY name')
+    file_types = query_db('SELECT id, name FROM file_types ORDER BY name')
     return render_template('admin/workflow_templates.html',
                            user=user,
                            templates=template_list,
-                           all_users=all_users)
+                           all_users=all_users,
+                           file_types=file_types)
 
 
 # ════════════════════════════════════════════════════════════════
 # ISO 9001:2015 — 到期文件預警
 # ════════════════════════════════════════════════════════════════
+
+@app.route('/api/file_type_template')
+@login_required
+def api_file_type_template():
+    """回傳指定檔案類型的預設簽核範本 id（供送審 Modal 自動預選）。"""
+    ft_id = request.args.get('file_type_id', type=int)
+    if not ft_id:
+        return jsonify({'template_id': None})
+    row = query_db(
+        'SELECT default_template_id FROM file_types WHERE id=?', [ft_id], one=True
+    )
+    return jsonify({'template_id': row['default_template_id'] if row else None})
+
 
 @app.route('/api/expiry_count')
 @login_required
@@ -2588,24 +2708,26 @@ def search():
             params = [uid, uid, uid]
 
         # ── 全文搜尋條件 ──────────────────────────────────────
-        # 策略：tsvector @@ plainto_tsquery 做精確關鍵字匹配（有排名）
-        #        ILIKE + trigram index 做子字串匹配（中文最佳）
-        # 兩者取 OR，以 ts_rank 作主要排序
-        search_cond  = ''
-        search_rank  = '0'
-        like_val     = f'%{q}%' if q else None
+        # 策略：ILIKE 做子字串匹配（中文最佳）
+        # 注意：params 順序必須對應 SQL 中 %s 出現的位置
+        #       SELECT ts_rank %s → WHERE perm %s × n → WHERE search %s
+        search_cond   = ''
+        search_rank   = '0'
+        params_select = []   # SELECT 子句用到的 %s 參數（最先）
+        params_search = []   # WHERE search 條件用到的 %s 參數（最後）
+        like_val      = f'%{q}%' if q else None
 
         if q:
-            # 安全地將使用者輸入轉為 tsquery（忽略特殊符號）
             search_cond = '''AND (
-                d.search_vector @@ plainto_tsquery('simple', %s)
-                OR (coalesce(d.doc_number,'') || ' ' || coalesce(d.subject,'') || ' ' ||
-                    coalesce(d.remarks,'') || ' ' || coalesce(d.department,'') || ' ' ||
-                    coalesce(f.name,'') || ' ' || coalesce(u.name,''))
-                   ILIKE %s
+                (coalesce(d.doc_number,'') || ' ' || coalesce(d.subject,'') || ' ' ||
+                 coalesce(d.remarks,'') || ' ' || coalesce(d.department,'') || ' ' ||
+                 coalesce(f.name,'') || ' ' || coalesce(u.name,''))
+                ILIKE %s
             )'''
-            search_rank = "ts_rank(d.search_vector, plainto_tsquery('simple', %s))"
-            params += [q, like_val, q]   # tsquery, ILIKE, ts_rank
+            search_rank   = '1'   # 不用 ts_rank，避免 search_vector 欄位依賴
+            params_search = [like_val]
+
+        params = params_select + params + params_search
 
         # ── 篩選條件 ──────────────────────────────────────────
         filter_cond = ''
@@ -2621,10 +2743,10 @@ def search():
 
         results = query_db(f'''
             SELECT d.*,
-                   ft.name  AS file_type_name,
-                   u.name   AS owner_name,
-                   f.name   AS folder_name,
-                   t.name   AS tab_name,
+                   ft.name AS file_type_name,
+                   u.name  AS owner_name,
+                   f.name  AS folder_name,
+                   t.name  AS tab_name,
                    {search_rank} AS relevance
             FROM documents d
             LEFT JOIN file_types ft ON d.file_type_id = ft.id
@@ -3046,9 +3168,37 @@ def admin_file_types():
             fid = request.form.get('id', type=int)
             execute_db('DELETE FROM file_types WHERE id=?', [fid])
             flash('刪除成功', 'success')
+        elif action == 'set_template':
+            fid = request.form.get('id', type=int)
+            tid = request.form.get('template_id', type=int) or None
+            # 直接更新 file_types 的 default_template_id（不影響其他列）
+            execute_db('UPDATE file_types SET default_template_id=? WHERE id=?', [tid, fid])
         return redirect(url_for('admin_file_types'))
-    file_types = query_db('SELECT * FROM file_types ORDER BY code')
-    return render_template('admin/file_types.html', user=user, file_types=file_types)
+    try:
+        file_types = query_db('''
+            SELECT ft.*,
+                   ft.default_template_id AS tmpl_id,
+                   wt.name                AS tmpl_name
+            FROM file_types ft
+            LEFT JOIN workflow_templates wt ON ft.default_template_id = wt.id
+            ORDER BY ft.code
+        ''')
+    except Exception:
+        # default_template_id 欄位尚未建立（migrate_db 尚未執行）→ 先執行遷移再重試
+        migrate_db()
+        file_types = query_db('''
+            SELECT ft.*,
+                   ft.default_template_id AS tmpl_id,
+                   wt.name                AS tmpl_name
+            FROM file_types ft
+            LEFT JOIN workflow_templates wt ON ft.default_template_id = wt.id
+            ORDER BY ft.code
+        ''')
+    templates = query_db(
+        'SELECT id, name FROM workflow_templates WHERE is_active=1 ORDER BY name'
+    )
+    return render_template('admin/file_types.html', user=user,
+                           file_types=file_types, templates=templates)
 
 
 @app.route('/admin/groups', methods=['GET', 'POST'])
@@ -3141,8 +3291,8 @@ def admin_users():
 def admin_user_new():
     user = current_user()
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
+        username = request.form.get('new_uname', '').strip()
+        password = request.form.get('new_pwd', '').strip()
         name = request.form.get('name', '').strip()
         department = request.form.get('department', '').strip()
         email = request.form.get('email', '').strip()
@@ -3160,6 +3310,58 @@ def admin_user_new():
             except Exception:
                 flash('帳號已存在', 'danger')
     return render_template('admin/user_form.html', user=user, edit_user=None)
+
+
+@app.route('/admin/users/<int:uid>/delete', methods=['POST'])
+@admin_required
+def admin_user_delete(uid):
+    user = current_user()
+    if uid == user['id']:
+        return jsonify({'success': False, 'msg': '無法刪除自己的帳號'})
+    target = query_db('SELECT * FROM users WHERE id=?', [uid], one=True)
+    if not target:
+        return jsonify({'success': False, 'msg': '使用者不存在'})
+    # 防止刪除最後一個管理員
+    if target['is_admin']:
+        admin_cnt = query_db('SELECT COUNT(*) AS c FROM users WHERE is_admin=1', one=True)
+        if admin_cnt and admin_cnt['c'] <= 1:
+            return jsonify({'success': False, 'msg': '無法刪除唯一的管理員帳號'})
+
+    aid = user['id']   # 目前管理員 id（承接擁有權）
+
+    # ── 1. 可設 NULL 的欄位 ───────────────────────────────────
+    execute_db('UPDATE audit_log         SET actor_id=NULL    WHERE actor_id=?',    [uid])
+    execute_db('UPDATE chat_messages     SET sender_id=NULL   WHERE sender_id=?',   [uid])
+    execute_db('UPDATE document_versions SET approved_by=NULL WHERE approved_by=?', [uid])
+    execute_db('UPDATE work_logs         SET reviewed_by=NULL WHERE reviewed_by=?', [uid])
+
+    # ── 2. 轉移給管理員（NOT NULL 欄位） ─────────────────────
+    execute_db('UPDATE documents              SET owner_id=?    WHERE owner_id=?',    [aid, uid])
+    execute_db('UPDATE folders                SET owner_id=?    WHERE owner_id=?',    [aid, uid])
+    execute_db('UPDATE tabs                   SET owner_id=?    WHERE owner_id=?',    [aid, uid])
+    execute_db('UPDATE approval_workflows     SET initiated_by=? WHERE initiated_by=?', [aid, uid])
+    execute_db('UPDATE chat_rooms             SET created_by=?  WHERE created_by=?',  [aid, uid])
+    execute_db('UPDATE chat_sticker_packs     SET owner_id=?    WHERE owner_id=?',    [aid, uid])
+    execute_db('UPDATE document_versions      SET created_by=?  WHERE created_by=?',  [aid, uid])
+    execute_db('UPDATE download_logs          SET user_id=?     WHERE user_id=?',     [aid, uid])
+    # work_logs 有 (user_id, log_date) 唯一索引，無法轉移，直接刪除
+    execute_db('DELETE FROM work_logs WHERE user_id=?', [uid])
+    execute_db('UPDATE workflow_steps         SET assignee_id=? WHERE assignee_id=?', [aid, uid])
+    execute_db('UPDATE workflow_template_steps SET user_id=?   WHERE user_id=?',     [aid, uid])
+
+    # ── 3. 直接刪除（個人資料） ───────────────────────────────
+    execute_db('DELETE FROM approver_roles          WHERE user_id=?', [uid])
+    execute_db('DELETE FROM attendance              WHERE user_id=?', [uid])
+    execute_db('DELETE FROM chat_push_subscriptions WHERE user_id=?', [uid])
+    execute_db('DELETE FROM chat_room_members       WHERE user_id=?', [uid])
+    execute_db('DELETE FROM document_permissions    WHERE user_id=?', [uid])
+    execute_db('DELETE FROM folder_permissions      WHERE user_id=?', [uid])
+    execute_db('DELETE FROM group_members           WHERE user_id=?', [uid])
+    execute_db('DELETE FROM reminders               WHERE user_id=?', [uid])
+
+    # ── 4. 最後刪除使用者 ─────────────────────────────────────
+    execute_db('DELETE FROM users WHERE id=?', [uid])
+    return jsonify({'success': True})
 
 
 @app.route('/admin/users/<int:uid>/edit', methods=['GET', 'POST'])
