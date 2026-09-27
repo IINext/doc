@@ -944,6 +944,72 @@ Doc,21,ViewDoc_OwnerTotalSize,,ViewDoc_OwnerTotalSize,Default,View,7,N
 Doc,22,View.員工資料檔,,ViewFIL1010,Default,View,26,N
 Doc,23,GetFileList,,GetFileList,Memory,Table,8,N
 Doc,24,DataViewFields,,DataViewFields,Memory,Table,4,N
+Home,1,ViewOfObjProperties,ViewOfObjProperties,ViewOfObjProperties,Master,View,5,N
+Home,2,Temp Alpha List,,Temp_Alpha_List,Memory,Table,6,N
+Home,3,ViewOfObjFlow,ViewOfObjFlow,ViewOfObjFlow,Master,View,18,N
+Home,4,ViewOfObjFlowSigned,ViewOfObjFlowSigned,ViewOfObjFlowSigned,Master,View,5,N
+Home,5,ViewOfA01,,ViewOfA01,Master,View,6,N
+Home,6,WorkflowItem,,WorkflowItem,Master,Table,5,Y
+Home,7,MesflowItem,,MesflowItem,Master,Table,5,Y
+Home,9,Line,,Line,SQLite Database,Table,1,N
+Home,10,Temp Alpha List,,Temp_Alpha_List,Memory,Table,6,N
+Home,11,生產進度安排,,Schedule,SQLite Database,Table,14,N
+Home,12,KMTree,,DOC_KMTree,Default,Table,9,Y
+Home,13,ViewDoc_ObjPath,,ViewDoc_ObjPath,Default,View,3,N
+Home,14,領用明細,,Material_Apply,SQLite Database,Table,7,N
+Home,15,發料明細,,Material_Draw,SQLite Database,Table,7,N
+Home,16,退料明細,,Material_Back,SQLite Database,Table,7,N
+Home,17,實收明細,,Material_FG,SQLite Database,Table,8,N
+Home,18,成品入庫明細,,FinishGood,SQLite Database,Table,9,N
+Home,20,TMP.附件暫存,,TMP00001,Memory,Table,11,N
+Home,21,TMP.CCP 記錄,,TMP00002,Memory,Table,59,N
+Home,22,TMP.選擇單號,,TMP00003,Memory,Table,13,N
+Home,23,TMP.排程報表,,TMP00004,Memory,Table,39,N
+Home,24,TMP.選擇機台,,TMP00005,Memory,Table,3,N
+Home,25,TMP.附件查詢,,TMP00006,Memory,Table,7,N
+Home,26,TMP.選擇品號,,TMP00007,Memory,Table,27,N
+Home,27,TMP.不良原因,,TMP00008,Memory,Table,3,N
+Home,28,TMP.生產排程,,TMP00009,Memory,Table,17,N
+Home,29,TMP.外箱標示,,TMP00010,Memory,Table,3,N
+Home,30,TMP.盤點試算,,TMP00011,Memory,Table,26,N
+Home,31,TMP.INVOICE,,TMP00012,Memory,Table,10,N
+Home,32,TMP.ShippingReport,,TMP00013,Memory,Table,13,N
+Home,33,TMP.CCP強迫輸入,,TMP00014,Memory,Table,3,N
+Home,34,TMP.印刷領料,,TMP00015,Memory,Table,12,N
+Home,35,TMP.PKG,,TMP00016,Memory,Table,13,N
+Home,36,TMP.委外原物料結存檔,,TMP00017,Memory,View,15,N
+Home,37,TMP.委外原料入出比較,,TMP00018,Memory,Table,5,N
+Home,38,TMP.委外原料入出比較明細,,TMP00019,Memory,Table,6,N
+Home,39,TMP.出缺勤月結,,TMP00020,Memory,View,19,N
+Home,40,TMP.月薪資彙總,,TMP00021,Memory,View,68,N
+Home,41,TMP.PLC001,,TMPPLC001,Memory,Table,149,N
+Home,42,TMP.GUID,,TMPGUID,Memory,Table,4,N
+Home,43,TMP.客戶訂單履歷,,TMP00022,SQLite Database,Table,11,N
+Home,44,TMP.成品結存數,,TMP00023,Memory,View,3,N
+Home,45,TMP.條碼列印規格,,TMP00024,Memory,Table,8,N
+Home,46,TMP.製程人工時,,TMP00025,Memory,Table,4,N
+Home,47,TMP.料號B管制表,,TMP00026,Memory,View,8,N
+Home,48,TMP.發料試算,,TMP10001,Default,Table,9,Y
+Home,49,TMP.批號庫存1,,TMP10002,Default,Table,16,Y
+Home,50,TMP.批號庫存2,,TMP10003,Default,Table,6,Y
+Home,51,TMP.排程發佈,,TMP10004,Default,Table,3,Y
+Home,52,TMP.登入檢查,,TMP10005,Default,Table,4,Y
+Home,53,TMP.登入檢查(Local),,TMP10005,Local,Table,4,N
+Home,54,TMP.GUID(Local),,GUID0001,Local,Table,2,N
+Home,55,ViewTemp01,,ViewTemp01,Default,View,2,N
+Home,56,xx磅秤資料,,WTTABLE,Default,Table,5,Y
+Home,58,xTMP.下載盤點單,,TMP.下載盤點單,Memory,Table,5,N
+Home,60,網站詢價,,Inquery,Default,Table,54,Y
+Home,62,員工附檔一,,HRFil0011,Default,Table,18,Y
+Home,63,員工學歷,,HRFil0012,Default,Table,7,Y
+Home,64,員工經歷,,HRFil0013,Default,Table,7,Y
+Home,65,員工獎懲,,HRFil0014,Default,Table,7,Y
+Home,66,員工職務,,HRFil0015,Default,Table,7,Y
+Home,67,員工訓練,,HRFil0016,Default,Table,7,Y
+Home,68,代理人,,HRFil0017,Default,Table,5,Y
+Home,69,最高權限,,HRFil0018,Default,Table,2,Y
+Home,70,有效代理人,,HRFil0019,Default,View,4,N
+Home,72,TMP.登入檢查,,TMP10005,Default,Table,4,N
 PLC,1,TMP.PLC001,,TMPPLC001,Memory,Table,190,N
 PLC,2,TMP.PLC002,,TMPPLC002,Memory,Table,195,N
 UserFunctionality,1,Criteria,,Criteria,Memory,Table,21,N
@@ -953,6 +1019,11 @@ UserFunctionality,4,PrintDataSelection,,PrintDataSelection,Memory,Table,5,N
 UserFunctionality,5,ViewByKey,,ViewByKey,Memory,Table,3,N
 UserFunctionality,6,ExcelSelectedColummns,,ExcelSelectedColummns,Memory,Table,7,N
 UserFunctionality,7,ExcelInfo,,ExcelInfo,Memory,Table,3,N
-UserFunctionality,8,ExcelSelectedColummns (Local),,ExcelSelectedColummnsLocal,Local,Table,7,Y
-UserFunctionality,9,ExcelInfo (Local),,ExcelInfoLocal,Local,Table,3,Y
+UserFunctionality,8,ExcelSelectedColummns (Local),,ExcelSelectedColummnsLocal,Local,Table,7,N
+UserFunctionality,9,ExcelInfo (Local),,ExcelInfoLocal,Local,Table,3,N
 UserFunctionality,10,TestDS,,TestDS,Memory,Table,11,N
+Chart,1,Address Book Header,,Address_Book_Hdr,Memory,Table,13,N
+Chart,2,Phone Numbers,,Addr_Phones,Memory,Table,7,N
+Chart,3,Addresses,,Addr_Addresses,Memory,Table,13,N
+Chart,4,彙圖分群明細,,%LogonID%LiveDetail,SQLite Database,Table,3,N
+Chart,5,彙圖分群代碼,,%LogonID%LiveGroup,SQLite Database,Table,2,N

@@ -7,14 +7,15 @@
     conflicts.csv    同一個資料表在不同專案裡定義不一致的欄位
 
 用法：
-    python magic_schema.py schema/ Files.xml EDB.xml
+    python magic_schema.py schema/ Files.xml EDB.xml Doc.xml Home.xml --db Default --db Master
     python magic_schema.py schema/ Files.xml EDB.xml --native-types
 
 多個專案連到同一個資料庫時，同名（實體名稱）的資料表合併成一個：
 欄位取聯集，varchar 取較長的長度；其他型態不一致時，採用有寫明 Oracle 型態（SqlType）的定義，
 都沒有就以第一個專案為準，並記錄在 conflicts.csv。
 每個專案產生 DDL 的資料來源，自動選資料表最多的那一個
-（Memory、SQLite、Mobile 這類本機資料來源除外）。
+（Memory、SQLite、Mobile 這類本機資料來源除外）；
+同一個資料庫在各專案裡名稱不同時，用 --db 列出所有名稱，例如 --db Default --db Master。
 
 預設「保留原本的儲存方式」：日期仍是 char(8)（YYYYMMDD）、時間是 char(6)（HHMMSS）、
 邏輯欄位是 smallint（0/1），這樣從 Oracle 搬資料時可以原封不動。
@@ -30,10 +31,12 @@ LOCAL_SOURCES = ('Memory', 'SQLite', 'Mobile', 'Log')
 
 
 def q(name):
-    """PostgreSQL 識別字：ASCII 名稱轉小寫，一律加雙引號（中文欄位名稱照舊）。"""
-    if re.fullmatch(r'[A-Za-z0-9_]+', name):
-        name = name.lower()
-    return '"' + name.replace('"', '""') + '"'
+    """PostgreSQL 識別字：英文字母一律轉小寫（Oracle 不分大小寫），並加雙引號。
+
+    中文不受影響；像「Y牢固完整度」這種中英混合的名稱會變成「y牢固完整度」，
+    和 View 裡沒加引號的寫法（PostgreSQL 會轉小寫）一致。
+    """
+    return '"' + name.lower().replace('"', '""') + '"'
 
 
 def sql_str(s):
@@ -131,13 +134,13 @@ def main_source(objs):
     return max(counts, key=counts.get) if counts else None   # 只有本機暫存表的專案
 
 
-def parse_project(objs, native, project):
+def parse_project(objs, native, project, dbs=None):
     """回傳 (資料表模型 dict, tables 列, columns 列, 警告)。
 
     資料表模型：{實體名稱小寫: {'phys', 'name', 'columns': {欄位小寫: col}, 'indexes': [...]}}
     col = {'dbname', 'type', 'nullable', 'default', 'magic'}
     """
-    source = main_source(objs)
+    sources = set(dbs) if dbs else {main_source(objs)}
     model, tables, columns, warnings = {}, [], [], []
     for pos, d in enumerate(objs, 1):
         name, phys, src = d.get('name'), d.get('PhysicalName'), d.get('data_source')
@@ -147,7 +150,7 @@ def parse_project(objs, native, project):
         kind = {'T': 'Table', 'V': 'View'}.get(val(d, 'ObjectType'), val(d, 'ObjectType'))
         if phys and phys.upper().startswith('MV_'):
             kind = 'Materialized View'
-        generate = src == source and kind == 'Table'
+        generate = src in sources and kind == 'Table'
         if generate and phys.lower() in model:
             warnings.append(f'{project}：略過 {name}（{phys}），與 {model[phys.lower()]["name"]} 的實體名稱重複')
             generate = False
@@ -298,13 +301,19 @@ def write_csv(path, rows):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith('--')]
-    native = '--native-types' in sys.argv
+    argv = sys.argv[1:]
+    dbs = []
+    while '--db' in argv:
+        i = argv.index('--db')
+        dbs.append(argv[i + 1])
+        del argv[i:i + 2]
+    args = [a for a in argv if not a.startswith('--')]
+    native = '--native-types' in argv
     out, sources = args[0], args[1:]
     models, tables, columns, warnings = [], [], [], []
     for path in sources:
         project = re.sub(r'^[0-9a-f]{8}-', '', os.path.splitext(os.path.basename(path))[0])
-        m, t, c, w = parse_project(load(path), native, project)
+        m, t, c, w = parse_project(load(path), native, project, dbs)
         models.append(m)
         tables += t
         columns += c

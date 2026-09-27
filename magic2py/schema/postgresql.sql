@@ -1,4 +1,5 @@
--- 由 magic_schema.py 從 Files、EDB、Doc、PLC、UserFunctionality 產生，請勿手動修改
+-- 由 magic_schema.py 從 Files、EDB、Doc、Home、PLC、UserFunctionality、Chart 產生，請勿手動修改
+-- 注意：Home：略過 TMP.登入檢查（TMP10005），與 TMP.登入檢查 的實體名稱重複
 -- 型態衝突：A01.DueDate Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
 -- 型態衝突：A01.AccMonth Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
 -- 型態衝突：A50.TaxRate Files=varchar(1)、EDB=numeric(3,1)，採用 varchar(1)（都沒有 SqlType，請用 Oracle 確認）
@@ -157,8 +158,8 @@ CREATE TABLE "fil0011" (
     "隨貨附發票" smallint DEFAULT 0 NOT NULL,
     "區域代號" varchar(10) DEFAULT ' ' NOT NULL,
     "國別代號" varchar(10) DEFAULT ' ' NOT NULL,
-    "匯至EBC" smallint DEFAULT 0 NOT NULL,
-    "EBC申請代號" varchar(20) DEFAULT ' ' NOT NULL,
+    "匯至ebc" smallint DEFAULT 0 NOT NULL,
+    "ebc申請代號" varchar(20) DEFAULT ' ' NOT NULL,
     "結帳日" smallint DEFAULT 0 NOT NULL,
     "匯款總行" varchar(20) DEFAULT ' ' NOT NULL,
     "匯款銀行" varchar(20) DEFAULT ' ' NOT NULL,
@@ -178,7 +179,7 @@ CREATE TABLE "fil0011" (
     "廠商分類" varchar(10) DEFAULT ' ' NOT NULL,
     "允許分批交貨" smallint DEFAULT 0 NOT NULL,
     "加工費用科目" varchar(10) DEFAULT ' ' NOT NULL,
-    "ABC等級" varchar(1) DEFAULT ' ' NOT NULL,
+    "abc等級" varchar(1) DEFAULT ' ' NOT NULL,
     "交貨評等" varchar(20) DEFAULT ' ' NOT NULL,
     "品質評等" varchar(20) DEFAULT ' ' NOT NULL,
     "個月逢" smallint DEFAULT 0 NOT NULL,
@@ -352,7 +353,7 @@ CREATE TABLE "fil0012" (
     "安全存量" numeric(14,4) DEFAULT 0 NOT NULL,
     "進貨報價類別" varchar(20) DEFAULT ' ' NOT NULL,
     "qrcode" bytea,
-    "最佳製袋PLC" varchar(60) DEFAULT ' ' NOT NULL,
+    "最佳製袋plc" varchar(60) DEFAULT ' ' NOT NULL,
     "盤點日期" char(8) DEFAULT '00000000' NOT NULL,
     "盤存數量" numeric(14,4) DEFAULT 0 NOT NULL,
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -367,7 +368,7 @@ CREATE UNIQUE INDEX "fil0012_02" ON "fil0012" ("產品類別", "產品編號");
 CREATE UNIQUE INDEX "fil0012_03" ON "fil0012" ("產品類別", "物料大類", "產品編號");
 CREATE UNIQUE INDEX "fil0012_04" ON "fil0012" ("物料大類", "產品編號");
 CREATE INDEX "fil0012_05" ON "fil0012" ("流水編號");
-CREATE INDEX "fil0012_06" ON "fil0012" ("最佳製袋PLC");
+CREATE INDEX "fil0012_06" ON "fil0012" ("最佳製袋plc");
 COMMENT ON TABLE "fil0012" IS '0.品號資料檔';
 COMMENT ON COLUMN "fil0012"."產品編號" IS 'F.產品/M.原物料編號';
 COMMENT ON COLUMN "fil0012"."產品類別" IS '成品/原物料';
@@ -903,10 +904,10 @@ CREATE TABLE "fil0032" (
     "位於" varchar(100) DEFAULT ' ' NOT NULL,
     "裁切規格_起" smallint DEFAULT 0 NOT NULL,
     "裁切規格_迄" smallint DEFAULT 0 NOT NULL,
-    "裁切規格_M" smallint DEFAULT 0 NOT NULL,
+    "裁切規格_m" smallint DEFAULT 0 NOT NULL,
     "條數" smallint DEFAULT 0 NOT NULL,
     "側底紙_mm" smallint DEFAULT 0 NOT NULL,
-    "側底紙_M" smallint DEFAULT 0 NOT NULL,
+    "側底紙_m" smallint DEFAULT 0 NOT NULL,
     "成捲數" smallint DEFAULT 0 NOT NULL,
     "裁切方向" varchar(1) DEFAULT ' ' NOT NULL,
     "灑粉" smallint DEFAULT 0 NOT NULL,
@@ -927,8 +928,8 @@ CREATE TABLE "fil0032" (
     "加工項目_夾鍊_正面二" smallint DEFAULT 0 NOT NULL,
     "加工項目_夾鍊_背面二" smallint DEFAULT 0 NOT NULL,
     "加工項目_夾鍊代碼二" varchar(20) DEFAULT ' ' NOT NULL,
-    "加工項目_K模" smallint DEFAULT 0 NOT NULL,
-    "加工項目_K模說明" varchar(40) DEFAULT ' ' NOT NULL,
+    "加工項目_k模" smallint DEFAULT 0 NOT NULL,
+    "加工項目_k模說明" varchar(40) DEFAULT ' ' NOT NULL,
     "加工項目_提把" smallint DEFAULT 0 NOT NULL,
     "加工項目_提把說明" varchar(40) DEFAULT ' ' NOT NULL,
     "加工項目_墨西哥帽" smallint DEFAULT 0 NOT NULL,
@@ -1010,9 +1011,9 @@ COMMENT ON COLUMN "fil0032"."開窗尺寸1" IS '開窗尺寸1(mm)';
 COMMENT ON COLUMN "fil0032"."開窗尺寸2" IS '開窗尺寸2(mm)';
 COMMENT ON COLUMN "fil0032"."裁切規格_起" IS '裁切規格：起';
 COMMENT ON COLUMN "fil0032"."裁切規格_迄" IS '裁切規格：迄';
-COMMENT ON COLUMN "fil0032"."裁切規格_M" IS '裁切規格：M';
+COMMENT ON COLUMN "fil0032"."裁切規格_m" IS '裁切規格：M';
 COMMENT ON COLUMN "fil0032"."側底紙_mm" IS '側／底紙mm';
-COMMENT ON COLUMN "fil0032"."側底紙_M" IS '側／底紙：M';
+COMMENT ON COLUMN "fil0032"."側底紙_m" IS '側／底紙：M';
 COMMENT ON COLUMN "fil0032"."成捲數" IS '成捲數(捲)';
 COMMENT ON COLUMN "fil0032"."加工項目_圓孔6" IS 'xx加工項目：圓孔6';
 COMMENT ON COLUMN "fil0032"."加工項目_圓孔8" IS 'xx加工項目：圓孔8';
@@ -1029,8 +1030,8 @@ COMMENT ON COLUMN "fil0032"."加工項目_夾鍊說明二" IS '加工項目：�
 COMMENT ON COLUMN "fil0032"."加工項目_夾鍊_正面二" IS '加工項目：夾鍊(正面)二';
 COMMENT ON COLUMN "fil0032"."加工項目_夾鍊_背面二" IS '加工項目：夾鍊(背面)二';
 COMMENT ON COLUMN "fil0032"."加工項目_夾鍊代碼二" IS '加工項目：夾鍊代碼二';
-COMMENT ON COLUMN "fil0032"."加工項目_K模" IS '加工項目：K模';
-COMMENT ON COLUMN "fil0032"."加工項目_K模說明" IS '加工項目：K模說明';
+COMMENT ON COLUMN "fil0032"."加工項目_k模" IS '加工項目：K模';
+COMMENT ON COLUMN "fil0032"."加工項目_k模說明" IS '加工項目：K模說明';
 COMMENT ON COLUMN "fil0032"."加工項目_提把" IS '加工項目：提把';
 COMMENT ON COLUMN "fil0032"."加工項目_提把說明" IS '加工項目：提把說明';
 COMMENT ON COLUMN "fil0032"."加工項目_墨西哥帽" IS '加工項目：墨西哥帽';
@@ -1110,12 +1111,12 @@ CREATE TABLE "fil0033" (
     "位於" varchar(100) DEFAULT ' ' NOT NULL,
     "裁切規格_起" numeric(5,1) DEFAULT 0 NOT NULL,
     "裁切規格_迄" numeric(5,1) DEFAULT 0 NOT NULL,
-    "裁切規格_M" smallint DEFAULT 0 NOT NULL,
+    "裁切規格_m" smallint DEFAULT 0 NOT NULL,
     "裁切米數說明" varchar(40) DEFAULT ' ' NOT NULL,
     "條數" smallint DEFAULT 0 NOT NULL,
     "裁切條數說明" varchar(40) DEFAULT ' ' NOT NULL,
     "側底紙mm" smallint DEFAULT 0 NOT NULL,
-    "側底紙_M" smallint DEFAULT 0 NOT NULL,
+    "側底紙_m" smallint DEFAULT 0 NOT NULL,
     "成捲數" smallint DEFAULT 0 NOT NULL,
     "成捲數正負差" varchar(1) DEFAULT '±' NOT NULL,
     "成捲差異比" numeric(4,1) DEFAULT 0 NOT NULL,
@@ -1173,9 +1174,9 @@ COMMENT ON COLUMN "fil0033"."開窗尺寸2" IS '開窗尺寸2(mm)';
 COMMENT ON COLUMN "fil0033"."位於" IS '位於1';
 COMMENT ON COLUMN "fil0033"."裁切規格_起" IS '裁切規格：起';
 COMMENT ON COLUMN "fil0033"."裁切規格_迄" IS '裁切規格：迄';
-COMMENT ON COLUMN "fil0033"."裁切規格_M" IS '裁切規格：M';
+COMMENT ON COLUMN "fil0033"."裁切規格_m" IS '裁切規格：M';
 COMMENT ON COLUMN "fil0033"."側底紙mm" IS '側／底紙mm';
-COMMENT ON COLUMN "fil0033"."側底紙_M" IS '側／底紙:M';
+COMMENT ON COLUMN "fil0033"."側底紙_m" IS '側／底紙:M';
 COMMENT ON COLUMN "fil0033"."成捲數" IS '成捲數(捲)';
 COMMENT ON COLUMN "fil0033"."開窗尺寸21" IS '開窗尺寸21(mm)';
 COMMENT ON COLUMN "fil0033"."開窗尺寸22" IS '開窗尺寸22(mm)';
@@ -1387,11 +1388,11 @@ CREATE TABLE "fil0036" (
     "設計製稿" varchar(10) DEFAULT ' ' NOT NULL,
     "客戶說明" varchar(100) DEFAULT ' ' NOT NULL,
     "產品說明" varchar(100) DEFAULT ' ' NOT NULL,
-    "製稿規格_成品H" smallint DEFAULT 0 NOT NULL,
-    "製稿規格_成品W" smallint DEFAULT 0 NOT NULL,
-    "製稿規格_成品G" smallint DEFAULT 0 NOT NULL,
-    "製稿規格_成品A" smallint DEFAULT 0 NOT NULL,
-    "製稿規格_成品B" smallint DEFAULT 0 NOT NULL,
+    "製稿規格_成品h" smallint DEFAULT 0 NOT NULL,
+    "製稿規格_成品w" smallint DEFAULT 0 NOT NULL,
+    "製稿規格_成品g" smallint DEFAULT 0 NOT NULL,
+    "製稿規格_成品a" smallint DEFAULT 0 NOT NULL,
+    "製稿規格_成品b" smallint DEFAULT 0 NOT NULL,
     "表刷" smallint DEFAULT 0 NOT NULL,
     "裡刷" smallint DEFAULT 0 NOT NULL,
     "附色樣" smallint DEFAULT 0 NOT NULL,
@@ -1462,11 +1463,11 @@ CREATE TABLE "fil0036" (
 COMMENT ON TABLE "fil0036" IS '0.製稿工作指示';
 COMMENT ON COLUMN "fil0036"."單別" IS '單別(B21)';
 COMMENT ON COLUMN "fil0036"."單號" IS '單號(B21)';
-COMMENT ON COLUMN "fil0036"."製稿規格_成品H" IS '製稿規格(成品)H';
-COMMENT ON COLUMN "fil0036"."製稿規格_成品W" IS '製稿規格(成品)W';
-COMMENT ON COLUMN "fil0036"."製稿規格_成品G" IS '製稿規格(成品)G';
-COMMENT ON COLUMN "fil0036"."製稿規格_成品A" IS '製稿規格(展開)A';
-COMMENT ON COLUMN "fil0036"."製稿規格_成品B" IS '製稿規格(展開)B';
+COMMENT ON COLUMN "fil0036"."製稿規格_成品h" IS '製稿規格(成品)H';
+COMMENT ON COLUMN "fil0036"."製稿規格_成品w" IS '製稿規格(成品)W';
+COMMENT ON COLUMN "fil0036"."製稿規格_成品g" IS '製稿規格(成品)G';
+COMMENT ON COLUMN "fil0036"."製稿規格_成品a" IS '製稿規格(展開)A';
+COMMENT ON COLUMN "fil0036"."製稿規格_成品b" IS '製稿規格(展開)B';
 COMMENT ON COLUMN "fil0036"."共幾色" IS '共幾色?';
 COMMENT ON COLUMN "fil0036"."改支數" IS '改支數?';
 COMMENT ON COLUMN "fil0036"."共版支數" IS '共版支數?';
@@ -1574,10 +1575,10 @@ CREATE TABLE "fil0039" (
     "製程代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "機台代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "工作代碼" varchar(10) DEFAULT ' ' NOT NULL,
-    "AB底側" varchar(50) DEFAULT ' ' NOT NULL,
-    "AB底側二" varchar(50) DEFAULT ' ' NOT NULL,
-    "AB底側三" varchar(50) DEFAULT ' ' NOT NULL,
-    "AB底側四" varchar(50) DEFAULT ' ' NOT NULL,
+    "ab底側" varchar(50) DEFAULT ' ' NOT NULL,
+    "ab底側二" varchar(50) DEFAULT ' ' NOT NULL,
+    "ab底側三" varchar(50) DEFAULT ' ' NOT NULL,
+    "ab底側四" varchar(50) DEFAULT ' ' NOT NULL,
     "使用半成品" varchar(50) DEFAULT ' ' NOT NULL,
     "使用半成品二" varchar(50) DEFAULT ' ' NOT NULL,
     "使用半成品三" varchar(50) DEFAULT ' ' NOT NULL,
@@ -1599,7 +1600,7 @@ CREATE UNIQUE INDEX "fil0039_01" ON "fil0039" ("製令單號", "節點");
 CREATE INDEX "fil0039_02" ON "fil0039" ("工作代碼");
 CREATE INDEX "fil0039_03" ON "fil0039" ("製令單號", "工作代碼");
 COMMENT ON TABLE "fil0039" IS '0.產品條件製程';
-COMMENT ON COLUMN "fil0039"."AB底側" IS 'AB底側一';
+COMMENT ON COLUMN "fil0039"."ab底側" IS 'AB底側一';
 COMMENT ON COLUMN "fil0039"."使用半成品" IS '使用半成品一';
 COMMENT ON COLUMN "fil0039"."物料編號" IS '物料編號一';
 
@@ -1719,13 +1720,13 @@ CREATE TABLE "fil003e" (
     "圖文清晰度" smallint DEFAULT 0 NOT NULL,
     "紙箱清潔度" smallint DEFAULT 0 NOT NULL,
     "外標籤" smallint DEFAULT 0 NOT NULL,
-    "N圖稿" smallint DEFAULT 0 NOT NULL,
-    "N成品外觀" smallint DEFAULT 0 NOT NULL,
-    "N淋膜_貼合" smallint DEFAULT 0 NOT NULL,
-    "N裁切平整性" smallint DEFAULT 0 NOT NULL,
-    "N圖文清晰度" smallint DEFAULT 0 NOT NULL,
-    "N紙箱清潔度" smallint DEFAULT 0 NOT NULL,
-    "N外標籤" smallint DEFAULT 0 NOT NULL,
+    "n圖稿" smallint DEFAULT 0 NOT NULL,
+    "n成品外觀" smallint DEFAULT 0 NOT NULL,
+    "n淋膜_貼合" smallint DEFAULT 0 NOT NULL,
+    "n裁切平整性" smallint DEFAULT 0 NOT NULL,
+    "n圖文清晰度" smallint DEFAULT 0 NOT NULL,
+    "n紙箱清潔度" smallint DEFAULT 0 NOT NULL,
+    "n外標籤" smallint DEFAULT 0 NOT NULL,
     "製袋成品檢驗項目" varchar(1) DEFAULT ' ' NOT NULL,
     "撕角位置" integer DEFAULT 0 NOT NULL,
     "夾鏈位置" integer DEFAULT 0 NOT NULL,
@@ -1739,10 +1740,10 @@ CREATE TABLE "fil003e" (
     "測漏試驗" smallint DEFAULT 0 NOT NULL,
     "開口測試" smallint DEFAULT 0 NOT NULL,
     "熱封強度測試" smallint DEFAULT 0 NOT NULL,
-    "N切口平整性" smallint DEFAULT 0 NOT NULL,
-    "N測漏試驗" smallint DEFAULT 0 NOT NULL,
-    "N開口測試" smallint DEFAULT 0 NOT NULL,
-    "N熱封強度測試" smallint DEFAULT 0 NOT NULL,
+    "n切口平整性" smallint DEFAULT 0 NOT NULL,
+    "n測漏試驗" smallint DEFAULT 0 NOT NULL,
+    "n開口測試" smallint DEFAULT 0 NOT NULL,
+    "n熱封強度測試" smallint DEFAULT 0 NOT NULL,
     "成卷成品檢驗項目" varchar(1) DEFAULT ' ' NOT NULL,
     "電眼間距" integer DEFAULT 0 NOT NULL,
     "電眼間距二" integer DEFAULT 0 NOT NULL,
@@ -1751,10 +1752,10 @@ CREATE TABLE "fil003e" (
     "外包裝" smallint DEFAULT 0 NOT NULL,
     "成捲鬆緊度" smallint DEFAULT 0 NOT NULL,
     "紙管完整度" smallint DEFAULT 0 NOT NULL,
-    "N紙管" smallint DEFAULT 0 NOT NULL,
-    "N外包裝" smallint DEFAULT 0 NOT NULL,
-    "N成捲鬆緊度" smallint DEFAULT 0 NOT NULL,
-    "N紙管完整度" smallint DEFAULT 0 NOT NULL,
+    "n紙管" smallint DEFAULT 0 NOT NULL,
+    "n外包裝" smallint DEFAULT 0 NOT NULL,
+    "n成捲鬆緊度" smallint DEFAULT 0 NOT NULL,
+    "n紙管完整度" smallint DEFAULT 0 NOT NULL,
     "備註" varchar(200) DEFAULT ' ' NOT NULL,
     "其他" varchar(1) DEFAULT ' ' NOT NULL,
     "判定" varchar(1) DEFAULT ' ' NOT NULL,
@@ -1798,13 +1799,13 @@ COMMENT ON COLUMN "fil003e"."裁切平整性" IS 'y裁切平整性';
 COMMENT ON COLUMN "fil003e"."圖文清晰度" IS 'y圖文清晰度';
 COMMENT ON COLUMN "fil003e"."紙箱清潔度" IS 'y紙箱清潔度';
 COMMENT ON COLUMN "fil003e"."外標籤" IS 'y外標籤';
-COMMENT ON COLUMN "fil003e"."N圖稿" IS 'n圖稿';
-COMMENT ON COLUMN "fil003e"."N成品外觀" IS 'n成品外觀';
-COMMENT ON COLUMN "fil003e"."N淋膜_貼合" IS 'n淋膜/貼合';
-COMMENT ON COLUMN "fil003e"."N裁切平整性" IS 'n裁切平整性';
-COMMENT ON COLUMN "fil003e"."N圖文清晰度" IS 'n圖文清晰度';
-COMMENT ON COLUMN "fil003e"."N紙箱清潔度" IS 'n紙箱清潔度';
-COMMENT ON COLUMN "fil003e"."N外標籤" IS 'n外標籤';
+COMMENT ON COLUMN "fil003e"."n圖稿" IS 'n圖稿';
+COMMENT ON COLUMN "fil003e"."n成品外觀" IS 'n成品外觀';
+COMMENT ON COLUMN "fil003e"."n淋膜_貼合" IS 'n淋膜/貼合';
+COMMENT ON COLUMN "fil003e"."n裁切平整性" IS 'n裁切平整性';
+COMMENT ON COLUMN "fil003e"."n圖文清晰度" IS 'n圖文清晰度';
+COMMENT ON COLUMN "fil003e"."n紙箱清潔度" IS 'n紙箱清潔度';
+COMMENT ON COLUMN "fil003e"."n外標籤" IS 'n外標籤';
 COMMENT ON COLUMN "fil003e"."製袋成品檢驗項目" IS '==製袋成品檢驗項目';
 COMMENT ON COLUMN "fil003e"."撕角位置" IS '撕角位置(±2mm)';
 COMMENT ON COLUMN "fil003e"."夾鏈位置" IS '夾鏈位置(±2mm)';
@@ -1818,20 +1819,20 @@ COMMENT ON COLUMN "fil003e"."切口平整性" IS 'y切口平整性';
 COMMENT ON COLUMN "fil003e"."測漏試驗" IS 'y測漏試驗';
 COMMENT ON COLUMN "fil003e"."開口測試" IS 'y開口測試';
 COMMENT ON COLUMN "fil003e"."熱封強度測試" IS 'y熱封強度測試';
-COMMENT ON COLUMN "fil003e"."N切口平整性" IS 'n切口平整性';
-COMMENT ON COLUMN "fil003e"."N測漏試驗" IS 'n測漏試驗';
-COMMENT ON COLUMN "fil003e"."N開口測試" IS 'n開口測試';
-COMMENT ON COLUMN "fil003e"."N熱封強度測試" IS 'n熱封強度測試';
+COMMENT ON COLUMN "fil003e"."n切口平整性" IS 'n切口平整性';
+COMMENT ON COLUMN "fil003e"."n測漏試驗" IS 'n測漏試驗';
+COMMENT ON COLUMN "fil003e"."n開口測試" IS 'n開口測試';
+COMMENT ON COLUMN "fil003e"."n熱封強度測試" IS 'n熱封強度測試';
 COMMENT ON COLUMN "fil003e"."成卷成品檢驗項目" IS '==成卷成品檢驗項目';
 COMMENT ON COLUMN "fil003e"."電眼間距" IS '電眼間距(±2mm)';
 COMMENT ON COLUMN "fil003e"."紙管" IS 'y紙管';
 COMMENT ON COLUMN "fil003e"."外包裝" IS 'y外包裝';
 COMMENT ON COLUMN "fil003e"."成捲鬆緊度" IS 'y成捲鬆緊度(出廠檢驗)';
 COMMENT ON COLUMN "fil003e"."紙管完整度" IS 'y紙管完整度(出廠檢驗)';
-COMMENT ON COLUMN "fil003e"."N紙管" IS 'n紙管';
-COMMENT ON COLUMN "fil003e"."N外包裝" IS 'n外包裝';
-COMMENT ON COLUMN "fil003e"."N成捲鬆緊度" IS 'n成捲鬆緊度(出廠檢驗)';
-COMMENT ON COLUMN "fil003e"."N紙管完整度" IS 'n紙管完整度(出廠檢驗)';
+COMMENT ON COLUMN "fil003e"."n紙管" IS 'n紙管';
+COMMENT ON COLUMN "fil003e"."n外包裝" IS 'n外包裝';
+COMMENT ON COLUMN "fil003e"."n成捲鬆緊度" IS 'n成捲鬆緊度(出廠檢驗)';
+COMMENT ON COLUMN "fil003e"."n紙管完整度" IS 'n紙管完整度(出廠檢驗)';
 COMMENT ON COLUMN "fil003e"."其他" IS '==其他';
 COMMENT ON COLUMN "fil003e"."標準撕角位置" IS '標準撕角位置(±2mm)';
 COMMENT ON COLUMN "fil003e"."標準夾鏈位置" IS '標準夾鏈位置(±2mm)';
@@ -2008,13 +2009,13 @@ CREATE TABLE "fil003g" (
     "圖文清晰度" smallint DEFAULT 0 NOT NULL,
     "紙箱清潔度" smallint DEFAULT 0 NOT NULL,
     "外標籤" smallint DEFAULT 0 NOT NULL,
-    "N圖稿" smallint DEFAULT 0 NOT NULL,
-    "N成品外觀" smallint DEFAULT 0 NOT NULL,
-    "N淋膜_貼合" smallint DEFAULT 0 NOT NULL,
-    "N裁切平整性" smallint DEFAULT 0 NOT NULL,
-    "N圖文清晰度" smallint DEFAULT 0 NOT NULL,
-    "N紙箱清潔度" smallint DEFAULT 0 NOT NULL,
-    "N外標籤" smallint DEFAULT 0 NOT NULL,
+    "n圖稿" smallint DEFAULT 0 NOT NULL,
+    "n成品外觀" smallint DEFAULT 0 NOT NULL,
+    "n淋膜_貼合" smallint DEFAULT 0 NOT NULL,
+    "n裁切平整性" smallint DEFAULT 0 NOT NULL,
+    "n圖文清晰度" smallint DEFAULT 0 NOT NULL,
+    "n紙箱清潔度" smallint DEFAULT 0 NOT NULL,
+    "n外標籤" smallint DEFAULT 0 NOT NULL,
     "製袋成品檢驗項目" varchar(1) DEFAULT ' ' NOT NULL,
     "撕角位置" integer DEFAULT 0 NOT NULL,
     "夾鏈位置" integer DEFAULT 0 NOT NULL,
@@ -2028,10 +2029,10 @@ CREATE TABLE "fil003g" (
     "測漏試驗" smallint DEFAULT 0 NOT NULL,
     "開口測試" smallint DEFAULT 0 NOT NULL,
     "熱封強度測試" smallint DEFAULT 0 NOT NULL,
-    "N切口平整性" smallint DEFAULT 0 NOT NULL,
-    "N測漏試驗" smallint DEFAULT 0 NOT NULL,
-    "N開口測試" smallint DEFAULT 0 NOT NULL,
-    "N熱封強度測試" smallint DEFAULT 0 NOT NULL,
+    "n切口平整性" smallint DEFAULT 0 NOT NULL,
+    "n測漏試驗" smallint DEFAULT 0 NOT NULL,
+    "n開口測試" smallint DEFAULT 0 NOT NULL,
+    "n熱封強度測試" smallint DEFAULT 0 NOT NULL,
     "標準厚度" integer DEFAULT 0 NOT NULL,
     "機台狀態" varchar(1) DEFAULT ' ' NOT NULL,
     "追加欄位" varchar(1) DEFAULT ' ' NOT NULL,
@@ -2058,13 +2059,13 @@ COMMENT ON COLUMN "fil003g"."裁切平整性" IS 'y裁切平整性';
 COMMENT ON COLUMN "fil003g"."圖文清晰度" IS 'y圖文清晰度';
 COMMENT ON COLUMN "fil003g"."紙箱清潔度" IS 'y紙箱清潔度';
 COMMENT ON COLUMN "fil003g"."外標籤" IS 'y外標籤';
-COMMENT ON COLUMN "fil003g"."N圖稿" IS 'n圖稿';
-COMMENT ON COLUMN "fil003g"."N成品外觀" IS 'n成品外觀';
-COMMENT ON COLUMN "fil003g"."N淋膜_貼合" IS 'n淋膜/貼合';
-COMMENT ON COLUMN "fil003g"."N裁切平整性" IS 'n裁切平整性';
-COMMENT ON COLUMN "fil003g"."N圖文清晰度" IS 'n圖文清晰度';
-COMMENT ON COLUMN "fil003g"."N紙箱清潔度" IS 'n紙箱清潔度';
-COMMENT ON COLUMN "fil003g"."N外標籤" IS 'n外標籤';
+COMMENT ON COLUMN "fil003g"."n圖稿" IS 'n圖稿';
+COMMENT ON COLUMN "fil003g"."n成品外觀" IS 'n成品外觀';
+COMMENT ON COLUMN "fil003g"."n淋膜_貼合" IS 'n淋膜/貼合';
+COMMENT ON COLUMN "fil003g"."n裁切平整性" IS 'n裁切平整性';
+COMMENT ON COLUMN "fil003g"."n圖文清晰度" IS 'n圖文清晰度';
+COMMENT ON COLUMN "fil003g"."n紙箱清潔度" IS 'n紙箱清潔度';
+COMMENT ON COLUMN "fil003g"."n外標籤" IS 'n外標籤';
 COMMENT ON COLUMN "fil003g"."製袋成品檢驗項目" IS '==製袋成品檢驗項目';
 COMMENT ON COLUMN "fil003g"."撕角位置" IS '撕角位置(±2mm)';
 COMMENT ON COLUMN "fil003g"."夾鏈位置" IS '夾鏈位置(±2mm)';
@@ -2078,10 +2079,10 @@ COMMENT ON COLUMN "fil003g"."切口平整性" IS 'y切口平整性';
 COMMENT ON COLUMN "fil003g"."測漏試驗" IS 'y測漏試驗';
 COMMENT ON COLUMN "fil003g"."開口測試" IS 'y開口測試';
 COMMENT ON COLUMN "fil003g"."熱封強度測試" IS 'y熱封強度測試';
-COMMENT ON COLUMN "fil003g"."N切口平整性" IS 'n切口平整性';
-COMMENT ON COLUMN "fil003g"."N測漏試驗" IS 'n測漏試驗';
-COMMENT ON COLUMN "fil003g"."N開口測試" IS 'n開口測試';
-COMMENT ON COLUMN "fil003g"."N熱封強度測試" IS 'n熱封強度測試';
+COMMENT ON COLUMN "fil003g"."n切口平整性" IS 'n切口平整性';
+COMMENT ON COLUMN "fil003g"."n測漏試驗" IS 'n測漏試驗';
+COMMENT ON COLUMN "fil003g"."n開口測試" IS 'n開口測試';
+COMMENT ON COLUMN "fil003g"."n熱封強度測試" IS 'n熱封強度測試';
 COMMENT ON COLUMN "fil003g"."追加欄位" IS '==追加欄位';
 COMMENT ON COLUMN "fil003g"."標準撕角位置" IS '標準撕角位置(±2mm)';
 COMMENT ON COLUMN "fil003g"."標準夾鏈位置" IS '標準夾鏈位置(±2mm)';
@@ -2102,8 +2103,8 @@ CREATE TABLE "fil003h" (
     "出袋距離_右" numeric(7,2) DEFAULT 0 NOT NULL,
     "檢驗時間" char(6) DEFAULT '000000' NOT NULL,
     "箱號" integer DEFAULT 0 NOT NULL,
-    "Y牢固完整度" smallint DEFAULT 0 NOT NULL,
-    "N牢固完整度" smallint DEFAULT 0 NOT NULL,
+    "y牢固完整度" smallint DEFAULT 0 NOT NULL,
+    "n牢固完整度" smallint DEFAULT 0 NOT NULL,
     "作業員" varchar(10) DEFAULT ' ' NOT NULL,
     "備註" varchar(100) DEFAULT ' ' NOT NULL,
     "機台狀態" varchar(1) DEFAULT ' ' NOT NULL,
@@ -2112,8 +2113,8 @@ CREATE TABLE "fil003h" (
 CREATE INDEX "fil003h_02" ON "fil003h" ("巡檢項目");
 CREATE INDEX "fil003h_03" ON "fil003h" ("機台代碼");
 COMMENT ON TABLE "fil003h" IS '0.氣閥鐵條線上巡檢表';
-COMMENT ON COLUMN "fil003h"."Y牢固完整度" IS 'y牢固完整度';
-COMMENT ON COLUMN "fil003h"."N牢固完整度" IS 'n牢固完整度';
+COMMENT ON COLUMN "fil003h"."y牢固完整度" IS 'y牢固完整度';
+COMMENT ON COLUMN "fil003h"."n牢固完整度" IS 'n牢固完整度';
 
 -- Files：0.估價單主檔
 CREATE TABLE "fil003i" (
@@ -2127,10 +2128,10 @@ CREATE TABLE "fil003i" (
     "高" numeric(6,2) DEFAULT 0 NOT NULL,
     "寬" numeric(6,2) DEFAULT 0 NOT NULL,
     "長" numeric(6,2) DEFAULT 0 NOT NULL,
-    "多少M" numeric(6,2) DEFAULT 0 NOT NULL,
+    "多少m" numeric(6,2) DEFAULT 0 NOT NULL,
     "購買數量" numeric(10,0) DEFAULT 0 NOT NULL,
-    "展開尺寸A" numeric(6,2) DEFAULT 0 NOT NULL,
-    "展開尺寸B" numeric(6,2) DEFAULT 0 NOT NULL,
+    "展開尺寸a" numeric(6,2) DEFAULT 0 NOT NULL,
+    "展開尺寸b" numeric(6,2) DEFAULT 0 NOT NULL,
     "尺寸倍率" numeric(4,1) DEFAULT 1 NOT NULL,
     "原料第一層" varchar(20) DEFAULT ' ' NOT NULL,
     "原料第二層" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2668,7 +2669,7 @@ CREATE TABLE "fil0041" (
     "客戶報價材質結構1" varchar(20) DEFAULT ' ' NOT NULL,
     "客戶報價材質結構2" varchar(20) DEFAULT ' ' NOT NULL,
     "客戶報價材質結構3" varchar(20) DEFAULT ' ' NOT NULL,
-    "檢附COA" smallint DEFAULT 0 NOT NULL,
+    "檢附coa" smallint DEFAULT 0 NOT NULL,
     "檢驗外觀" varchar(1) DEFAULT ' ' NOT NULL,
     "檢驗清潔度" varchar(1) DEFAULT ' ' NOT NULL,
     "檢驗顏色" varchar(1) DEFAULT ' ' NOT NULL,
@@ -2762,7 +2763,7 @@ CREATE TABLE "fil0041_a" (
     "客戶報價材質結構1" varchar(20) DEFAULT ' ' NOT NULL,
     "客戶報價材質結構2" varchar(20) DEFAULT ' ' NOT NULL,
     "客戶報價材質結構3" varchar(20) DEFAULT ' ' NOT NULL,
-    "檢附COA" smallint DEFAULT 0 NOT NULL,
+    "檢附coa" smallint DEFAULT 0 NOT NULL,
     "檢驗外觀" varchar(1) DEFAULT ' ' NOT NULL,
     "檢驗清潔度" varchar(1) DEFAULT ' ' NOT NULL,
     "檢驗顏色" varchar(1) DEFAULT ' ' NOT NULL,
@@ -2854,7 +2855,7 @@ CREATE TABLE "fil0041_b" (
     "放行人員" varchar(10) DEFAULT ' ' NOT NULL,
     "不限出庫" smallint DEFAULT 0 NOT NULL,
     "不限出庫人員" varchar(10) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     PRIMARY KEY ("單別", "單號", "序號")
 );
 COMMENT ON TABLE "fil0041_b" IS '0.熟成室管制表';
@@ -2878,7 +2879,7 @@ CREATE TABLE "fil0041_ba" (
     "放行人員" varchar(10) DEFAULT ' ' NOT NULL,
     "不限出庫" smallint DEFAULT 0 NOT NULL,
     "不限出庫人員" varchar(10) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     PRIMARY KEY ("單別", "單號", "序號")
 );
 COMMENT ON TABLE "fil0041_ba" IS '0.冷鏈室管制表';
@@ -3080,7 +3081,7 @@ CREATE TABLE "fil0049" (
     "袋內無粉與無沾粘異物" smallint,
     "袋子無雙頭封" smallint,
     "夾邊左右無大小邊與尺寸正確" smallint,
-    "碗公或K模高低位置平均" smallint,
+    "碗公或k模高低位置平均" smallint,
     "切刀鋒利無毛邊與開口性佳" smallint,
     "打角完整無毛邊與斷屑完全" smallint,
     "夾鏈緊密牢度佳與無破裂" smallint,
@@ -3324,7 +3325,7 @@ CREATE TABLE "fil004j" (
     "應出庫日時起" timestamp(0) NOT NULL,
     "應出庫日時迄" timestamp(0) NOT NULL,
     "本製程編號" varchar(70) DEFAULT ' ' NOT NULL,
-    "PLC抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
+    "plc抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
     "庫存數" numeric(14,4) DEFAULT 0 NOT NULL,
     "製品厚度" numeric(14,4) DEFAULT 0 NOT NULL,
     "熟成條件" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3335,8 +3336,8 @@ CREATE TABLE "fil004j" (
     "放行人員姓名" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫設定姓名" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫時間" smallint DEFAULT 0 NOT NULL,
-    "IP位址" varchar(40) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     "熟成室位置" varchar(20) DEFAULT ' ' NOT NULL,
     "加工別" varchar(1) DEFAULT ' ' NOT NULL,
     "單頭流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -3376,7 +3377,7 @@ CREATE TABLE "fil004ja" (
     "應出庫日時起" timestamp(0) NOT NULL,
     "應出庫日時迄" timestamp(0) NOT NULL,
     "本製程編號" varchar(70) DEFAULT ' ' NOT NULL,
-    "PLC抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
+    "plc抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
     "庫存數" numeric(14,4) DEFAULT 0 NOT NULL,
     "製品厚度" numeric(14,4) DEFAULT 0 NOT NULL,
     "冷鏈條件" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3387,8 +3388,8 @@ CREATE TABLE "fil004ja" (
     "放行人員姓名" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫設定姓名" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫時間" smallint DEFAULT 0 NOT NULL,
-    "IP位址" varchar(40) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     "冷鏈室位置" varchar(20) DEFAULT ' ' NOT NULL,
     "加工別" varchar(1) DEFAULT ' ' NOT NULL,
     "單頭流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -3428,7 +3429,7 @@ CREATE TABLE "fil004k" (
     "應出庫日時起" timestamp(0) NOT NULL,
     "應出庫日時迄" timestamp(0) NOT NULL,
     "本製程編號" varchar(70) DEFAULT ' ' NOT NULL,
-    "PLC抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
+    "plc抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
     "庫存數" numeric(14,4) DEFAULT 0 NOT NULL,
     "製品厚度" numeric(14,4) DEFAULT 0 NOT NULL,
     "熟成條件" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3439,8 +3440,8 @@ CREATE TABLE "fil004k" (
     "放行人員" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫設定人員" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫時間" smallint DEFAULT 0 NOT NULL,
-    "IP位址" varchar(40) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     "加工別" varchar(1) DEFAULT ' ' NOT NULL,
     "單頭流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "超時未入庫" smallint DEFAULT 0 NOT NULL,
@@ -3478,7 +3479,7 @@ CREATE TABLE "fil004ka" (
     "應出庫日時起" timestamp(0) NOT NULL,
     "應出庫日時迄" timestamp(0) NOT NULL,
     "本製程編號" varchar(70) DEFAULT ' ' NOT NULL,
-    "PLC抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
+    "plc抓取米數" numeric(14,4) DEFAULT 0 NOT NULL,
     "庫存數" numeric(14,4) DEFAULT 0 NOT NULL,
     "製品厚度" numeric(14,4) DEFAULT 0 NOT NULL,
     "熟成條件" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3489,8 +3490,8 @@ CREATE TABLE "fil004ka" (
     "放行人員" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫設定人員" varchar(20) DEFAULT ' ' NOT NULL,
     "不限出庫時間" smallint DEFAULT 0 NOT NULL,
-    "IP位址" varchar(40) DEFAULT ' ' NOT NULL,
-    "IP位址2" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址" varchar(40) DEFAULT ' ' NOT NULL,
+    "ip位址2" varchar(40) DEFAULT ' ' NOT NULL,
     "加工別" varchar(1) DEFAULT ' ' NOT NULL,
     "單頭流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "超時未入庫" smallint DEFAULT 0 NOT NULL,
@@ -4151,7 +4152,7 @@ COMMENT ON COLUMN "fil1020"."寄件日" IS '寄件日 / 寄件時';
 -- Files：1.ISO編號對照
 CREATE TABLE "fil1021" (
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
-    "ISO編號" varchar(30) DEFAULT ' ' NOT NULL,
+    "iso編號" varchar(30) DEFAULT ' ' NOT NULL,
     "版次" varchar(10) DEFAULT ' ' NOT NULL,
     "裝定日期" char(8) DEFAULT ' ' NOT NULL,
     "修定日期" char(8) DEFAULT ' ' NOT NULL,
@@ -4160,12 +4161,12 @@ CREATE TABLE "fil1021" (
 );
 CREATE UNIQUE INDEX "fil1021key1" ON "fil1021" ("publicname");
 COMMENT ON TABLE "fil1021" IS '1.ISO編號對照';
-COMMENT ON COLUMN "fil1021"."ISO編號" IS 'ISO文件編號';
+COMMENT ON COLUMN "fil1021"."iso編號" IS 'ISO文件編號';
 
 -- Files：1.ISO編號變更明細
 CREATE TABLE "fil1022" (
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
-    "ISO編號" varchar(30) DEFAULT ' ' NOT NULL,
+    "iso編號" varchar(30) DEFAULT ' ' NOT NULL,
     "版次" varchar(10) DEFAULT ' ' NOT NULL,
     "裝定日期" char(8) DEFAULT ' ' NOT NULL,
     "修定日期" char(8) DEFAULT ' ' NOT NULL,
@@ -4174,7 +4175,7 @@ CREATE TABLE "fil1022" (
 );
 CREATE UNIQUE INDEX "fil1022key1" ON "fil1022" ("publicname", "版次");
 COMMENT ON TABLE "fil1022" IS '1.ISO編號變更明細';
-COMMENT ON COLUMN "fil1022"."ISO編號" IS 'ISO文件編號';
+COMMENT ON COLUMN "fil1022"."iso編號" IS 'ISO文件編號';
 
 -- Files：1.製程成本月彙總
 CREATE TABLE "fil1051" (
@@ -4237,8 +4238,8 @@ CREATE TABLE "fil300b" (
     "機台代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "位置" varchar(1) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) DEFAULT 0 NOT NULL,
-    "PLC代碼" varchar(10) DEFAULT ' ' NOT NULL,
-    "PLC數值" numeric(10,0) DEFAULT 0 NOT NULL,
+    "plc代碼" varchar(10) DEFAULT ' ' NOT NULL,
+    "plc數值" numeric(10,0) DEFAULT 0 NOT NULL,
     "讀取日期" timestamp(0),
     "變更日期" timestamp(0),
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -4251,7 +4252,7 @@ CREATE TABLE "fil300b" (
 );
 CREATE UNIQUE INDEX "fil300b_01" ON "fil300b" ("機台代碼", "位置", "序號");
 CREATE INDEX "fil300b_02" ON "fil300b" ("機台代碼", "位置", "讀取日期");
-CREATE INDEX "fil300b_03" ON "fil300b" ("機台代碼", "位置", "讀取日期" DESC, "序號", "PLC代碼");
+CREATE INDEX "fil300b_03" ON "fil300b" ("機台代碼", "位置", "讀取日期" DESC, "序號", "plc代碼");
 CREATE INDEX "fil300b_04" ON "fil300b" ("機台代碼", "變更日期", "位置", "序號");
 CREATE INDEX "fil300b_05" ON "fil300b" ("製令單號", "讀取日時", "位置");
 CREATE INDEX "fil300b_06" ON "fil300b" ("相關單號", "機台代碼");
@@ -4439,30 +4440,30 @@ CREATE TABLE "fil3014" (
     "測試厚度平均" numeric(5,1) DEFAULT 0 NOT NULL,
     "喜美批號" varchar(40) DEFAULT ' ' NOT NULL,
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
-    "MD斷裂強度值測試1" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試2" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試3" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值平均一" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試4" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試5" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試6" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值平均二" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試7" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試8" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值測試9" numeric(6,2) DEFAULT 0 NOT NULL,
-    "MD斷裂強度值平均三" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試1" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試2" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試3" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值平均一" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試4" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試5" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試6" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值平均二" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試7" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試8" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值測試9" numeric(6,2) DEFAULT 0 NOT NULL,
-    "TD斷裂強度值平均三" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試1" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試2" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試3" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值平均一" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試4" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試5" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試6" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值平均二" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試7" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試8" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值測試9" numeric(6,2) DEFAULT 0 NOT NULL,
+    "md斷裂強度值平均三" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試1" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試2" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試3" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值平均一" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試4" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試5" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試6" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值平均二" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試7" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試8" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值測試9" numeric(6,2) DEFAULT 0 NOT NULL,
+    "td斷裂強度值平均三" numeric(6,2) DEFAULT 0 NOT NULL,
     "熱封溫度_假性黏著" numeric(4,0) DEFAULT 0 NOT NULL,
     "熱封溫度_確封溫度" numeric(4,0) DEFAULT 0 NOT NULL,
     "摩擦係數_動" numeric(3,2) DEFAULT 0 NOT NULL,
@@ -5872,7 +5873,7 @@ CREATE TABLE "hrfil2008" (
 CREATE UNIQUE INDEX "hrfil2008key1" ON "hrfil2008" ("職等");
 COMMENT ON TABLE "hrfil2008" IS '職位薪點表';
 
--- Files：員工附檔一
+-- Files：員工附檔一；Home：員工附檔一
 CREATE TABLE "hrfil0011" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "介紹人" varchar(12) NOT NULL,
@@ -5897,7 +5898,7 @@ CREATE TABLE "hrfil0011" (
 COMMENT ON TABLE "hrfil0011" IS '員工附檔一';
 COMMENT ON COLUMN "hrfil0011"."主修系統" IS '主修科系';
 
--- Files：員工學歷
+-- Files：員工學歷；Home：員工學歷
 CREATE TABLE "hrfil0012" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5911,7 +5912,7 @@ CREATE TABLE "hrfil0012" (
 CREATE INDEX "hrfil0012key2" ON "hrfil0012" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0012" IS '員工學歷';
 
--- Files：員工經歷
+-- Files：員工經歷；Home：員工經歷
 CREATE TABLE "hrfil0013" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5925,7 +5926,7 @@ CREATE TABLE "hrfil0013" (
 CREATE INDEX "hrfil0013key2" ON "hrfil0013" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0013" IS '員工經歷';
 
--- Files：員工獎懲
+-- Files：員工獎懲；Home：員工獎懲
 CREATE TABLE "hrfil0014" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5939,7 +5940,7 @@ CREATE TABLE "hrfil0014" (
 CREATE INDEX "hrfil0014key2" ON "hrfil0014" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0014" IS '員工獎懲';
 
--- Files：員工職務
+-- Files：員工職務；Home：員工職務
 CREATE TABLE "hrfil0015" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5953,7 +5954,7 @@ CREATE TABLE "hrfil0015" (
 CREATE INDEX "hrfil0015key2" ON "hrfil0015" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0015" IS '員工職務';
 
--- Files：員工訓練
+-- Files：員工訓練；Home：員工訓練
 CREATE TABLE "hrfil0016" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5967,7 +5968,7 @@ CREATE TABLE "hrfil0016" (
 CREATE INDEX "hrfil0016key2" ON "hrfil0016" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0016" IS '員工訓練';
 
--- Files：代理人
+-- Files：代理人；Home：代理人
 CREATE TABLE "hrfil0017" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "代理人流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -5979,7 +5980,7 @@ CREATE TABLE "hrfil0017" (
 CREATE INDEX "hrfil0017key2" ON "hrfil0017" ("員工流水編號", "代理人流水編號", "起始日期", "終止日期");
 COMMENT ON TABLE "hrfil0017" IS '代理人';
 
--- Files：最高權限
+-- Files：最高權限；Home：最高權限
 CREATE TABLE "hrfil0018" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "最高權限" smallint NOT NULL
@@ -6119,7 +6120,7 @@ CREATE TABLE "fili0001" (
     "讀值" numeric(12,2) NOT NULL,
     "讀取日期" char(8) DEFAULT '00000000' NOT NULL,
     "讀取時間" char(6) DEFAULT '000000' NOT NULL,
-    "讀取IP" varchar(50) NOT NULL
+    "讀取ip" varchar(50) NOT NULL
 );
 CREATE UNIQUE INDEX "fili0001key1" ON "fili0001" ("流水編號");
 CREATE UNIQUE INDEX "fili0001key2" ON "fili0001" ("感測器編號", "感測器序號", "讀取日期", "讀取時間");
@@ -6506,11 +6507,11 @@ COMMENT ON COLUMN "a01_18"."emp_id" IS '留言人ID';
 -- EDB：單據變更日期
 CREATE TABLE "a01_19" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
-    "PDF新增日期" char(8) DEFAULT '00000000' NOT NULL,
-    "PDF新增時間" char(6) DEFAULT '000000' NOT NULL
+    "pdf新增日期" char(8) DEFAULT '00000000' NOT NULL,
+    "pdf新增時間" char(6) DEFAULT '000000' NOT NULL
 );
 CREATE UNIQUE INDEX "a01_19key1" ON "a01_19" ("serial_num");
-CREATE INDEX "a01_19key2" ON "a01_19" ("PDF新增日期", "PDF新增時間");
+CREATE INDEX "a01_19key2" ON "a01_19" ("pdf新增日期", "pdf新增時間");
 COMMENT ON TABLE "a01_19" IS '單據變更日期';
 COMMENT ON COLUMN "a01_19"."serial_num" IS '流水編號';
 
@@ -7187,9 +7188,9 @@ CREATE TABLE "calendar" (
     "flag" smallint NOT NULL,
     "fromserialno" varchar(40) DEFAULT ' ' NOT NULL
 );
-CREATE UNIQUE INDEX "CalKey1%EntryID%" ON "calendar" ("serialno");
-CREATE INDEX "CalKey2%EntryID%" ON "calendar" ("userid", "datefrom", "timefrom");
-CREATE INDEX "CalKey3%EntryID%" ON "calendar" ("userid", "completed", "datefrom", "timefrom");
+CREATE UNIQUE INDEX "calkey1%entryid%" ON "calendar" ("serialno");
+CREATE INDEX "calkey2%entryid%" ON "calendar" ("userid", "datefrom", "timefrom");
+CREATE INDEX "calkey3%entryid%" ON "calendar" ("userid", "completed", "datefrom", "timefrom");
 COMMENT ON TABLE "calendar" IS 'Calendar';
 COMMENT ON COLUMN "calendar"."flag" IS 'Level';
 
@@ -7198,7 +7199,7 @@ CREATE TABLE "calendarsn" (
     "date_" char(8) DEFAULT '00000000' NOT NULL,
     "seqno" smallint NOT NULL
 );
-CREATE UNIQUE INDEX "SNOKey1%EntryID%" ON "calendarsn" ("date_");
+CREATE UNIQUE INDEX "snokey1%entryid%" ON "calendarsn" ("date_");
 COMMENT ON TABLE "calendarsn" IS 'CalSeqNo';
 COMMENT ON COLUMN "calendarsn"."date_" IS 'CalDate';
 
@@ -7209,7 +7210,7 @@ CREATE TABLE "calendartz" (
     "time" char(6) DEFAULT '000000' NOT NULL,
     "zdata" varchar(2048) DEFAULT ' ' NOT NULL
 );
-CREATE UNIQUE INDEX "CalTZKey1%EntryID%" ON "calendartz" ("userid", "date_", "time");
+CREATE UNIQUE INDEX "caltzkey1%entryid%" ON "calendartz" ("userid", "date_", "time");
 COMMENT ON TABLE "calendartz" IS 'CalTZData';
 COMMENT ON COLUMN "calendartz"."date_" IS 'Date';
 
@@ -7345,7 +7346,7 @@ COMMENT ON COLUMN "doc_kmcategory"."seqno" IS '序號';
 COMMENT ON COLUMN "doc_kmcategory"."modulename" IS '名稱';
 COMMENT ON COLUMN "doc_kmcategory"."description" IS '說明';
 
--- Doc：樹狀結構
+-- Doc：樹狀結構；Home：KMTree
 CREATE TABLE "doc_kmtree" (
     "category" varchar(50) NOT NULL,
     "nodeid" varchar(20) NOT NULL,
@@ -7520,27 +7521,170 @@ COMMENT ON COLUMN "doc_allowedsize"."allowcategory" IS '允許新增頁籤';
 COMMENT ON COLUMN "doc_allowedsize"."allownode" IS '允許新增文件夾';
 COMMENT ON COLUMN "doc_allowedsize"."allowdoc" IS '允許新增文件';
 
--- UserFunctionality：ExcelSelectedColummns (Local)
-CREATE TABLE "excelselectedcolummnslocal" (
-    "tasksequence" numeric(10,0) NOT NULL,
-    "variableindex" integer NOT NULL,
-    "variablename" varchar(30) NOT NULL,
-    "variabledisplayname" varchar(30) NOT NULL,
-    "selected" smallint NOT NULL,
-    "date_as_monthyear" smallint NOT NULL,
-    "columnorder" smallint NOT NULL
+-- Home：WorkflowItem
+CREATE TABLE "workflowitem" (
+    "item" varchar(20) NOT NULL,
+    "name" varchar(10) NOT NULL,
+    "iconno" smallint NOT NULL,
+    "nodeid" smallint NOT NULL,
+    "parentid" smallint NOT NULL
 );
-CREATE UNIQUE INDEX "excelselectedcolummnsindex" ON "excelselectedcolummnslocal" ("tasksequence", "columnorder", "variableindex");
-COMMENT ON TABLE "excelselectedcolummnslocal" IS 'ExcelSelectedColummns (Local)';
-COMMENT ON COLUMN "excelselectedcolummnslocal"."date_as_monthyear" IS 'date as monthYear';
+CREATE INDEX "workflowitemkey1" ON "workflowitem" ("item");
+CREATE UNIQUE INDEX "workflowitemkey2" ON "workflowitem" ("nodeid");
+CREATE INDEX "workflowitemkey3" ON "workflowitem" ("parentid", "nodeid");
+COMMENT ON TABLE "workflowitem" IS 'WorkflowItem';
+COMMENT ON COLUMN "workflowitem"."nodeid" IS 'NodeID';
 
--- UserFunctionality：ExcelInfo (Local)
-CREATE TABLE "excelinfolocal" (
-    "tasksequence" numeric(10,0) NOT NULL,
-    "plot_by_row" smallint NOT NULL,
-    "chart_type" smallint NOT NULL
+-- Home：MesflowItem
+CREATE TABLE "mesflowitem" (
+    "item" varchar(20) NOT NULL,
+    "name" varchar(10) NOT NULL,
+    "iconno" smallint NOT NULL,
+    "nodeid" smallint NOT NULL,
+    "parentid" smallint NOT NULL
 );
-CREATE UNIQUE INDEX "excelinfolocalindex" ON "excelinfolocal" ("tasksequence");
-COMMENT ON TABLE "excelinfolocal" IS 'ExcelInfo (Local)';
-COMMENT ON COLUMN "excelinfolocal"."plot_by_row" IS 'Plot by Row';
-COMMENT ON COLUMN "excelinfolocal"."chart_type" IS 'Chart Type';
+CREATE INDEX "mesflowitemkey1" ON "mesflowitem" ("item");
+CREATE UNIQUE INDEX "mesflowitemkey2" ON "mesflowitem" ("nodeid");
+CREATE INDEX "mesflowitemkey3" ON "mesflowitem" ("parentid", "nodeid");
+COMMENT ON TABLE "mesflowitem" IS 'MesflowItem';
+COMMENT ON COLUMN "mesflowitem"."nodeid" IS 'NodeID';
+
+-- Home：TMP.發料試算
+CREATE TABLE "tmp10001" (
+    "guid" varchar(60) DEFAULT ' ' NOT NULL,
+    "序號" numeric(10,0) DEFAULT 0 NOT NULL,
+    "料號" varchar(20) DEFAULT ' ' NOT NULL,
+    "庫別" varchar(10) DEFAULT ' ' NOT NULL,
+    "批號" varchar(40) DEFAULT ' ' NOT NULL,
+    "數量" numeric(14,4) DEFAULT 0 NOT NULL,
+    "單位" varchar(10) DEFAULT ' ' NOT NULL,
+    "選擇" smallint DEFAULT 0 NOT NULL,
+    "備註" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("guid", "序號")
+);
+COMMENT ON TABLE "tmp10001" IS 'TMP.發料試算';
+
+-- Home：TMP.批號庫存1
+CREATE TABLE "tmp10002" (
+    "批號" varchar(40) DEFAULT ' ' NOT NULL,
+    "製袋" smallint NOT NULL,
+    "氣閥" smallint NOT NULL,
+    "鐵條" smallint NOT NULL,
+    "異動" smallint NOT NULL,
+    "重工" smallint NOT NULL,
+    "品檢" smallint NOT NULL,
+    "成品編號" varchar(20) DEFAULT ' ' NOT NULL,
+    "生產日期" char(8) NOT NULL,
+    "結存數量" numeric(14,4) DEFAULT 0 NOT NULL,
+    "製袋重量" numeric(14,4) NOT NULL,
+    "氣閥重量" numeric(14,4) NOT NULL,
+    "鐵條重量" numeric(14,4) NOT NULL,
+    "結存重量" numeric(14,4) NOT NULL,
+    "guid" varchar(60) DEFAULT ' ' NOT NULL,
+    "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("guid")
+);
+CREATE UNIQUE INDEX "tmp1002_key1" ON "tmp10002" ("員工編號", "批號");
+COMMENT ON TABLE "tmp10002" IS 'TMP.批號庫存1';
+
+-- Home：TMP.批號庫存2
+CREATE TABLE "tmp10003" (
+    "批號" varchar(40) DEFAULT ' ' NOT NULL,
+    "平均製袋重量" numeric(16,6) NOT NULL,
+    "平均氣閥重量" numeric(16,6) NOT NULL,
+    "平均鐵條重量" numeric(16,6) NOT NULL,
+    "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
+    "單據日期" char(8) DEFAULT '00000000' NOT NULL
+);
+CREATE UNIQUE INDEX "tmp1003_key1" ON "tmp10003" ("批號");
+COMMENT ON TABLE "tmp10003" IS 'TMP.批號庫存2';
+
+-- Home：TMP.排程發佈
+CREATE TABLE "tmp10004" (
+    "機台代碼" varchar(10) DEFAULT ' ' NOT NULL,
+    "日期" char(8) DEFAULT '00000000' NOT NULL,
+    "發佈" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "tmp10004key1" ON "tmp10004" ("機台代碼", "日期");
+COMMENT ON TABLE "tmp10004" IS 'TMP.排程發佈';
+
+-- Home：TMP.登入檢查
+CREATE TABLE "tmp10005" (
+    "ip" varchar(20) DEFAULT ' ' NOT NULL,
+    "userid" varchar(60) DEFAULT ' ' NOT NULL,
+    "lastdate" char(8) DEFAULT '00000000' NOT NULL,
+    "lasttime" char(6) DEFAULT '000000' NOT NULL
+);
+CREATE UNIQUE INDEX "tmp10005key1" ON "tmp10005" ("ip");
+COMMENT ON TABLE "tmp10005" IS 'TMP.登入檢查';
+
+-- Home：xx磅秤資料
+CREATE TABLE "wttable" (
+    "weight" numeric(10,6),
+    "createtime" varchar(20),
+    "wtip" varchar(20),
+    "used" smallint DEFAULT 0 NOT NULL
+);
+COMMENT ON TABLE "wttable" IS 'xx磅秤資料';
+
+-- Home：網站詢價
+CREATE TABLE "inquery" (
+    "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
+    "聯絡人" varchar(50) NOT NULL,
+    "聯絡電話" varchar(20) NOT NULL,
+    "電子郵件" varchar(100) NOT NULL,
+    "成品類型" varchar(10) NOT NULL,
+    "成捲品寬度" varchar(10) NOT NULL,
+    "成捲品高度" varchar(10) NOT NULL,
+    "袋型" varchar(10) NOT NULL,
+    "袋子高度" varchar(10) NOT NULL,
+    "袋子寬度" varchar(10) NOT NULL,
+    "袋子長度" varchar(10) NOT NULL,
+    "需夾鏈否" varchar(10) NOT NULL,
+    "夾鏈類型" varchar(10) NOT NULL,
+    "夾鏈樣式" varchar(10) NOT NULL,
+    "第一色" varchar(20) NOT NULL,
+    "第二色" varchar(20) NOT NULL,
+    "第三色" varchar(20) NOT NULL,
+    "第四色" varchar(20) NOT NULL,
+    "第五" varchar(20) NOT NULL,
+    "第六色" varchar(20) NOT NULL,
+    "第七色" varchar(20) NOT NULL,
+    "第八色" varchar(20) NOT NULL,
+    "第九色" varchar(20) NOT NULL,
+    "第十色" varchar(20) NOT NULL,
+    "共幾層" varchar(1) NOT NULL,
+    "第一層材料" varchar(40) NOT NULL,
+    "第一層厚度" varchar(10) NOT NULL,
+    "第一層貼合" varchar(10) NOT NULL,
+    "第二層材料" varchar(40) NOT NULL,
+    "第二層厚度" varchar(10) NOT NULL,
+    "第二層貼合" varchar(10) NOT NULL,
+    "第三層材料" varchar(40) NOT NULL,
+    "第三層厚度" varchar(10) NOT NULL,
+    "第三層貼合" varchar(10) NOT NULL,
+    "第四層材料" varchar(40) NOT NULL,
+    "第四層厚度" varchar(10) NOT NULL,
+    "第四層貼合" varchar(10) NOT NULL,
+    "第五層材料" varchar(40) NOT NULL,
+    "第五層厚度" varchar(10) NOT NULL,
+    "第五層貼合" varchar(10) NOT NULL,
+    "第六層材料" varchar(40) NOT NULL,
+    "第六層厚度" varchar(10) NOT NULL,
+    "第六層貼合" varchar(10) NOT NULL,
+    "化學性質" varchar(256) NOT NULL,
+    "物理性質" varchar(256) NOT NULL,
+    "數量條件" varchar(256) NOT NULL,
+    "商當的包裝材料" varchar(256) NOT NULL,
+    "包裝技法" varchar(256) NOT NULL,
+    "需要的包裝的期間" varchar(256) NOT NULL,
+    "在此期限間的溫度及濕度" varchar(256) NOT NULL,
+    "運輸或者貯藏單位的包裝容器" varchar(256) NOT NULL,
+    "運輸或者貯藏中的振動衝擊" varchar(256) NOT NULL,
+    "新增日期" char(8) DEFAULT '00000000' NOT NULL,
+    "新增時間" char(6) DEFAULT '000000' NOT NULL
+);
+CREATE UNIQUE INDEX "tempkey1" ON "inquery" ("流水編號", "聯絡人");
+COMMENT ON TABLE "inquery" IS '網站詢價';
+COMMENT ON COLUMN "inquery"."第五" IS '第五色';
+COMMENT ON COLUMN "inquery"."商當的包裝材料" IS '適當的包裝材料';

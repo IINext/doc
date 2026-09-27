@@ -62,7 +62,13 @@ class Project:
                 if pub:
                     programs[(pname.lower(), pub)] = f'{pname} #{i} {t.find("Header").get("Description")}'
         # 元件的資料表、程式：LNK/DB、TaskID 的 obj 是元件清單中的「位置」（第幾個），不是 id
-        self.comp, self.comp_prg = {}, {}
+        self.comp, self.comp_prg, self.comp_evt = {}, {}, {}
+        # 元件事件的 comp 是「有事件的元件」中的第幾個；沒有 comp 屬性時是第 1 個
+        with_events = [c for c in self.root.findall('ComponentsRepository/Components/Component')
+                       if c.find('ComponentEvents') is not None]
+        for ei, c in enumerate(with_events, 1):
+            for pos, o in enumerate(c.findall('ComponentEvents/Object'), 1):
+                self.comp_evt[(str(ei), str(pos))] = f'{c.get("name")}:{val(o, "PublicName")}'
         for ci, c in enumerate(self.root.findall('ComponentsRepository/Components/Component'), 1):
             # 元件名稱和專案名稱不一定相同（例如 Files.ecf 在 PLC 專案裡叫 PLC），用 .ecf 檔名對應
             cab = re.search(r'([^\\/%]*)\.ecf$', val(c, 'CABINET_FILE') or '', re.I)
@@ -114,6 +120,9 @@ class Task:
         obj = val(ev, 'PublicObject', 'obj')
         if not obj:
             return ''
+        comp = val(ev, 'PublicObject', 'comp')
+        if comp != '-1':
+            return self.p.comp_evt.get((comp or '1', obj), f'comp{comp or 1}.#{obj}')
         parent = int(val(ev, 'Parent') or 0)
         if parent == 32768:
             evnts = self.p.tasks[0].findall('EVNT')
