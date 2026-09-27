@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}請假申請單 - ERP{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h5 class="mb-0 me-auto">請假申請單</h5>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('leave.create') }}"><i class="bi bi-plus-lg"></i> 新增</a>
+</div>
+
+<form class="row g-2 align-items-end mb-3" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">填寫日期</label>
+    <div class="input-group input-group-sm">
+      <input class="form-control" type="date" name="date_from" value="{{ date_from.isoformat() }}">
+      <span class="input-group-text">～</span>
+      <input class="form-control" type="date" name="date_to" value="{{ date_to.isoformat() }}">
+    </div>
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">單號</label>
+    <input class="form-control form-control-sm" name="no" value="{{ request.args.get('no', '') }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">狀態</label>
+    <select class="form-select form-select-sm" name="status">
+      <option value="">全部</option>
+      <option value="0" {% if request.args.get('status') == '0' %}selected{% endif %}>草稿</option>
+      {% for code, text in status_text.items() %}
+      <option value="{{ code }}" {% if request.args.get('status') == code %}selected{% endif %}>{{ text }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto"><button class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i> 查詢</button></div>
+</form>
+
+<div class="table-responsive bg-white border rounded">
+<table class="table table-sm table-hover mb-0">
+  <thead class="table-light">
+    <tr>
+      <th>單號</th><th>狀態</th><th>申請人</th><th>部門</th><th>假別</th>
+      <th>起始</th><th>截止</th><th class="text-end">天</th><th class="text-end">時</th><th>代理人</th><th>填寫人</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="{{ url_for('leave.edit', no=r['單號']) }}">{{ r['單號'] }}</a></td>
+      <td><span class="badge status-badge {{ 'bg-success' if r['簽核狀態'] == 'E' else 'bg-warning text-dark' if r['簽核狀態'] == 'I' else 'bg-danger' if r['簽核狀態'] in ('D', 'A') else 'bg-secondary' }}">
+        {{ status_text.get(r['簽核狀態'], '草稿') }}</span></td>
+      <td>{{ r['申請人姓名'] }}</td>
+      <td>{{ r['部門名稱'] }}</td>
+      <td>{{ r['請假假別名稱'] }}</td>
+      <td>{{ to_date(r['起始日期']) }} {{ to_time(r['起始時間']).strftime('%H:%M') }}</td>
+      <td>{{ to_date(r['截止日期']) }} {{ to_time(r['截止時間']).strftime('%H:%M') }}</td>
+      <td class="text-end">{{ r['天數'] }}</td>
+      <td class="text-end">{{ '%g' % r['時數'] }}</td>
+      <td>{{ r['代理人姓名'] }}</td>
+      <td>{{ r['填寫人姓名'] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="11" class="text-center text-muted py-4">沒有資料</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

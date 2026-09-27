@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}登入 - ERP{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-sm-8 col-md-5 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h5 class="card-title mb-4"><i class="bi bi-box-arrow-in-right"></i> 登入 ERP</h5>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="emp_no">員工編號</label>
+            <input class="form-control" id="emp_no" name="emp_no" required autofocus autocomplete="username">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="password">密碼</label>
+            <input class="form-control" id="password" name="password" type="password" required autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary w-100">登入</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

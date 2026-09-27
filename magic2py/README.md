@@ -214,5 +214,6 @@ Oracle 的 `user_views` 只有查詢本身，View 的欄位名稱從 `oracle_col
 
 1. 確認那 31 個 HR 相關資料表在哪個 schema 或資料庫。
 2. 處理需要人工改寫的 16 個 View。
-3. 用 repo 的 Flask 系統，把 Home 的 H01 請假申請單從畫面、資料到送簽完整轉一次，建立共用寫法。
+3. ~~把 Home 的 H01 請假申請單從畫面、資料到送簽完整轉一次~~：已完成，見 [`../erp/`](../erp/README.md)。
+   下一步是簽核人核准／退回，以及其他單據。
 4. 在 Magic 上跑幾組 #14 的結果，填進 `test_amount_to_chinese.py` 的 `MAGIC_VERIFIED`。

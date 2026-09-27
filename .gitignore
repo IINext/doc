@@ -25,3 +25,6 @@ env/
 # 系統檔
 .DS_Store
 Thumbs.db
+
+# ERP 本機設定（含資料庫密碼與金鑰）
+erp/erp.env.bat
