@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>即時通 AIBridge 介面導覽</title>
+<style>
+/* ============================================================
+   產品介紹 ── 使用介面導覽
+   可獨立開啟，也可將 <section class="ui-tour"> 整段貼進原「產品介紹」HTML
+   （連同本 <style> 區塊；所有樣式都限定在 .ui-tour 底下，不會影響原頁面）
+   ============================================================ */
+:root{
+  --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; --paper:#ffffff; --bg:#f4f6fa;
+  --navy:#1e3a5f; --navy-2:#27496f; --navy-3:#34597f; --accent:#2563eb;
+  --bubble:#e8f2fd; --bubble-line:#cfe3f8; --callout:#e11d48; --callout-soft:#fff1f3;
+}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;line-height:1.6}
+.ui-tour{max-width:1180px;margin:0 auto;padding:32px 16px 48px}
+.ui-tour h2{font-size:26px;margin:0 0 6px;color:var(--navy)}
+.ui-tour .lead{margin:0 0 24px;color:var(--muted);font-size:15px}
+.ui-tour h3{font-size:19px;margin:36px 0 12px;color:var(--navy);border-left:4px solid var(--accent);padding-left:10px}
+
+/* ---------- 版面：左畫面、右說明 ---------- */
+.ui-tour .tour-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:24px;align-items:start}
+
+/* ---------- 視窗模擬 ---------- */
+.ui-tour .win{background:var(--paper);border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;
+  box-shadow:0 10px 30px rgba(15,23,42,.12);font-size:12.5px}
+.ui-tour .titlebar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line);background:#fafafa}
+.ui-tour .titlebar .logo{width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#10b981,#2563eb)}
+.ui-tour .titlebar .ctrls{margin-left:auto;letter-spacing:14px;color:#555}
+.ui-tour .menubar{padding:2px 12px;border-bottom:1px solid var(--line);color:#333;word-spacing:10px}
+.ui-tour .app{display:grid;grid-template-columns:230px 1fr;min-height:560px}
+
+/* 左側欄 */
+.ui-tour .side{background:var(--navy);color:#e2e8f0;padding:10px 10px 0;position:relative}
+.ui-tour .org{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ui-tour .org .chip{background:var(--navy-2);border:1px solid #4b6b90;border-radius:6px;padding:3px 10px;font-weight:bold}
+.ui-tour .org .out{font-size:11px;color:#cbd5e1}
+.ui-tour .me{display:flex;gap:5px;align-items:center;margin-bottom:8px}
+.ui-tour .av{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:grid;place-items:center;font-weight:bold;flex:none}
+.ui-tour .mini{background:var(--navy-2);border:1px solid #4b6b90;border-radius:5px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.ui-tour .icons{display:flex;gap:4px;margin-bottom:10px;align-items:center}
+.ui-tour .icons span{width:22px;height:22px;border-radius:5px;background:var(--navy-3);display:grid;place-items:center;font-size:12px}
+.ui-tour .icons .plus{margin-left:auto;border-radius:50%;background:#3b82f6;color:#fff}
+.ui-tour .search{background:var(--navy-2);border:1px solid #4b6b90;border-radius:6px;padding:4px 8px;color:#94a3b8;margin-bottom:6px}
+.ui-tour .tools-label{font-size:11px;color:#f87171}
+.ui-tour .tools{display:flex;gap:6px;margin:4px 0 10px}
+.ui-tour .tool{border:1px solid #6b8bb0;border-radius:14px;padding:2px 9px;font-size:11.5px;position:relative;white-space:nowrap}
+.ui-tour .chat{display:flex;gap:8px;align-items:center;padding:9px 6px;border-top:1px solid rgba(255,255,255,.08);position:relative}
+.ui-tour .chat.active{background:var(--navy-3);margin:0 -10px;padding-left:16px;padding-right:16px}
+.ui-tour .chat .t{font-weight:bold;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ui-tour .chat .s{font-size:11px;color:#a8b8cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ui-tour .chat .txt{min-width:0}
+.ui-tour .grp{background:#3b82f6}
+.ui-tour .person{background:#60a5fa}
+
+/* 右側對話 */
+.ui-tour .main{display:flex;flex-direction:column;background:#fff;min-width:0}
+.ui-tour .head{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:bold;font-size:14px}
+.ui-tour .head .hb{margin-left:auto;display:flex;gap:6px}
+.ui-tour .head .hb span{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font-size:13px}
+.ui-tour .msgs{flex:1;padding:12px 14px;background:#fbfcfe;display:flex;flex-direction:column;gap:12px}
+.ui-tour .msg{display:flex;gap:8px;align-items:flex-end;position:relative}
+.ui-tour .msg .av{width:24px;height:24px;font-size:11px;background:#3b82f6}
+.ui-tour .from{font-size:11px;color:var(--muted);margin-bottom:2px}
+.ui-tour .bubble{background:var(--bubble);border:1px solid var(--bubble-line);border-radius:10px;padding:8px 11px;max-width:420px}
+.ui-tour .bubble .link{color:var(--accent);text-decoration:underline}
+.ui-tour .bubble.done .link{color:#94a3b8;text-decoration:line-through}
+.ui-tour .mask{display:inline-block;width:38px;height:12px;border:1.5px solid #d946ef;border-radius:3px;vertical-align:middle}
+.ui-tour .time{font-size:10.5px;color:var(--muted);align-self:flex-end;white-space:nowrap}
+.ui-tour .inputbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);position:relative}
+.ui-tour .inputbar .ic{font-size:15px}
+.ui-tour .inputbar .box{flex:1;border:1.5px solid #3b82f6;border-radius:18px;padding:6px 12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ui-tour .inputbar .send{background:#3b82f6;color:#fff;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font-size:11px;flex:none}
+
+/* 編號標記 */
+.ui-tour .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--callout);color:#fff;
+  font-size:12px;font-weight:bold;font-family:Arial,sans-serif;box-shadow:0 0 0 2px #fff;flex:none}
+.ui-tour .pin{position:absolute;z-index:2}
+.ui-tour .hl{outline:2px solid var(--callout);outline-offset:2px;border-radius:6px}
+
+/* 說明卡 */
+.ui-tour .legend{display:flex;flex-direction:column;gap:10px}
+.ui-tour .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:10px}
+.ui-tour .card b.title{display:block;font-size:15px}
+.ui-tour .card .tag{display:inline-block;background:var(--callout-soft);color:var(--callout);border-radius:4px;padding:0 6px;font-size:12px;margin:2px 0 4px;font-weight:bold}
+.ui-tour .card p{margin:0;font-size:13.5px;color:#374151}
+
+/* 情境流程 */
+.ui-tour .flows{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.ui-tour .flow{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px}
+.ui-tour .flow h4{margin:0 0 8px;font-size:15px;display:flex;gap:8px;align-items:center}
+.ui-tour .flow ol{margin:0;padding-left:20px;font-size:13.5px}
+.ui-tour .flow li{margin-bottom:4px}
+
+/* 卡片解剖 */
+.ui-tour .anatomy{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px}
+.ui-tour .anatomy .bubble{max-width:none;font-size:13px;line-height:2}
+.ui-tour .anatomy .bubble .n{width:18px;height:18px;font-size:11px;vertical-align:middle}
+.ui-tour .anatomy ul{margin:0;padding-left:0;list-style:none;font-size:13.5px}
+.ui-tour .anatomy li{display:flex;gap:8px;margin-bottom:8px}
+
+@media (max-width:900px){
+  .ui-tour .tour-grid,.ui-tour .anatomy{grid-template-columns:1fr}
+  .ui-tour .app{grid-template-columns:190px 1fr}
+}
+@media (max-width:560px){
+  .ui-tour .app{grid-template-columns:1fr}
+  .ui-tour .win{font-size:12px}
+}
+@media print{
+  body{background:#fff}
+  .ui-tour{padding:0}
+  .ui-tour .win{box-shadow:none}
+  .ui-tour .tour-grid{grid-template-columns:1.5fr 1fr}
+  .ui-tour .card,.ui-tour .flow,.ui-tour .anatomy{break-inside:avoid}
+  .ui-tour h3{break-after:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<section class="ui-tour">
+  <h2>使用介面導覽：功能在畫面上的哪裡？</h2>
+  <p class="lead">即時通 AIBridge 把「文件、排程預警、資料庫、Excel 轉系統、外部 AI Agent」都收進同一個聊天視窗。
+    使用者不需要切換多套系統，只要看通知、點連結、或在對話框 @AI 即可完成工作。下圖紅色編號對應右側說明。</p>
+
+  <div class="tour-grid">
+    <!-- ===== 畫面模擬 ===== -->
+    <div class="win" role="img" aria-label="即時通主畫面示意圖，標示各功能位置">
+      <div class="titlebar"><span class="logo"></span>即時通<span class="ctrls">—☐✕</span></div>
+      <div class="menubar">File Edit View Window Help</div>
+      <div class="app">
+        <!-- 左側欄 -->
+        <aside class="side">
+          <div class="org"><span class="chip">🏢 範例科技</span><span class="out">⇥ 登出</span></div>
+          <div class="me"><span class="av">系</span><span class="mini">⏰ 排程</span><span class="mini">🔑 密碼</span><span class="mini">👤 個資</span></div>
+          <div class="icons"><span>🔔</span><span>📁</span><span>🤖</span><span>📘</span><span>📊</span><span>👑</span><span class="plus">+</span></div>
+          <div class="search">🔍 搜尋群組 / 聯絡人…</div>
+          <div class="tools-label">🧰 我的工具</div>
+          <div class="tools">
+            <span class="tool">營運追蹤 ↗</span>
+            <span class="tool hl">文件管理系統 ↗<span class="n pin" style="top:-12px;right:-12px">1</span></span>
+          </div>
+
+          <div class="chat"><span class="av">🤖</span><div class="txt"><div class="t">AI 助理</div><div class="s">## 客訴處理 SOP 摘要【…</div></div>
+            <span class="n pin" style="right:4px;top:8px">6</span></div>
+          <div class="chat active"><span class="av">系</span><div class="txt"><div class="t">系統通知</div><div class="s">📈 SPT-2 16AWG 2P 電源線…</div></div>
+            <span class="n pin" style="right:6px;top:8px">2</span></div>
+          <div class="chat"><span class="av grp">👥</span><div class="txt"><div class="t">📌 報價追蹤通知</div><div class="s">【報價單追蹤】口頭報價尚未補單…</div></div>
+            <span class="n pin" style="right:4px;top:8px">3</span></div>
+          <div class="chat"><span class="av grp">👥</span><div class="txt"><div class="t">📌 門號續約通知</div><div class="s">【門號續約待確認】到期前 60 天…</div></div>
+            <span class="n pin" style="right:4px;top:8px">4</span></div>
+          <div class="chat"><span class="av grp">👥</span><div class="txt"><div class="t">📌 標案監控通知</div><div class="s">【標案監控】新公告 1 筆・…</div></div>
+            <span class="n pin" style="right:4px;top:8px">5</span></div>
+          <div class="chat"><span class="av person">王</span><div class="txt"><div class="t">王小明</div><div class="s">剛剛把採購審核程式開放給你…</div></div></div>
+        </aside>
+
+        <!-- 對話區 -->
+        <div class="main">
+          <div class="head">系統通知<span class="hb"><span>🔍</span><span>👥</span><span>🔔</span><span>📌</span><span>🚪</span></span></div>
+          <div class="msgs">
+            <div class="msg"><span class="av">系</span>
+              <div><div class="from">🤖 AI 助理</div>
+                <div class="bubble hl">📈 A-1733 在線 PH 6 米 無溫補 Y 端 一體成型（供應商甲）　漲價：2100 → 3160（+50.48%）<br>
+                  原因：通知原物料及經營成本上漲<br>填報人：<span class="mask"></span><br><br>
+                  👉 <span class="link">開啟填報頁面</span></div></div>
+              <span class="time">下午 06:42</span>
+              <span class="n pin" style="left:22px;top:6px">7</span></div>
+            <div class="msg"><span class="av">系</span>
+              <div><div class="from">🤖 AI 助理</div>
+                <div class="bubble">📈 水質手提盒上空用黑色海棉（供應商乙）　漲價：29 → 34（+17.24%）<br>
+                  原因：原物料廠商材料調漲 20% 以上，舊價已無法承接<br>填報人：<span class="mask"></span><br><br>
+                  👉 <span class="link">開啟填報頁面</span></div></div>
+              <span class="time">下午 06:45</span></div>
+            <div class="msg"><span class="av">系</span>
+              <div><div class="from">🤖 AI 助理</div>
+                <div class="bubble done">📈 SPT-2 16AWG 2P 單頭母座 AC 線［30CM］（供應商丙）　漲價：22.5 → 26.2（+16.44%）<br>
+                  原因：原物料成本調漲（例如銅、外被、絕緣材料）<br>填報人：<span class="mask"></span><br><br>
+                  👉 <span class="link">開啟填報頁面</span> ✓</div></div>
+              <span class="time">下午 06:47</span></div>
+          </div>
+          <div class="inputbar"><span class="ic">📎</span><span class="ic">😊</span><span class="ic">🖼️</span><span class="ic">📷</span>
+            <span class="box hl">輸入訊息…（@AI 問問題・交辦工作）</span><span class="ic">🎙️</span><span class="send">送出</span>
+            <span class="n pin" style="left:50%;top:-10px">6</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 對照說明 ===== -->
+    <div class="legend">
+      <div class="card"><span class="n">1</span><div><b class="title">「我的工具」→ 文件管理系統</b><span class="tag">非結構化文件 → 知識庫</span>
+        <p>一鍵開啟文件管理系統（免再登入）。規章、SOP、合約、圖面上傳後自動建版本、控權限，並成為 AI 助理可以查詢的企業知識庫。</p></div></div>
+      <div class="card"><span class="n">2</span><div><b class="title">系統通知</b><span class="tag">系統排程預警</span>
+        <p>排程定時掃描 ERP／資料庫，一旦符合條件（如進貨單價漲幅超過門檻）就主動推播，不必等人工翻報表才發現。</p></div></div>
+      <div class="card"><span class="n">3</span><div><b class="title">報價追蹤通知</b><span class="tag">資料庫整合運用</span>
+        <p>直接讀取既有系統資料，找出「口頭報價未補單」「報價逾期未回覆」等狀況，提醒對應業務跟進。</p></div></div>
+      <div class="card"><span class="n">4</span><div><b class="title">門號續約通知</b><span class="tag">程式開發包：Excel → 轉成系統</span>
+        <p>原本用 Excel 管理的清單（如門號合約），透過開發包轉成系統資料，到期前 60 天自動提醒負責人確認。</p></div></div>
+      <div class="card"><span class="n">5</span><div><b class="title">標案監控通知</b><span class="tag">外部 AI Agent（MCP）</span>
+        <p>外部 AI Agent 透過 MCP 定期巡查政府採購網等來源，符合關鍵字的新公告整理成摘要推送進群組。</p></div></div>
+      <div class="card"><span class="n">6</span><div><b class="title">AI 助理／對話框 @AI</b><span class="tag">問問題・交辦工作</span>
+        <p>在任何對話輸入「@AI」即可查文件、問數據、請 AI 起草回覆或建立待辦；也可以直接私訊「AI 助理」。</p></div></div>
+      <div class="card"><span class="n">7</span><div><b class="title">通知卡片</b><span class="tag">看到就能處理</span>
+        <p>每則通知都帶有「發生什麼事、原因、負責人、行動連結」。點連結完成填報後，連結會變灰並標示 ✓，一眼看出哪些已處理。</p></div></div>
+    </div>
+  </div>
+
+  <!-- ===== 一則通知的組成 ===== -->
+  <h3>一則通知的組成</h3>
+  <div class="anatomy">
+    <div class="bubble"><span class="n">A</span> 📈 A-1733 在線 PH 6 米 無溫補 Y 端 一體成型（供應商甲）　漲價：2100 → 3160（+50.48%）<br>
+      <span class="n">B</span> 原因：通知原物料及經營成本上漲<br><span class="n">C</span> 填報人：<span class="mask"></span><br><br>
+      <span class="n">D</span> 👉 <span class="link">開啟填報頁面</span></div>
+    <ul>
+      <li><span class="n">A</span><span><b>觸發事件</b>：哪個品項、變動前後數值與幅度，由排程從資料庫比對產生。</span></li>
+      <li><span class="n">B</span><span><b>原因</b>：取自單據備註或供應商回覆，主管不必另外追問。</span></li>
+      <li><span class="n">C</span><span><b>負責人</b>：依資料指派，通知直接送到該人員與相關群組。</span></li>
+      <li><span class="n">D</span><span><b>行動連結</b>：點開即進入填報／確認頁面（手機、電腦皆可），完成後自動標記已處理。</span></li>
+    </ul>
+  </div>
+
+  <!-- ===== 典型操作情境 ===== -->
+  <h3>典型操作情境</h3>
+  <div class="flows">
+    <div class="flow"><h4><span class="n">2</span>採購漲價預警</h4><ol>
+      <li>排程每日比對進貨單價，漲幅超過門檻即觸發。</li>
+      <li>「系統通知」收到漲價卡片，含幅度與原因。</li>
+      <li>採購點「開啟填報頁面」，填寫因應方式。</li>
+      <li>送出後卡片標示 ✓，主管在同一畫面掌握進度。</li></ol></div>
+    <div class="flow"><h4><span class="n">1</span><span class="n">6</span>查規章、找文件</h4><ol>
+      <li>文件透過「文件管理系統」上傳、審核、發行。</li>
+      <li>同仁在對話框輸入「@AI 客訴處理流程最新版？」</li>
+      <li>AI 助理回覆重點摘要，並附上文件連結。</li>
+      <li>依權限開啟正式版本，下載自動加浮水印並留紀錄。</li></ol></div>
+    <div class="flow"><h4><span class="n">4</span>Excel 轉成系統</h4><ol>
+      <li>提供現有 Excel 清單（例如門號合約）。</li>
+      <li>以程式開發包轉成系統資料表與維護畫面。</li>
+      <li>設定提醒規則：到期前 60 天通知。</li>
+      <li>到期提醒自動出現在「門號續約通知」群組。</li></ol></div>
+    <div class="flow"><h4><span class="n">5</span>外部標案監控</h4><ol>
+      <li>設定關鍵字（產品類別、機關、金額區間）。</li>
+      <li>外部 AI Agent 透過 MCP 定期巡查公告。</li>
+      <li>新公告整理成摘要，推送至「標案監控通知」。</li>
+      <li>業務在群組內討論、@AI 分析投標條件。</li></ol></div>
+  </div>
+</section>
+
+</body>
+</html>
