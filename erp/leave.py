@@ -18,9 +18,10 @@ from flask import Blueprint, abort, current_app, flash, g, redirect, render_temp
 
 from . import db, edb, flow
 from .auth import login_required
+from .formdocs import closing_date, is_doc_manager as _is_doc_manager
 from .leave_rules import (Shift, allowed_hours, first_day_and_end, min_hours_message, plan_details,
                           time_errors)
-from .magic import add_months, end_of_month, from_date, from_time, to_date, to_time, utc_guid
+from .magic import add_months, from_date, from_time, to_date, to_time, utc_guid
 from .numbering import next_doc_no
 
 bp = Blueprint('leave', __name__, url_prefix='/hr/leave')
@@ -47,16 +48,7 @@ def _time(sec):
 
 
 def is_doc_manager(emp_no):
-    """單據管理員（ViewFIL0020 的單據管理員代號一～三）可以看所有人的單、代為修改。"""
-    return db.one("""SELECT 1 FROM viewfil0020 WHERE "單據類別" = %s
-                     AND %s IN ("單據管理員代號", "單據管理員代號二", "單據管理員代號三")""",
-                  (DOC_TYPE, emp_no)) is not None
-
-
-def closing_date():
-    """人資關帳年月（HRFil1002a，SysKey = 'EMP'）的月底；沒有設定時回傳 None。"""
-    d = to_date(db.scalar('SELECT "關帳年月" FROM hrfil1002a WHERE syskey = %s', ('EMP',)))
-    return end_of_month(d) if d else None
+    return _is_doc_manager(DOC_TYPE, emp_no)
 
 
 def leave_types():
