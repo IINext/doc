@@ -7,6 +7,20 @@
   <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('leave.index') }}"><i class="bi bi-arrow-left"></i></a>
   <h5 class="mb-0 me-auto">請假申請單 {% if doc %}{{ doc['單號'] }}
     <span class="badge bg-secondary">{{ status_text.get(status, '草稿') }}</span>{% endif %}</h5>
+  {% if flow.get('can_withdraw') %}
+  <form method="post" action="{{ url_for('leave.withdraw', no=doc['單號']) }}" class="m-0"
+        onsubmit="return confirm('確定取回並修正？簽核流程會刪除，修改後要重新送簽。')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-counterclockwise"></i> 取回修正</button>
+  </form>
+  {% endif %}
+  {% if flow.get('can_void') %}
+  <form method="post" action="{{ url_for('leave.void', no=doc['單號']) }}" class="m-0"
+        onsubmit="return confirm('確定作廢？')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> 作廢</button>
+  </form>
+  {% endif %}
   {% if doc and not readonly %}
   <form method="post" action="{{ url_for('leave.submit', no=doc['單號']) }}" class="m-0"
         onsubmit="return confirm('是否送簽?')">
@@ -20,6 +34,29 @@
   </form>
   {% endif %}
 </div>
+
+{% if flow.get('my_turn') %}
+<div class="card border-warning mb-3">
+  <div class="card-header bg-warning-subtle py-2"><i class="bi bi-pen"></i> 輪到您簽核</div>
+  <div class="card-body">
+    <div class="row g-3">
+      <form class="col-md-6" method="post" action="{{ url_for('leave.approve', no=doc['單號']) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label" for="comment">意見（可不填）</label>
+        <textarea class="form-control mb-2" id="comment" name="comment" rows="2"></textarea>
+        <button class="btn btn-success"><i class="bi bi-check-lg"></i> 同意</button>
+      </form>
+      <form class="col-md-6" method="post" action="{{ url_for('leave.reject', no=doc['單號']) }}"
+            onsubmit="return confirm('確定退回？')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label" for="reason">退回原因（必填，會通知開單人）</label>
+        <textarea class="form-control mb-2" id="reason" name="reason" rows="2" required></textarea>
+        <button class="btn btn-danger"><i class="bi bi-arrow-return-left"></i> 退回</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <div class="card mb-3">
 <div class="card-body">
@@ -93,6 +130,30 @@
     {% for r in rows %}
       <tr><td>{{ r['單據序號'] }}</td><td>{{ to_date(r['異動日期']) }}</td>
           <td>{{ to_time(r['time1']).strftime('%H:%M') }}</td><td class="text-end">{{ '%g' % r['異動數量'] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if flow.get('history') %}
+<div class="card mt-3">
+  <div class="card-header py-2">簽核歷程</div>
+  <table class="table table-sm mb-0">
+    <thead class="table-light"><tr><th>關卡</th><th>應簽核人</th><th>結果</th><th>簽核人</th><th>時間</th><th>意見</th></tr></thead>
+    <tbody>
+    {% for h in flow['history'] %}
+      <tr class="{{ 'text-muted' if h['free2sign'] or not h['signorcc'] else '' }}">
+        <td>{{ h['serial_num_seq'] }}{% if h['version'] %}（會簽）{% endif %}{% if not h['signorcc'] %} 副本{% endif %}
+            {% if h['會簽判定'] %}會簽主項{% endif %}</td>
+        <td>{{ h['assignee_name'] or '' }}</td>
+        <td>{% if h['free2sign'] %}免簽{% elif h['signorcc'] %}
+          <span class="badge {{ 'bg-success' if h['signedtype'] == '1' else 'bg-danger' if h['signedtype'] == '2' else 'bg-secondary' }}">
+            {{ result_text.get(h['signedtype'], h['signedtype']) }}</span>{% endif %}</td>
+        <td>{{ h['signer_name'] or '' }}</td>
+        <td>{% if h['signeddate'] != '00000000' %}{{ to_date(h['signeddate']) }} {{ to_time(h['signedtime']).strftime('%H:%M') }}{% endif %}</td>
+        <td>{{ h['註解'] or '' }}</td>
+      </tr>
     {% endfor %}
     </tbody>
   </table>

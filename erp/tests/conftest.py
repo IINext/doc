@@ -22,7 +22,7 @@ SCHEMA_FILES = [ROOT / 'magic2py/schema/postgresql.sql', ROOT / 'magic2py/oracle
                 ROOT / 'magic2py/schema/postgresql_views.sql', ROOT / 'erp/schema.sql']
 SEEDED_TABLES = ['erp_auth', 'fil0010', 'fil0010a', 'fil0024', 'fil0025', 'fil1014', 'fil1019', 'hrfil1002a',
                  'a30', 'a40', 'a50', 'a60_7', 'a60_8', 'a20', 'a20_1', 'a01', 'a01_2', 'a01_3', 'a01_4',
-                 'fil0030', 'fil0040', 'fil0050', 'hrfil1031']
+                 'fil0030', 'fil0040', 'fil0050', 'hrfil1031', 'messages']
 PASSWORD = 'correct horse 1'
 
 
@@ -60,7 +60,7 @@ def seed():
         set_password(no, PASSWORD, must_change=False)
     db.insert('a30', {'serial_num': 'G-D01', 'groupid': 'D01', 'groupname': '生管課', 'guname': '生管課'})
     db.insert('a40', {'serial_num': 'P-MGR', 'psoiid': 'MGR', 'guname': '課長'})
-    db.insert('a60_8', {'serial_num': 'S-E002', 'serial_num_seq': 1, 'depid': 'G-D01'})   # E002 管轄 D01
+    db.insert('a60_8', {'serial_num': 'S-E002', 'serial_num_seq': 1, 'depid': 'G-D01', 'recordid': 'R-S-E002'})   # E002 管轄 D01
     for code, name, min_hours, limit, holidays, reason in (('01', '事假', 1, 14, 0, 1), ('03', '病假', '0.5', 30, 0, 0),
                                                            ('09', '婚假', 8, 8, 1, 0)):
         db.insert('fil1014', {'代碼類別': '假別代碼', '系統代碼': code, '代碼名稱': name, '數字參數': min_hours,

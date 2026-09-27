@@ -102,7 +102,7 @@ def _has_assignee(serial, person):
     return db.one('SELECT 1 FROM a01_2 WHERE serial_num = %s AND assignedto = %s', (serial, person)) is not None
 
 
-def _add_flow(serial, node, seq, assignee, urgent):
+def _add_flow(serial, node, seq, assignee, urgent, in_progress=True):
     """新增一筆 A01_2（單據流程）。
 
     原程式用 Link Write 寫入：流程序號已經存在時會覆蓋那一筆（例如同一職位有多人，序號和下一個節點重疊），
@@ -125,7 +125,8 @@ def _add_flow(serial, node, seq, assignee, urgent):
         '會簽判定': node['會簽判定'], '會簽方式': node['會簽方式'],
         'singature_line': node['singature_line'], 'singature_seq': node['singature_seq'],
     })
-    db.execute("UPDATE a01 SET flowstatus = 'I' WHERE serial_num = %s", (serial,))
+    if in_progress:
+        db.execute("UPDATE a01 SET flowstatus = 'I' WHERE serial_num = %s", (serial,))
 
 
 def _approvers_by_position(posiid, dept_serial=None, jurisdiction_of=None):
@@ -141,6 +142,84 @@ def _approvers_by_position(posiid, dept_serial=None, jurisdiction_of=None):
     return [r['replaceby'].strip() or r['serialno'] for r in rows]
 
 
+def _generate(serial, obj, reg, emp, values, designated=(), designated_dept='', copies=False):
+    """依 A20_1 的流程節點產生 A01_2。copies=False 產生正本（送簽），True 產生副本（結案時，EDB #11）。
+    回傳 (有成立的節點, 訊息清單)。"""
+    messages = []
+    applicant = obj['applyby'].strip()
+    dept, comp = emp['depserial'], emp['compserial']
+    exclude_applicant = bool(reg['流程獨立否'])               # 申請人免簽
+    merge_same = bool(reg['同人合併'])
+    nodes = db.query("""SELECT * FROM a20_1
+                        WHERE serial_num = %s AND compid = %s AND signorcc = %s
+                          AND (appdept = ' ' OR appdept = %s)
+                        ORDER BY serial_num_seq""", (reg['serial_num'], comp, 0 if copies else 1, dept))
+    if not nodes and not copies:
+        messages.append('員工歸屬公司的流程尚未設定')
+    ok = False
+    for node in nodes:
+        if not _node_applies(node, values):
+            continue
+        if not ok and not copies:                             # 設定核銷人員（第一個成立的節點時）
+            verifier_posi = reg['屬性中類名稱'].strip()         # 簽核後程式：核銷人員的職位
+            people = _approvers_by_position(verifier_posi, jurisdiction_of=dept) if verifier_posi else []
+            if people:
+                db.execute('UPDATE a01 SET verifiedby = %s WHERE serial_num = %s', (people[-1], serial))
+        ok = True
+        base = node['serial_num_seq']
+        add = lambda seq, person: _add_flow(serial, node, seq, person, obj['urgency'],  # noqa: E731
+                                            in_progress=not copies)
+        if node['會簽判定']:                                   # 會簽主項（沒有指定人員）
+            add(base, ' ')
+            continue
+        if node['bycomp']:                                    # 指定欄位
+            raise EdbError('流程節點使用「指定欄位」，新系統尚未支援，請洽系統管理員')
+        if node['指定人員'].strip():
+            people = [p.strip() for p in designated if p.strip()] if node['指定人員'].strip() == '#' \
+                else [node['指定人員'].strip()]
+            if node['指定人員'].strip() == '#' and not people:
+                messages.append('程式應而未指定簽核人員')
+            for i, person in enumerate(people, 1):
+                if _has_assignee(serial, person) or (exclude_applicant and person == applicant):
+                    continue
+                add(base + i, person)
+            continue
+        flowdept = node['flowdept'].strip()                   # 簽核部門欄位
+        if flowdept:
+            people = _approvers_by_position(node['posiid'],
+                                            dept_serial=designated_dept if flowdept == '#' else flowdept)
+        else:
+            people = _approvers_by_position(node['posiid'], jurisdiction_of=dept)
+        if not people:
+            messages.append(f'沒有該部門職稱人員：{node["posiid"]}')
+        for i, person in enumerate(people):
+            if merge_same and _has_assignee(serial, person):
+                continue
+            if exclude_applicant and person == applicant:
+                continue
+            add(base + i, person)
+    # 刪除沒有人員的流程（會簽主項除外）
+    db.execute("DELETE FROM a01_2 WHERE serial_num = %s AND trim(assignedto) = '' AND \"會簽判定\" = 0", (serial,))
+    if merge_same and not copies:                             # 同一人重複出現：後面的改為免簽
+        db.execute("""UPDATE a01_2 f SET free2sign = 1
+                      WHERE f.serial_num = %s AND f.version = 0 AND f.signorcc = 1
+                        AND EXISTS (SELECT 1 FROM a01_2 p
+                                    WHERE p.serial_num = f.serial_num AND p.version = 0 AND p.signorcc = 1
+                                      AND p.serial_num_seq < f.serial_num_seq AND p.assignedto = f.assignedto)""",
+                   (serial,))
+    return ok, messages
+
+
+def _context(serial, form_code=None):
+    """送簽需要的資料：A01（鎖定）、申請人、表單的元件註冊（A20）。"""
+    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
+    if obj is None:
+        raise EdbError('單據尚未建立簽核物件')
+    emp = employee(obj['applyby'].strip() or obj['owner'])
+    reg = db.one('SELECT * FROM a20 WHERE job_type = %s LIMIT 1', (form_code or serial[:3],))
+    return obj, emp, reg
+
+
 def submit(serial, signing_category='', designated=(), designated_dept='', values=None, form_code=None):
     """EDB #7 表單送簽(正本)。回傳 (成功否, 訊息清單)。
 
@@ -150,86 +229,227 @@ def submit(serial, signing_category='', designated=(), designated_dept='', value
     values：流程條件可以用的表單欄位值（欄位名稱 → 值）
     """
     values = {'簽核類別': signing_category, **(values or {})}
-    form_code = form_code or serial[:3]
+    obj, emp, reg = _context(serial, form_code)
     messages = []
-    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
-    if obj is None:
-        raise EdbError('單據尚未建立簽核物件')
-    applicant = obj['applyby'].strip()
-    emp = employee(applicant or obj['owner'])
-    reg = db.one('SELECT * FROM a20 WHERE job_type = %s LIMIT 1', (form_code,))
     if reg is None:
-        messages.append(f'元件代碼(單據前三碼)尚未註冊：{form_code}')
+        messages.append(f'元件代碼(單據前三碼)尚未註冊：{form_code or serial[:3]}')
     ok = False
     if emp is not None and reg is not None:
-        dept, comp = emp['depserial'], emp['compserial']
-        exclude_applicant = bool(reg['流程獨立否'])           # 申請人免簽
-        merge_same = bool(reg['同人合併'])
         if reg['visible']:                                    # 免送簽核
             db.execute("UPDATE a01 SET status = %s, flowstatus = 'E' WHERE serial_num = %s",
                        (reg['laststatus'], serial))
             ok = True
         else:
-            nodes = db.query("""SELECT * FROM a20_1
-                                WHERE serial_num = %s AND compid = %s AND signorcc = 1
-                                  AND (appdept = ' ' OR appdept = %s)
-                                ORDER BY serial_num_seq""", (reg['serial_num'], comp, dept))
-            if not nodes:
-                messages.append('員工歸屬公司的流程尚未設定')
-            first = True
-            for node in nodes:
-                if not _node_applies(node, values):
-                    continue
-                ok = True
-                verifier_posi = reg['屬性中類名稱'].strip()     # 簽核後程式：核銷人員的職位
-                if first and verifier_posi:                   # 設定核銷人員（第一個成立的節點時）
-                    people = _approvers_by_position(verifier_posi, jurisdiction_of=dept)
-                    if people:
-                        db.execute('UPDATE a01 SET verifiedby = %s WHERE serial_num = %s', (people[-1], serial))
-                first = False
-                base = node['serial_num_seq']
-                if node['會簽判定']:                           # 會簽主項（沒有指定人員）
-                    _add_flow(serial, node, base, ' ', obj['urgency'])
-                    continue
-                if node['bycomp']:                            # 指定欄位
-                    raise EdbError('流程節點使用「指定欄位」，新系統尚未支援，請洽系統管理員')
-                if node['指定人員'].strip():
-                    people = [p.strip() for p in designated if p.strip()] if node['指定人員'].strip() == '#' \
-                        else [node['指定人員'].strip()]
-                    if node['指定人員'].strip() == '#' and not people:
-                        messages.append('程式應而未指定簽核人員')
-                    for i, person in enumerate(people, 1):
-                        if _has_assignee(serial, person) or (exclude_applicant and person == applicant):
-                            continue
-                        _add_flow(serial, node, base + i, person, obj['urgency'])
-                    continue
-                flowdept = node['flowdept'].strip()           # 簽核部門欄位
-                if flowdept:
-                    people = _approvers_by_position(node['posiid'],
-                                                    dept_serial=designated_dept if flowdept == '#' else flowdept)
-                else:
-                    people = _approvers_by_position(node['posiid'], jurisdiction_of=dept)
-                if not people:
-                    messages.append(f'沒有該部門職稱人員：{node["posiid"]}')
-                for i, person in enumerate(people):
-                    if merge_same and _has_assignee(serial, person):
-                        continue
-                    if exclude_applicant and person == applicant:
-                        continue
-                    _add_flow(serial, node, base + i, person, obj['urgency'])
-        # 刪除沒有人員的流程（會簽主項除外）
-        db.execute("DELETE FROM a01_2 WHERE serial_num = %s AND trim(assignedto) = '' AND \"會簽判定\" = 0",
-                   (serial,))
-        if merge_same:                                        # 同一人重複出現：後面的改為免簽
-            db.execute("""UPDATE a01_2 f SET free2sign = 1
-                          WHERE f.serial_num = %s AND f.version = 0 AND f.signorcc = 1
-                            AND EXISTS (SELECT 1 FROM a01_2 p
-                                        WHERE p.serial_num = f.serial_num AND p.version = 0 AND p.signorcc = 1
-                                          AND p.serial_num_seq < f.serial_num_seq AND p.assignedto = f.assignedto)""",
-                       (serial,))
-        create_activity(serial, 'Open', applicant or obj['owner'])
+            ok, messages = _generate(serial, obj, reg, emp, values, designated, designated_dept)
+        create_activity(serial, 'Open', obj['applyby'].strip() or obj['owner'])
     if ok:
         db.execute('UPDATE a01 SET locked = 1 WHERE serial_num = %s', (serial,))   # 已送簽
     else:
         messages.append('送簽失敗: 尚未設定流程 !!')
     return ok, messages
+
+
+# ── 簽核（Home #94 SignDocument、#79 別人給我的文件夾、EDB #26 MyGenRecords） ─────────
+#
+# A01_2 的資料夾（folder）：'1' 急件待簽、'2' 一般待簽、'3' 待處理、'6' 已退回、'7' 已簽、'E' 結案
+# 簽核結果（signedtype）：'0' 未簽、'1' 同意、'2' 退回
+# 會簽：會簽主項（會簽判定 = 1）底下的子關卡 version = 主項的序號
+
+PENDING_FOLDERS = ('1', '2', '3')
+
+# 輪到這一關的條件（EDB #26 MyGenRecords）：
+# - 最上層關卡：緊鄰的上一個最上層正本、非免簽關卡已同意（或沒有上一關）
+# - 會簽子關卡：會簽主項還沒有結果，而且主項之前的最上層關卡已同意
+# - 後面的關卡都還沒有人簽過
+# 原程式找「上一關」不分層級，前一關是會簽時會卡在某個子關卡；這裡只看最上層。
+_TURN_SQL = """
+    f.signorcc = 1 AND f.free2sign = 0 AND f.signedtype = '0' AND f.folder IN ('1', '2', '3')
+    AND o.flowstatus = 'I'
+    AND (f.version = 0 OR EXISTS (SELECT 1 FROM a01_2 m WHERE m.serial_num = f.serial_num
+                                  AND m.serial_num_seq = f.version AND m.signedtype = '0'))
+    AND coalesce((SELECT p.signedtype FROM a01_2 p
+                  WHERE p.serial_num = f.serial_num AND p.version = 0 AND p.signorcc = 1 AND p.free2sign = 0
+                    AND p.serial_num_seq < CASE WHEN f.version = 0 THEN f.serial_num_seq ELSE f.version END
+                  ORDER BY p.serial_num_seq DESC LIMIT 1), '1') = '1'
+    AND NOT EXISTS (SELECT 1 FROM a01_2 n WHERE n.serial_num = f.serial_num
+                    AND n.serial_num_seq > f.serial_num_seq AND n.signedtype >= '1')
+"""
+
+
+def pending(user_serial, form_codes=None):
+    """輪到 user_serial 簽的關卡。form_codes 限定表單代碼（單據流水號前三碼）。"""
+    sql = f"""SELECT f.*, o.name, o.owner, o.applyby, o.flowstatus, o.urgency, o.createdate, o.createtime,
+                     substr(f.serial_num, 1, 3) AS form_code, a.guname AS form_name
+              FROM a01_2 f JOIN a01 o ON o.serial_num = f.serial_num
+              LEFT JOIN a20 a ON a.job_type = substr(f.serial_num, 1, 3)
+              WHERE f.assignedto = %s AND {_TURN_SQL}"""
+    params = [user_serial]
+    if form_codes is not None:
+        sql += ' AND substr(f.serial_num, 1, 3) = ANY(%s)'
+        params.append(list(form_codes))
+    return db.query(sql + ' ORDER BY o.urgency DESC, f.serial_num, f.serial_num_seq', params)
+
+
+def my_turn(serial, user_serial):
+    """user_serial 在這張單上目前可以簽的關卡（沒有就回傳 None）。"""
+    return db.one(f"""SELECT f.* FROM a01_2 f JOIN a01 o ON o.serial_num = f.serial_num
+                      WHERE f.serial_num = %s AND f.assignedto = %s AND {_TURN_SQL}
+                      ORDER BY f.serial_num_seq LIMIT 1""", (serial, user_serial))
+
+
+def history(serial):
+    """簽核歷程（正本、副本），附人員姓名。"""
+    return db.query("""SELECT f.*, a.empname AS assignee_name, s.empname AS signer_name
+                       FROM a01_2 f
+                       LEFT JOIN viewofemp a ON a.serialno = f.assignedto
+                       LEFT JOIN viewofemp s ON s.serialno = f.signedby
+                       WHERE f.serial_num = %s ORDER BY f.signorcc DESC, f.serial_num_seq""", (serial,))
+
+
+def create_message(ref_serial, to_serial, text, sender_serial, kind='N'):
+    """EDB #38 CreateMessageBatch：寫一則訊息（Messages）。kind：Q 問、R 答、N 通知。截止日期為一個月後。"""
+    from .magic import utc_guid
+    now = _now()
+    db.insert('messages', {'serial_num': 'MSG' + utc_guid(), 'createby': sender_serial, 'messageto': to_serial,
+                           'refdocument': ref_serial, '類型': kind, 'createdate': from_date(now.date()),
+                           'createtime': from_time(now.time()), 'message': text,
+                           'invaliddate': from_date(add_months(now.date(), 1))})
+
+
+def _append_note(old, text):
+    old = (old or '').strip()
+    return f'{old},{text}' if old and text else (old or text)
+
+
+def _lock_turn(serial, user_serial):
+    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
+    if obj is None:
+        raise EdbError('找不到這張單的簽核資料')
+    row = my_turn(serial, user_serial)
+    if row is None:
+        raise EdbError('目前不是輪到您簽核這張單')
+    return obj, row
+
+
+def _countersign(serial, parent_seq):
+    """會簽：依子關卡的結果決定會簽主項的結果（Home #94 子任務「會簽」）。
+    會簽方式：1 過半同意、2 全部同意、3 一人同意、4 三分之二同意、5 一人讀取即可。"""
+    parent = db.one('SELECT * FROM a01_2 WHERE serial_num = %s AND serial_num_seq = %s AND "會簽判定" = 1',
+                    (serial, parent_seq))
+    if parent is None:
+        return
+    kids = db.query('SELECT signedtype, read, free2sign FROM a01_2 WHERE serial_num = %s AND version = %s',
+                    (serial, parent_seq))
+    total = len(kids)
+    yes = sum(1 for k in kids if k['signedtype'] == '1' or k['free2sign'])
+    no = sum(1 for k in kids if k['signedtype'] == '2')
+    seen = sum(1 for k in kids if k['signedtype'] in ('1', '2') or k['read'] or k['free2sign'])
+    way = parent['會簽方式'].strip()
+    result = '0'
+    if (way == '1' and yes >= total / 2) or (way == '2' and yes == total) or (way == '3' and yes >= 1) \
+            or (way == '4' and yes >= total / 3 * 2) or (way == '5' and seen >= 1):
+        result = '1'
+    if (way == '1' and no >= total / 2) or (way == '2' and no >= 1) or (way == '3' and yes == 0 and no != 0) \
+            or (way == '4' and no >= total / 3 * 2):
+        result = '2'
+    now = _now()
+    db.execute("""UPDATE a01_2 SET signedtype = %s, folder = '2', read = %s,
+                  signeddate = %s, signedtime = %s WHERE serial_num = %s AND serial_num_seq = %s""",
+               (result, int(result != '0'), from_date(now.date()) if result != '0' else '00000000',
+                from_time(now.time()) if result != '0' else '000000', serial, parent_seq))
+    if result == '2':
+        db.execute("UPDATE a01 SET flowstatus = 'D' WHERE serial_num = %s", (serial,))
+
+
+def _all_approved(serial):
+    """結案判斷：最上層的正本、非免簽關卡都已同意。"""
+    return db.one("""SELECT 1 FROM a01_2 WHERE serial_num = %s AND version = 0 AND signorcc = 1
+                     AND free2sign = 0 AND signedtype <> '1' LIMIT 1""", (serial,)) is None
+
+
+def _close(serial, obj, values):
+    """結案：狀態改為 E，並依流程設定產生副本（EDB #11 表單送簽(副本)）。"""
+    db.execute("UPDATE a01 SET flowstatus = 'E' WHERE serial_num = %s", (serial,))
+    emp = employee(obj['applyby'].strip() or obj['owner'])
+    reg = db.one('SELECT * FROM a20 WHERE job_type = %s LIMIT 1', (serial[:3],))
+    if emp is not None and reg is not None:
+        _generate(serial, obj, reg, emp, values or {}, copies=True)
+
+
+def approve(serial, user_serial, comment='', values=None):
+    """同意（Home #94 WorkflowSign）。回傳單據的簽核狀態（'I' 簽核中、'E' 結案、'D' 退回）。
+    values：結案時產生副本用的流程條件值（同送簽）。"""
+    obj, row = _lock_turn(serial, user_serial)
+    now = _now()
+    has_next = db.one("""SELECT 1 FROM a01_2 WHERE serial_num = %s AND version = %s AND signorcc = 1
+                         AND free2sign = 0 AND serial_num_seq > %s LIMIT 1""",
+                      (serial, row['version'], row['serial_num_seq'])) is not None
+    closing = not has_next and row['version'] == 0
+    db.execute("""UPDATE a01_2 SET signedtype = '1', signedby = %s, signeddate = %s, signedtime = %s,
+                  read = 1, actioncompleted = 1, folder = %s, "註解" = %s
+                  WHERE serial_num = %s AND serial_num_seq = %s""",
+               (user_serial, from_date(now.date()), from_time(now.time()), 'E' if closing else '7',
+                _append_note(row['註解'], comment.strip()), serial, row['serial_num_seq']))
+    db.execute('UPDATE a01 SET "異動日期" = %s, "異動時間" = %s WHERE serial_num = %s',
+               (from_date(now.date()), from_time(now.time()), serial))
+    if row['version'] != 0:                                   # 會簽子關卡：重新計算主項
+        _countersign(serial, row['version'])
+    status = db.scalar('SELECT flowstatus FROM a01 WHERE serial_num = %s', (serial,))
+    if status == 'I' and _all_approved(serial):
+        _close(serial, obj, values)
+        status = 'E'
+    return status
+
+
+def reject(serial, user_serial, reason, back_to=None):
+    """退回（Home #94 WorkflowDrawback）：結果 '2'、資料夾 '6'、單據狀態 'D'，並通知被退回的人（預設開單人）。"""
+    reason = (reason or '').strip()
+    if not reason:
+        raise EdbError('請輸入退回原因')
+    obj, row = _lock_turn(serial, user_serial)
+    back_to = back_to or obj['owner']
+    now = _now()
+    db.execute("""UPDATE a01_2 SET signedtype = '2', signedby = %s, signeddate = %s, signedtime = %s,
+                  read = 1, folder = '6', signbackto = %s, "註解" = %s
+                  WHERE serial_num = %s AND serial_num_seq = %s""",
+               (user_serial, from_date(now.date()), from_time(now.time()), back_to,
+                _append_note(row['註解'], reason), serial, row['serial_num_seq']))
+    if row['version'] != 0:
+        _countersign(serial, row['version'])
+    else:
+        db.execute("UPDATE a01 SET flowstatus = 'D' WHERE serial_num = %s", (serial,))
+    db.execute('UPDATE a01 SET "異動日期" = %s, "異動時間" = %s WHERE serial_num = %s',
+               (from_date(now.date()), from_time(now.time()), serial))
+    create_message(serial, back_to, f'{obj["name"].strip()} 退回：{reason}', user_serial, kind='Q')
+    return db.scalar('SELECT flowstatus FROM a01 WHERE serial_num = %s', (serial,))
+
+
+def _owner_or_applicant(obj, user_serial):
+    if user_serial not in (obj['owner'].strip(), obj['applyby'].strip()):
+        raise EdbError('只有開單人或申請人可以執行')
+
+
+def withdraw(serial, user_serial):
+    """取回修正（Home #94 WorkflowBackToDraft → EDB #14 簽退取回、#17 退回草稿）：
+    刪除簽核流程，單據回到草稿，可以修改後重新送簽。"""
+    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
+    if obj is None:
+        raise EdbError('找不到這張單的簽核資料')
+    _owner_or_applicant(obj, user_serial)
+    if obj['flowstatus'] not in ('I', 'D'):
+        raise EdbError('只有簽核中或退回的單可以取回')
+    create_activity(serial, 'eRedo', user_serial)
+    db.execute('DELETE FROM a01_2 WHERE serial_num = %s', (serial,))
+    db.execute("UPDATE a01 SET status = '0', flowstatus = '0', locked = 0 WHERE serial_num = %s", (serial,))
+
+
+def void(serial, user_serial):
+    """作廢（Home #94 WorkflowTrash、EDB #15 表單報廢）。"""
+    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
+    if obj is None:
+        raise EdbError('找不到這張單的簽核資料')
+    _owner_or_applicant(obj, user_serial)
+    if obj['flowstatus'] in ('E', 'A'):
+        raise EdbError('已結案或已作廢的單不能作廢')
+    db.execute("UPDATE a01 SET flowstatus = 'A' WHERE serial_num = %s", (serial,))
+    create_activity(serial, 'Abandon', user_serial)

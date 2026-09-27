@@ -16,7 +16,7 @@ from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, url_for
 
-from . import db, edb
+from . import db, edb, flow
 from .auth import login_required
 from .leave_rules import (Shift, allowed_hours, first_day_and_end, min_hours_message, plan_details,
                           time_errors)
@@ -30,6 +30,8 @@ DOC_NAME = '請假卡'
 ANNUAL_LEAVE = '08'           # Main Program：G_特休假代碼
 MONTHS = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
 STATUS_TEXT = {'I': '簽核中', 'E': '已簽', 'D': '退回', 'A': '作廢'}   # GFn_SignedStatusCHN，其他是草稿
+
+flow.register_form(DOC_TYPE, DOC_NAME, 'leave.edit')
 
 
 def _sec(t):
@@ -318,6 +320,8 @@ def can_edit(doc):
 
 
 def check_editable(doc):
+    if doc['簽核狀態'] == 'D':
+        return '已退回，請先取回修正'
     if doc['簽核狀態'] > '0':
         return '已送簽,無法異動'
     close = closing_date()
@@ -367,7 +371,19 @@ def index():
 def _render_form(f, doc=None, rows=None):
     kinds = leave_types()
     editable = doc is None or check_editable(doc) is None
+    flow_info = {}
+    if doc is not None:
+        me = g.user['serial_num']
+        status = doc['簽核狀態']
+        flow_info = {
+            'history': edb.history(doc['流水編號']),
+            'my_turn': edb.my_turn(doc['流水編號'], me),
+            # 開單人或申請人：簽核中、退回可以取回修正；還沒結案可以作廢
+            'can_withdraw': status in ('I', 'D') and is_requester(doc),
+            'can_void': status in ('I', 'D') and is_requester(doc),
+        }
     return render_template('leave/form.html', f=f, doc=doc, kinds=kinds, rows=rows or [], editable=editable,
+                           flow=flow_info, result_text={'0': '未簽', '1': '同意', '2': '退回'},
                            hour_options={k['代碼'].strip(): [str(h) for h in allowed_hours(Decimal(k['至少小時']))]
                                          for k in kinds},
                            to_date=to_date, to_time=to_time, status_text=STATUS_TEXT)
@@ -446,6 +462,19 @@ def delete(no):
     return redirect(url_for('leave.edit', no=no))
 
 
+def flow_values(doc):
+    """流程節點的條件可以用的欄位（原程式用 VarCurrN 依名稱從畫面上取值）。"""
+    return {'假別': doc['假別'].strip(), '請假假別': doc['請假假別'].strip(), '天數': doc['天數'],
+            '時數': doc['時數'], '請假時數': doc['請假時數'], '部門編號': doc['部門編號'].strip(),
+            '申請人': doc['申請人'].strip(), '填寫人': doc['填寫人'].strip(),
+            '簽核類別': signing_category(employee_info(doc['申請人'].strip()))}
+
+
+def is_requester(doc):
+    """開單人（填寫人）或申請人。"""
+    return g.user['員工編號'] in (doc['填寫人'].strip(), doc['申請人'].strip())
+
+
 @bp.route('/<no>/submit', methods=('POST',))
 @login_required
 def submit(no):
@@ -472,10 +501,7 @@ def submit(no):
     serial = doc['流水編號']
     edb.create_object(serial, doc['主旨'], g.user['serial_num'], applicant['serial_num'])
     try:
-        ok, messages = edb.submit(serial, signing_category=signing_category(applicant), values={
-            '假別': doc['假別'].strip(), '請假假別': doc['請假假別'].strip(), '天數': doc['天數'],
-            '時數': doc['時數'], '請假時數': doc['請假時數'], '部門編號': doc['部門編號'].strip(),
-            '申請人': doc['申請人'].strip(), '填寫人': doc['填寫人'].strip()})
+        ok, messages = edb.submit(serial, signing_category=signing_category(applicant), values=flow_values(doc))
     except edb.EdbError as e:
         db.get_db().rollback()
         flash(str(e), 'danger')
@@ -488,3 +514,51 @@ def submit(no):
     for m in messages:
         flash(m, 'warning' if ok else 'danger')
     return redirect(url_for('leave.edit', no=no))
+
+
+def _flow_action(no, action, done_message):
+    """簽核動作的共用流程：找單、執行、commit；EdbError 時回復並顯示訊息。"""
+    doc = load(no)
+    if doc is None or not can_view(doc):
+        abort(404)
+    try:
+        result = action(doc)
+    except edb.EdbError as e:
+        db.get_db().rollback()
+        flash(str(e), 'danger')
+        return redirect(url_for('leave.edit', no=no))
+    db.commit()
+    flash(done_message(result) if callable(done_message) else done_message, 'success')
+    return redirect(url_for('leave.edit', no=no))
+
+
+@bp.route('/<no>/approve', methods=('POST',))
+@login_required
+def approve(no):
+    """同意（Home #94 WorkflowSign）。"""
+    return _flow_action(
+        no, lambda doc: edb.approve(doc['流水編號'], g.user['serial_num'], request.form.get('comment', ''),
+                                    values=flow_values(doc)),
+        lambda status: '已同意，簽核完成' if status == 'E' else '已同意')
+
+
+@bp.route('/<no>/reject', methods=('POST',))
+@login_required
+def reject(no):
+    """退回（Home #94 WorkflowDrawback），通知開單人。"""
+    return _flow_action(no, lambda doc: edb.reject(doc['流水編號'], g.user['serial_num'],
+                                                   request.form.get('reason', '')), '已退回')
+
+
+@bp.route('/<no>/withdraw', methods=('POST',))
+@login_required
+def withdraw(no):
+    """取回修正：刪除簽核流程、回到草稿，修改後可以重新送簽。"""
+    return _flow_action(no, lambda doc: edb.withdraw(doc['流水編號'], g.user['serial_num']), '已取回，可以修改後重新送簽')
+
+
+@bp.route('/<no>/void', methods=('POST',))
+@login_required
+def void(no):
+    """作廢。"""
+    return _flow_action(no, lambda doc: edb.void(doc['流水編號'], g.user['serial_num']), '已作廢')

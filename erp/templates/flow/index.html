@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}待簽 - ERP{% endblock %}
+{% block content %}
+<h5 class="mb-3">待簽的單據</h5>
+<div class="table-responsive bg-white border rounded">
+<table class="table table-sm table-hover mb-0">
+  <thead class="table-light">
+    <tr><th></th><th>表單</th><th>主旨</th><th>申請人</th><th>開單日期</th><th>關卡</th></tr>
+  </thead>
+  <tbody>
+  {% for r in items %}
+    <tr>
+      <td>{% if r['urgency'] %}<span class="badge bg-danger">急件</span>{% endif %}</td>
+      <td>{{ r['form'] }}</td>
+      <td>{% if r['url'] %}<a href="{{ r['url'] }}">{{ r['name'] }}</a>{% else %}{{ r['name'] }}{% endif %}</td>
+      <td>{{ r['applicant'] }}</td>
+      <td>{{ r['created'] or '' }}</td>
+      <td>{{ r['serial_num_seq'] }}{% if r['version'] %}（會簽）{% endif %}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="text-center text-muted py-4">目前沒有待簽的單據</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="text-muted small mt-2">只列出新系統已支援的表單，其他表單請在舊系統簽核。</p>
+{% endblock %}
