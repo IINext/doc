@@ -233,8 +233,10 @@ class Task:
         if t == 'LNK':
             tbl = self.p.table(op.find('DB')) or Table('?')
             self.tables.append(tbl)
+            # 遞減方向：Locate 找到的是符合條件的「最後一筆」（例如取目前最大的單號）
+            desc = '  (遞減)' if op.get('Direction') == 'D' else ''
             return (f'{pad}Link {LINK_MODE.get(op.get("Mode"), op.get("Mode"))} {tbl.label()}'
-                    f'  index={op.get("Key")}{self.cond(op)}')
+                    f'  index={op.get("Key")}{desc}{self.cond(op)}')
         if t == 'CallTask':
             obj = int(val(op, 'TaskID', 'obj') or 0)
             if val(op, 'OperationType') == 'T':
@@ -262,7 +264,8 @@ class Task:
                 return f'{pad}Invoke .NET {val(op, "FunctionName")}({self.args(op)}){ret}{self.cond(op)}\n{body}'
             return f'{pad}Invoke ({kind})({self.args(op)}){ret}{self.cond(op)}'
         if t == 'RaiseEvent':
-            return f'{pad}Raise Event {self.event(op.find("Event"))}{self.cond(op)}'
+            args = self.args(op)
+            return f'{pad}Raise Event {self.event(op.find("Event"))}' + (f'({args})' if args else '') + self.cond(op)
         if t == 'STP':
             kind = 'Error' if op.get('Mode') == 'E' else 'Warning'
             return f'{pad}{kind} {self.exp(op.get("Exp")) or op.get("TXT")}{self.cond(op)}'
@@ -279,6 +282,15 @@ class Task:
         elif mode and mode not in ('M', 'E'):
             info.append(f'Mode={INITIAL_MODE.get(mode, mode)}')
         out.append(f'{"  " * depth}=== {h.get("Description")}  [{", ".join(info)}]')
+        # 任務層級的 Range 條件（Range 視窗的「運算式」），會篩選主資料表的每一筆記錄
+        rng = self.exp(val(self.task, 'MAGIC_SQL'))
+        if rng and rng != 'No':
+            out.append(f'{"  " * depth}    [Range 條件] {rng}')
+        for fr in self.task.findall('FLD_RNG'):
+            col = val(fr, '_Column', 'obj')
+            lo, hi = self.exp(val(fr, 'MIN')), self.exp(val(fr, 'MAX'))
+            out.append(f'{"  " * depth}    [欄位範圍] {self.cols.get(col, "col" + str(col))}: {lo}'
+                       + (f' .. {hi}' if hi != lo else ''))
         for lu in self.task.findall('TaskLogic/LogicUnit'):
             lvl = LEVEL.get(val(lu, 'Level'), val(lu, 'Level'))
             if lvl in ('Task', 'Record'):

@@ -59,6 +59,8 @@ python magic_dump.py Home.xml --out dump/home --with Files.xml --with EDB.xml --
 
 - `BM: Real 單據流水號   Locate: E` — 變數代號、種類、欄位名稱，後面是 Init／Range／Locate 條件。
 - `Link Query 單據屬性 (A01)` — Magic 表名和 Oracle 實體名稱；Link 種類有 Query、Write、Create、Inner Join、Left Outer Join。
+  標示 `(遞減)` 的 Link 找到的是符合條件的**最後一筆**（例如取目前最大的單號）。
+- `[Range 條件] DC=BU` — 任務層級的篩選運算式（Range 視窗），會篩選主資料表的每一筆記錄。
 - `=== 刪除流程  [Batch, Mode=Delete]` — 任務的初始模式。**Delete 模式的 Batch 任務會刪除所有符合 Range 的記錄**，
   就算沒有任何邏輯行也一樣。
 - `Call [子任務] …`／`Call [程式 #55] …`／`Call [元件] Utility #11 …` — 呼叫子任務、同專案程式、元件程式。
