@@ -1,13 +1,20 @@
 """Magic xpa 資料表定義 → PostgreSQL。
 
-讀取 Magic xpa 專案 XML（例如 Files.xml）的 DataSourceRepository，產生：
+讀取一個或多個 Magic xpa 專案 XML 的 DataSourceRepository，合併後產生：
     postgresql.sql   CREATE TABLE / 索引 / 註解
-    tables.csv       資料表清單（含 View、非預設資料庫的表）
+    tables.csv       資料表清單（含 View、本機資料來源的表）
     columns.csv      欄位字典（Magic 型態、Picture、對應的 PostgreSQL 型態）
+    conflicts.csv    同一個資料表在不同專案裡定義不一致的欄位
 
 用法：
-    python magic_schema.py Files.xml schema/
-    python magic_schema.py Files.xml schema/ --native-types
+    python magic_schema.py schema/ Files.xml EDB.xml
+    python magic_schema.py schema/ Files.xml EDB.xml --native-types
+
+多個專案連到同一個資料庫時，同名（實體名稱）的資料表合併成一個：
+欄位取聯集，varchar 取較長的長度；其他型態不一致時，採用有寫明 Oracle 型態（SqlType）的定義，
+都沒有就以第一個專案為準，並記錄在 conflicts.csv。
+每個專案產生 DDL 的資料來源，自動選資料表最多的那一個
+（Memory、SQLite、Mobile 這類本機資料來源除外）。
 
 預設「保留原本的儲存方式」：日期仍是 char(8)（YYYYMMDD）、時間是 char(6)（HHMMSS）、
 邏輯欄位是 smallint（0/1），這樣從 Oracle 搬資料時可以原封不動。
@@ -19,7 +26,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-DEFAULT_SOURCE = 'Default'
+LOCAL_SOURCES = ('Memory', 'SQLite', 'Mobile', 'Log')
 
 
 def q(name):
@@ -110,23 +117,41 @@ def load(path):
     return root.findall('DataSourceRepository/DataObjects/DataObject')
 
 
-def build(objs, native):
-    ddl, tables, columns, warnings = [], [], [], []
-    seen = {}
+def val(e, path):
+    x = e.find(path)
+    return x.get('val') if x is not None else None
+
+
+def main_source(objs):
+    counts = {}
+    for d in objs:
+        src = d.get('data_source') or ''
+        if val(d, 'ObjectType') == 'T' and d.findall('Columns/Column') and not src.startswith(LOCAL_SOURCES):
+            counts[src] = counts.get(src, 0) + 1
+    return max(counts, key=counts.get)
+
+
+def parse_project(objs, native, project):
+    """回傳 (資料表模型 dict, tables 列, columns 列, 警告)。
+
+    資料表模型：{實體名稱小寫: {'phys', 'name', 'columns': {欄位小寫: col}, 'indexes': [...]}}
+    col = {'dbname', 'type', 'nullable', 'default', 'magic'}
+    """
+    source = main_source(objs)
+    model, tables, columns, warnings = {}, [], [], []
     for pos, d in enumerate(objs, 1):
         name, phys, src = d.get('name'), d.get('PhysicalName'), d.get('data_source')
-        otype = d.find('ObjectType').get('val') if d.find('ObjectType') is not None else ''
         cols = d.findall('Columns/Column')
         if not cols:
             continue  # 分隔用的空項目
-        kind = {'T': 'Table', 'V': 'View'}.get(otype, otype)
+        kind = {'T': 'Table', 'V': 'View'}.get(val(d, 'ObjectType'), val(d, 'ObjectType'))
         if phys and phys.upper().startswith('MV_'):
             kind = 'Materialized View'
-        generate = src == DEFAULT_SOURCE and kind == 'Table'
-        if generate and phys in seen:
-            warnings.append(f'-- 略過：{name}（{phys}）與 {seen[phys]} 的實體名稱重複')
+        generate = src == source and kind == 'Table'
+        if generate and phys.lower() in model:
+            warnings.append(f'{project}：略過 {name}（{phys}），與 {model[phys.lower()]["name"]} 的實體名稱重複')
             generate = False
-        tables.append({'序號': pos, 'Magic 名稱': name, 'Public 名稱': d.get('Public') or '',
+        tables.append({'專案': project, '序號': pos, 'Magic 名稱': name, 'Public 名稱': d.get('Public') or '',
                        '實體名稱': phys, '資料來源': src, '種類': kind, '欄位數': len(cols),
                        '產生 DDL': 'Y' if generate else 'N'})
 
@@ -137,7 +162,7 @@ def build(objs, native):
         for i, n in enumerate(dbnames):
             groups.setdefault(n.lower(), []).append(i)
 
-        coldefs = []          # (定義字串, Magic 欄位名稱清單, DB 欄位名稱)
+        tcols = {}
         for i, (c, p, dbname) in enumerate(zip(cols, phys_cols, dbnames)):
             group = groups[dbname.lower()]
             attrs = {phys_cols[j].get('attribute') for j in group}
@@ -150,62 +175,122 @@ def build(objs, native):
                 note = '運算欄位（SQL 運算式，不建立實體欄位）'
             elif group[0] != i:
                 note = f'與「{cols[group[0]].get("name")}」對應同一個 DB 欄位'
-            columns.append({'實體名稱': phys, 'Magic 名稱': name, '位置': i + 1, 'Magic 欄位': c.get('name'),
-                            'DB 欄位': dbname, 'Magic 型態': f'{p.get("attribute")}/{p.get("storage")}',
+            columns.append({'專案': project, '實體名稱': phys, 'Magic 名稱': name, '位置': i + 1,
+                            'Magic 欄位': c.get('name'), 'DB 欄位': dbname,
+                            'Magic 型態': f'{p.get("attribute")}/{p.get("storage")}',
                             'Picture': p.get('PIC_U') or '', 'Size': p.get('Size') or '',
                             'Oracle SqlType': p.get('SqlType') or '', 'PostgreSQL': '' if computed else t,
                             'Null': 'Y' if nullable else 'N', '預設值': default or '', '備註': note})
-            if generate and not computed and group[0] == i:
-                s = f'    {q(dbname)} {t}'
-                if default is not None:
-                    s += f' DEFAULT {default}'
-                if not nullable:
-                    s += ' NOT NULL'
-                coldefs.append((s, [cols[j].get('name') for j in group], dbname))
-
+            if not computed and group[0] == i:
+                tcols[dbname.lower()] = {'dbname': dbname, 'type': t, 'nullable': nullable, 'default': default,
+                                         'magic': [cols[j].get('name') for j in group],
+                                         'sqltype': p.get('SqlType') or '', 'project': project}
         if not generate:
             continue
-        seen[phys] = name
-        tname = q(phys)
-        body = [x[0] for x in coldefs]
-        extra = []
+
+        indexes = []
         for ix in d.findall('Indexes/Index'):
             if val(ix, 'IndexType') == 'V':
                 continue  # Magic 虛擬索引，資料庫中不存在
-            segs, skip = [], False
+            segs = []
             for sg in ix.findall('Segments/Segment'):
                 n = dbnames[int(sg.find('Column').get('val')) - 1]
                 if not is_identifier(n):
-                    skip = True
+                    warnings.append(f'{project}：略過索引 {name}.{ix.get("name")}（包含運算欄位）')
+                    segs = None
                     break
-                seg = q(n) + (' DESC' if val(sg, 'Order') == 'D' else '')
-                if q(n) not in [x.split(' ')[0] for x in segs]:   # 日期＋時間拆成兩段的只保留一段
-                    segs.append(seg)
-            ixname = q(val(ix, 'PhysicalName') or f'{phys}_{ix.get("id")}')
-            if skip:
-                warnings.append(f'-- 略過索引：{name}.{ix.get("name")}（包含運算欄位）')
-            elif val(ix, 'Primary') == 'Y':
-                body.append(f'    PRIMARY KEY ({", ".join(x.replace(" DESC", "") for x in segs)})')
+                if n.lower() not in [s[0].lower() for s in segs]:  # 日期＋時間拆成兩段的只保留一段
+                    segs.append((n, val(sg, 'Order') == 'D'))
+            if segs:
+                indexes.append({'name': val(ix, 'PhysicalName') or f'{phys}_{ix.get("id")}',
+                                'primary': val(ix, 'Primary') == 'Y', 'unique': val(ix, 'Mode') == 'S',
+                                'segs': segs})
+        model[phys.lower()] = {'phys': phys, 'name': name, 'project': project, 'columns': tcols,
+                               'indexes': indexes}
+    return model, tables, columns, warnings
+
+
+def varchar_len(t):
+    m = re.fullmatch(r'varchar\((\d+)\)', t)
+    return int(m.group(1)) if m else None
+
+
+def merge(models):
+    """合併多個專案的資料表模型。回傳 (合併後模型, 衝突列)。"""
+    merged, conflicts = {}, []
+    for model in models:
+        for key, tbl in model.items():
+            if key not in merged:
+                merged[key] = {**tbl, 'columns': dict(tbl['columns']), 'indexes': list(tbl['indexes']),
+                               'names': [f'{tbl["project"]}：{tbl["name"]}']}
+                continue
+            base = merged[key]
+            base['names'].append(f'{tbl["project"]}：{tbl["name"]}')
+            for ck, col in tbl['columns'].items():
+                old = base['columns'].get(ck)
+                if old is None:
+                    base['columns'][ck] = col
+                    continue
+                old['nullable'] = old['nullable'] or col['nullable']
+                if old['type'] == col['type']:
+                    continue
+                a, b = varchar_len(old['type']), varchar_len(col['type'])
+                if a and b:
+                    old['type'] = f'varchar({max(a, b)})'
+                    continue
+                row = {'實體名稱': base['phys'], 'DB 欄位': old['dbname'],
+                       '專案 1': old['project'], '型態 1': old['type'], 'SqlType 1': old['sqltype'],
+                       '專案 2': col['project'], '型態 2': col['type'], 'SqlType 2': col['sqltype']}
+                if col['sqltype'] and not old['sqltype']:   # 有明寫 Oracle 型態的定義比較可信
+                    base['columns'][ck] = {**col, 'nullable': old['nullable']}
+                    row['採用'], row['原因'] = col['type'], f'{col["project"]} 有 SqlType'
+                else:
+                    row['採用'] = old['type']
+                    row['原因'] = f'{old["project"]} 有 SqlType' if old['sqltype'] else '都沒有 SqlType，請用 Oracle 確認'
+                conflicts.append(row)
+            names = {ix['name'].lower() for ix in base['indexes']}
+            base['indexes'] += [ix for ix in tbl['indexes'] if ix['name'].lower() not in names]
+    return merged, conflicts
+
+
+def render(merged):
+    ddl = []
+    for tbl in merged.values():
+        tname = q(tbl['phys'])
+        body = []
+        for col in tbl['columns'].values():
+            s = f'    {q(col["dbname"])} {col["type"]}'
+            if col['default'] is not None:
+                s += f' DEFAULT {col["default"]}'
+            if not col['nullable']:
+                s += ' NOT NULL'
+            body.append(s)
+        extra = []
+        has_pk = False
+        for ix in tbl['indexes']:
+            segs = [q(n) + (' DESC' if desc else '') for n, desc in ix['segs']]
+            if ix['primary'] and not has_pk:
+                body.append(f'    PRIMARY KEY ({", ".join(q(n) for n, _ in ix["segs"])})')
+                has_pk = True
             else:
-                unique = 'UNIQUE ' if val(ix, 'Mode') == 'S' else ''
-                extra.append(f'CREATE {unique}INDEX {ixname} ON {tname} ({", ".join(segs)});')
-        ddl.append(f'-- {name}')
+                unique = 'UNIQUE ' if ix['unique'] or ix['primary'] else ''
+                extra.append(f'CREATE {unique}INDEX {q(ix["name"])} ON {tname} ({", ".join(segs)});')
+        ddl.append('-- ' + '；'.join(tbl['names']))
         ddl.append(f'CREATE TABLE {tname} (\n' + ',\n'.join(body) + '\n);')
         ddl.extend(extra)
-        ddl.append(f'COMMENT ON TABLE {tname} IS {sql_str(name)};')
-        for _, mnames, dbname in coldefs:
-            if mnames != [dbname]:
-                ddl.append(f'COMMENT ON COLUMN {tname}.{q(dbname)} IS {sql_str(" / ".join(mnames))};')
+        ddl.append(f'COMMENT ON TABLE {tname} IS {sql_str(tbl["name"])};')
+        for col in tbl['columns'].values():
+            if col['magic'] != [col['dbname']]:
+                ddl.append(f'COMMENT ON COLUMN {tname}.{q(col["dbname"])} IS {sql_str(" / ".join(col["magic"]))};')
         ddl.append('')
-    return ddl, tables, columns, warnings
-
-
-def val(e, path):
-    x = e.find(path)
-    return x.get('val') if x is not None else None
+    return ddl
 
 
 def write_csv(path, rows):
+    if not rows:
+        if os.path.exists(path):
+            os.remove(path)
+        return
     with open(path, 'w', newline='', encoding='utf-8-sig') as f:  # utf-8-sig：Excel 可直接開
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
@@ -213,18 +298,32 @@ def write_csv(path, rows):
 
 
 def main():
-    src, out = sys.argv[1], sys.argv[2]
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
     native = '--native-types' in sys.argv
+    out, sources = args[0], args[1:]
+    models, tables, columns, warnings = [], [], [], []
+    for path in sources:
+        project = re.sub(r'^[0-9a-f]{8}-', '', os.path.splitext(os.path.basename(path))[0])
+        m, t, c, w = parse_project(load(path), native, project)
+        models.append(m)
+        tables += t
+        columns += c
+        warnings += w
+    merged, conflicts = merge(models)
     os.makedirs(out, exist_ok=True)
-    ddl, tables, columns, warnings = build(load(src), native)
-    header = [f'-- 由 magic_schema.py 從 {os.path.basename(src)} 產生'
-              f'{"（--native-types）" if native else ""}，請勿手動修改', '']
+    projects = '、'.join(t['專案'] for t in {t['專案']: t for t in tables}.values())
+    header = [f'-- 由 magic_schema.py 從 {projects} 產生'
+              f'{"（--native-types）" if native else ""}，請勿手動修改']
+    header += [f'-- 注意：{w}' for w in warnings]
+    header += [f'-- 型態衝突：{c["實體名稱"]}.{c["DB 欄位"]} {c["專案 1"]}={c["型態 1"]}、'
+               f'{c["專案 2"]}={c["型態 2"]}，採用 {c["採用"]}（{c["原因"]}）' for c in conflicts]
     with open(os.path.join(out, 'postgresql.sql'), 'w', encoding='utf-8') as f:
-        f.write('\n'.join(header + warnings + [''] + ddl))
+        f.write('\n'.join(header + [''] + render(merged)))
     write_csv(os.path.join(out, 'tables.csv'), tables)
     write_csv(os.path.join(out, 'columns.csv'), columns)
-    n = sum(1 for t in tables if t['產生 DDL'] == 'Y')
-    print(f'資料表 {n} 個產生 DDL；共 {len(tables)} 個物件、{len(columns)} 個欄位；警告 {len(warnings)}')
+    write_csv(os.path.join(out, 'conflicts.csv'), conflicts)
+    print(f'資料表 {len(merged)} 個；共 {len(tables)} 個物件、{len(columns)} 個欄位；'
+          f'型態衝突 {len(conflicts)}；警告 {len(warnings)}')
     for w in warnings:
         print(w)
 

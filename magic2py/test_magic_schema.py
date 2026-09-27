@@ -2,7 +2,7 @@
 import unittest
 import xml.etree.ElementTree as ET
 
-from magic_schema import is_identifier, parse_picture, pg_type
+from magic_schema import is_identifier, merge, parse_picture, pg_type
 
 
 def phys(**attrs):
@@ -49,6 +49,32 @@ class PgTypeTest(unittest.TestCase):
         self.assertEqual(pg_type(b, True)[0], 'boolean')
         self.assertEqual(pg_type(phys(attribute='O', storage=34), False)[0], 'text')
         self.assertEqual(pg_type(phys(attribute='O', storage=29), False)[0], 'bytea')
+
+
+def table(project, **cols):
+    return {'t': {'phys': 'T', 'name': 't', 'project': project, 'indexes': [],
+                  'columns': {k: {'dbname': k, 'type': t, 'nullable': False, 'default': None, 'magic': [k],
+                                  'sqltype': sq, 'project': project} for k, (t, sq) in cols.items()}}}
+
+
+class MergeTest(unittest.TestCase):
+    def test_union_and_varchar_max(self):
+        merged, conflicts = merge([table('A', a=('varchar(10)', ''), b=('integer', '')),
+                                   table('B', a=('varchar(60)', ''), c=('char(8)', ''))])
+        cols = merged['t']['columns']
+        self.assertEqual(list(cols), ['a', 'b', 'c'])
+        self.assertEqual(cols['a']['type'], 'varchar(60)')
+        self.assertEqual(conflicts, [])
+
+    def test_sqltype_wins(self):
+        merged, conflicts = merge([table('A', d=('numeric(10,0)', '')), table('B', d=('char(8)', 'char(8)'))])
+        self.assertEqual(merged['t']['columns']['d']['type'], 'char(8)')
+        self.assertEqual(conflicts[0]['採用'], 'char(8)')
+
+    def test_conflict_without_sqltype_keeps_first(self):
+        merged, conflicts = merge([table('A', x=('varchar(1)', '')), table('B', x=('numeric(3,1)', ''))])
+        self.assertEqual(merged['t']['columns']['x']['type'], 'varchar(1)')
+        self.assertIn('Oracle', conflicts[0]['原因'])
 
 
 class HelperTest(unittest.TestCase):

@@ -1,0 +1,4 @@
+﻿實體名稱,DB 欄位,專案 1,型態 1,SqlType 1,專案 2,型態 2,SqlType 2,採用,原因
+A01,DueDate,Files,"numeric(10,0)",,EDB,char(8),char(8),char(8),EDB 有 SqlType
+A01,AccMonth,Files,"numeric(10,0)",,EDB,char(8),char(8),char(8),EDB 有 SqlType
+A50,TaxRate,Files,varchar(1),,EDB,"numeric(3,1)",,varchar(1),都沒有 SqlType，請用 Oracle 確認

@@ -1,25 +1,43 @@
 # Magic xpa → Python 轉換
 
-來源：`Project.xml`（共用函式庫專案）與 `Files.xml`（資料表元件），Magic xpa 3.3。原始 XML 沒有放進這個 repo。
+來源（Magic xpa 3.3，原始 XML 沒有放進這個 repo）：
+
+| 專案 | 內容 | 說明文件 |
+|---|---|---|
+| `Project.xml` | 共用函式庫，68 支程式 | 本文件「專案盤點」 |
+| `Files.xml` | 資料表元件（`Files.ecf`），864 個資料表／View | 本文件「資料表結構」 |
+| `EDB.xml` | 電子表單簽核引擎，141 支程式、95 個資料表 | [`EDB.md`](EDB.md) |
 
 ## 檔案
 
 | 檔案 | 說明 |
 |---|---|
-| `magic_dump.py` | 解析 Magic 專案 XML，輸出可讀的程式清單（變數、Logic Unit、Operation、Expression 都會展開） |
+| `magic_dump.py` | 解析 Magic 專案 XML，輸出可讀的程式清單（資料表、欄位、Logic Unit、Operation、Expression、SQL 都會展開） |
+| `EDB.md` | EDB 簽核系統的盤點、狀態碼與送簽流程說明 |
 | `amount_to_chinese.py` | 範例：程式 #14「數值金額轉換中文(含元整)」轉成 Python |
 | `test_amount_to_chinese.py` | 範例的測試 |
-| `magic_schema.py` | 從 `Files.xml` 產生 PostgreSQL 建表 SQL 和欄位字典 |
+| `magic_schema.py` | 從一個或多個專案 XML 產生合併後的 PostgreSQL 建表 SQL 和欄位字典 |
 | `test_magic_schema.py` | 型態對應規則的測試 |
-| `schema/postgresql.sql` | 產生的建表 SQL（195 個資料表、397 個索引） |
+| `schema/postgresql.sql` | 產生的建表 SQL（Files＋EDB 合併：253 個資料表、522 個索引） |
 | `schema/tables.csv`、`schema/columns.csv` | 資料表清單與欄位字典，可直接用 Excel 開 |
+| `schema/conflicts.csv` | 兩個專案對同一個欄位定義不一致的清單 |
 
 測試：`python -m unittest`
 
 ```
-python magic_dump.py Project.xml        # 列出 68 支程式
-python magic_dump.py Project.xml 14     # 展開第 14 支程式
+python magic_dump.py Project.xml                     # 列出 68 支程式
+python magic_dump.py Project.xml 14                  # 展開第 14 支程式
+python magic_dump.py Project.xml 10 --with Files.xml # 用到 Files 元件的資料表時，加上它才能顯示欄位名稱
 ```
+
+`magic_dump.py` 輸出的讀法：
+
+- `BM: Real 單據流水號   Locate: E` — 變數代號、種類、欄位名稱，後面是 Init／Range／Locate 條件。
+- `Link Query 單據屬性 (A01)` — Magic 表名和 Oracle 實體名稱；Link 種類有 Query、Write、Create、Inner Join、Left Outer Join。
+- `=== 刪除流程  [Batch, Mode=Delete]` — 任務的初始模式。**Delete 模式的 Batch 任務會刪除所有符合 Range 的記錄**，
+  就算沒有任何邏輯行也一樣。
+- `Call [子任務] …`／`Call [程式 #55] …` — 呼叫子任務或其他程式，括號內是參數，`-` 表示略過。
+- `Invoke UDF`、`Call By Name`、`Invoke .NET`、`Invoke OS Command` — 外部 DLL、依名稱呼叫、內嵌 .NET、作業系統指令。
 
 ## 專案盤點
 
@@ -58,14 +76,25 @@ python magic_dump.py Project.xml 14     # 展開第 14 支程式
 **需要在 Magic 上確認的一點**：小數參數（例如 123.9）傳進 N10 參數時，Magic 是截斷還是四捨五入。
 目前的 Python 版本是截斷。
 
-## 資料表結構（Files.xml）
+## 資料表結構
 
 ```
-python magic_schema.py Files.xml schema/                  # 保留原本的儲存方式（預設）
-python magic_schema.py Files.xml schema/ --native-types   # 日期/時間/邏輯改用 date/time/boolean
+python magic_schema.py schema/ Files.xml EDB.xml                  # 保留原本的儲存方式（預設）
+python magic_schema.py schema/ Files.xml EDB.xml --native-types   # 日期/時間/邏輯改用 date/time/boolean
 ```
 
-`Files.xml` 共 864 個 DataObject，資料庫是 **Oracle**：
+`Files` 和 `EDB` 連到同一個 **Oracle** 資料庫，所以合併成一份結構：同名資料表的欄位取聯集，
+定義不一致時採用有寫明 Oracle 型態（SqlType）的那一邊，衝突記錄在 `conflicts.csv`：
+
+| 資料表.欄位 | Files | EDB | 採用 |
+|---|---|---|---|
+| A01.DueDate（簽核期限） | `numeric(10,0)` | `char(8)` | `char(8)`（EDB 有 SqlType） |
+| A01.AccMonth（帳月） | `numeric(10,0)` | `char(8)` | `char(8)`（EDB 有 SqlType） |
+| A50.TaxRate（公司稅率） | `varchar(1)` | `numeric(3,1)` | `varchar(1)`，**請用 Oracle 確認** |
+
+EDB 另外新增 58 個資料表，合併後共 253 個資料表、522 個索引（其中 129 個是主鍵）。
+
+`Files.xml` 共 864 個 DataObject：
 
 | 種類 | 數量 | 處理方式 |
 |---|---|---|
@@ -75,7 +104,7 @@ python magic_schema.py Files.xml schema/ --native-types   # 日期/時間/邏輯
 | 其他資料來源（SQLite、Mobile、Memory、Log、AI…） | 23 | 只列在 `tables.csv` |
 | 分隔用的空項目 | 37 | 略過 |
 
-`postgresql.sql` 已在 PostgreSQL 16 上實際執行過，兩種模式都沒有錯誤。
+`postgresql.sql`（Files＋EDB 合併）已在 PostgreSQL 16 上實際執行過，兩種模式都沒有錯誤。
 
 ### 型態對應
 
@@ -94,10 +123,10 @@ python magic_schema.py Files.xml schema/ --native-types   # 日期/時間/邏輯
 
 - **日期＋時間共用一個欄位**：像「最後更新日／最後更新時」，Magic 用兩個欄位對應 Oracle 的同一個 `DATE` 欄位。
   PostgreSQL 合併成一個 `timestamp(0)`，欄位註解會寫出兩個 Magic 欄位名稱。Python 程式要分開取日期和時間。
-- **運算欄位 18 個**：Magic 欄位的 DB 名稱其實是 SQL 運算式（例如 `異動日期||異動時間`、子查詢、`DBMS_LOB.GETLENGTH(圖檔)`），
+- **運算欄位 20 個**（Files 18、EDB 2）：Magic 欄位的 DB 名稱其實是 SQL 運算式（例如 `異動日期||異動時間`、子查詢、`DBMS_LOB.GETLENGTH(圖檔)`），
   不建立實體欄位，轉換程式時要改寫成查詢或 Python 計算。`columns.csv` 備註欄有標示。
   其中 `DECODE`、`NVL`、`TO_CHAR` 是 Oracle 語法，要改成 PostgreSQL 的 `CASE`、`COALESCE`、`to_char`。
-- **38 個欄位的型態是推測的**：Magic 沒有寫 Oracle 的實際型態（沒有 SqlType），`columns.csv` 備註欄標示「推測」。
+- **40 個欄位的型態是推測的**（Files 38、EDB 2）：Magic 沒有寫 Oracle 的實際型態（沒有 SqlType），`columns.csv` 備註欄標示「推測」。
   請在 Oracle 執行下面的查詢確認：
 
   ```sql
@@ -119,7 +148,7 @@ python magic_schema.py Files.xml schema/ --native-types   # 日期/時間/邏輯
 
 ## 下一步需要的資料
 
-1. 實際使用這些資料表的業務專案 XML（例如訂單、生產、HR 各模組）。
+1. 實際使用這些資料表的業務專案 XML（例如訂單、生產、HR 各模組），以及這些模組接到 EDB 送簽的方式。
 2. Oracle 的 View 定義（`SELECT view_name, text FROM user_views`），606 個 View 要轉成 PostgreSQL 語法。
 3. 上面那段 `user_tab_columns` 查詢結果，用來確認推測的欄位型態。
 4. 幾組在 Magic 上實際跑出來的結果，填進 `test_amount_to_chinese.py` 的 `MAGIC_VERIFIED`。

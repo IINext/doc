@@ -1,7 +1,9 @@
--- 由 magic_schema.py 從 f14e81cf-Files.xml 產生，請勿手動修改
+-- 由 magic_schema.py 從 Files、EDB 產生，請勿手動修改
+-- 型態衝突：A01.DueDate Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
+-- 型態衝突：A01.AccMonth Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
+-- 型態衝突：A50.TaxRate Files=varchar(1)、EDB=numeric(3,1)，採用 varchar(1)（都沒有 SqlType，請用 Oracle 確認）
 
-
--- 0.員工資料檔
+-- Files：0.員工資料檔
 CREATE TABLE "fil0010" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -100,7 +102,7 @@ COMMENT ON COLUMN "fil0010"."language" IS '語系';
 COMMENT ON COLUMN "fil0010"."possition" IS '性別';
 COMMENT ON COLUMN "fil0010"."notes" IS '備註';
 
--- 0.簽核類別設定
+-- Files：0.簽核類別設定
 CREATE TABLE "fil0010a" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "請假" varchar(1) NOT NULL,
@@ -111,7 +113,7 @@ COMMENT ON TABLE "fil0010a" IS '0.簽核類別設定';
 COMMENT ON COLUMN "fil0010a"."請假" IS '請假簽核類別';
 COMMENT ON COLUMN "fil0010a"."加班" IS '加班簽核類別';
 
--- 0.廠客資料檔
+-- Files：0.廠客資料檔
 CREATE TABLE "fil0011" (
     "廠客" smallint DEFAULT 0 NOT NULL,
     "編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -284,7 +286,7 @@ COMMENT ON COLUMN "fil0011"."x4" IS 'x4=============================';
 COMMENT ON COLUMN "fil0011"."建立日期" IS '建立日期 / 建立時間';
 COMMENT ON COLUMN "fil0011"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.品號資料檔
+-- Files：0.品號資料檔
 CREATE TABLE "fil0012" (
     "產品編號" varchar(20) DEFAULT ' ' NOT NULL,
     "產品類別" varchar(1) DEFAULT ' ' NOT NULL,
@@ -432,7 +434,7 @@ COMMENT ON COLUMN "fil0012"."盤存數量" IS '庫存數量';
 COMMENT ON COLUMN "fil0012"."建立日" IS '建立時間';
 COMMENT ON COLUMN "fil0012"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.廠別資料檔
+-- Files：0.廠別資料檔
 CREATE TABLE "fil0013" (
     "廠別編號" varchar(4) DEFAULT ' ' NOT NULL,
     "廠別名稱" varchar(100) DEFAULT ' ' NOT NULL,
@@ -447,7 +449,7 @@ COMMENT ON TABLE "fil0013" IS '0.廠別資料檔';
 COMMENT ON COLUMN "fil0013"."建立日" IS '建立時間';
 COMMENT ON COLUMN "fil0013"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.廠客其它聯絡人
+-- Files：0.廠客其它聯絡人
 CREATE TABLE "fil0014" (
     "廠客編號" varchar(10) DEFAULT ' ' NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -462,7 +464,7 @@ CREATE TABLE "fil0014" (
 );
 COMMENT ON TABLE "fil0014" IS '0.廠客其它聯絡人';
 
--- 0.廠客送貨地址
+-- Files：0.廠客送貨地址
 CREATE TABLE "fil0015" (
     "廠客編號" varchar(10) DEFAULT ' ' NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -473,7 +475,7 @@ CREATE TABLE "fil0015" (
 );
 COMMENT ON TABLE "fil0015" IS '0.廠客送貨地址';
 
--- 0.請假資料檔
+-- Files：0.請假資料檔
 CREATE TABLE "fil0016" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -503,7 +505,7 @@ COMMENT ON COLUMN "fil0016"."假別代碼" IS '扣薪假別代碼';
 COMMENT ON COLUMN "fil0016"."填表日" IS '填表日 / 填表時';
 COMMENT ON COLUMN "fil0016"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.單位換算檔
+-- Files：0.單位換算檔
 CREATE TABLE "fil0017" (
     "從" varchar(10) DEFAULT ' ' NOT NULL,
     "到" varchar(10) DEFAULT ' ' NOT NULL,
@@ -515,7 +517,7 @@ CREATE TABLE "fil0017" (
 );
 COMMENT ON TABLE "fil0017" IS '0.單位換算檔';
 
--- 0.科目代碼檔
+-- Files：0.科目代碼檔
 CREATE TABLE "fil0018" (
     "科目代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "科目名稱" varchar(60) DEFAULT ' ' NOT NULL,
@@ -530,7 +532,7 @@ COMMENT ON TABLE "fil0018" IS '0.科目代碼檔';
 COMMENT ON COLUMN "fil0018"."建立日" IS '建立時間';
 COMMENT ON COLUMN "fil0018"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.採購單價檔
+-- Files：0.採購單價檔
 CREATE TABLE "fil0019" (
     "物料編號" varchar(20) DEFAULT ' ' NOT NULL,
     "廠商編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -552,7 +554,7 @@ COMMENT ON TABLE "fil0019" IS '0.採購單價檔';
 COMMENT ON COLUMN "fil0019"."建立日" IS '建立時間';
 COMMENT ON COLUMN "fil0019"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.部門資料檔
+-- Files：0.部門資料檔
 CREATE TABLE "fil0020" (
     "部門編號" varchar(10) DEFAULT ' ' NOT NULL,
     "部門名稱" varchar(40) DEFAULT ' ' NOT NULL,
@@ -571,7 +573,7 @@ COMMENT ON TABLE "fil0020" IS '0.部門資料檔';
 COMMENT ON COLUMN "fil0020"."製程" IS '製程代碼';
 COMMENT ON COLUMN "fil0020"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.銀行資料檔
+-- Files：0.銀行資料檔
 CREATE TABLE "fil0021" (
     "銀行類別" varchar(4) DEFAULT ' ' NOT NULL,
     "類別名稱" varchar(40) DEFAULT ' ' NOT NULL,
@@ -591,7 +593,7 @@ CREATE INDEX "fil0021_03" ON "fil0021" ("分支機構代碼");
 COMMENT ON TABLE "fil0021" IS '0.銀行資料檔';
 COMMENT ON COLUMN "fil0021"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.匯率資料檔
+-- Files：0.匯率資料檔
 CREATE TABLE "fil0022" (
     "幣別代碼" varchar(3) DEFAULT ' ' NOT NULL,
     "匯率日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -624,7 +626,7 @@ COMMENT ON COLUMN "fil0022"."海關買進" IS '海關買進(E)';
 COMMENT ON COLUMN "fil0022"."海關賣出" IS '海關賣出(F)';
 COMMENT ON COLUMN "fil0022"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.費用項目檔
+-- Files：0.費用項目檔
 CREATE TABLE "fil0023" (
     "費用代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "費用名稱" varchar(60) DEFAULT ' ' NOT NULL,
@@ -643,7 +645,7 @@ COMMENT ON TABLE "fil0023" IS '0.費用項目檔';
 COMMENT ON COLUMN "fil0023"."建立日" IS '建立時間';
 COMMENT ON COLUMN "fil0023"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.員工製程檔
+-- Files：0.員工製程檔
 CREATE TABLE "fil0024" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "c31a" smallint DEFAULT 0 NOT NULL,
@@ -675,7 +677,7 @@ COMMENT ON COLUMN "fil0024"."c31k" IS 'C31K.裁切檢品';
 COMMENT ON COLUMN "fil0024"."c32d" IS 'C32D上臘';
 COMMENT ON COLUMN "fil0024"."c32e" IS 'C32E版銅';
 
--- 0.班別代碼檔
+-- Files：0.班別代碼檔
 CREATE TABLE "fil0025" (
     "代碼" varchar(1) DEFAULT ' ' NOT NULL,
     "名稱" varchar(20) DEFAULT ' ' NOT NULL,
@@ -689,7 +691,7 @@ CREATE TABLE "fil0025" (
 );
 COMMENT ON TABLE "fil0025" IS '0.班別代碼檔';
 
--- 0.異動單主檔
+-- Files：0.異動單主檔
 CREATE TABLE "fil0030" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -744,7 +746,7 @@ COMMENT ON COLUMN "fil0030"."確認碼" IS '確認碼(改版:Y)';
 COMMENT ON COLUMN "fil0030"."填表日" IS '填表日 / 填表時';
 COMMENT ON COLUMN "fil0030"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.特殊欄位主檔
+-- Files：0.特殊欄位主檔
 CREATE TABLE "fil0031" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -851,7 +853,7 @@ COMMENT ON COLUMN "fil0031"."聯絡人序號" IS '聯絡人序號/加工速度';
 COMMENT ON COLUMN "fil0031"."數量" IS '數量/米數';
 COMMENT ON COLUMN "fil0031"."logical2" IS 'Logical2/單頭不限熟成時間';
 
--- 0.產品條件主檔
+-- Files：0.產品條件主檔
 CREATE TABLE "fil0032" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1064,7 +1066,7 @@ COMMENT ON COLUMN "fil0032"."封邊_背邊側" IS '封邊：背邊側';
 COMMENT ON COLUMN "fil0032"."封邊_背邊側mm" IS '封邊：背邊測mm';
 COMMENT ON COLUMN "fil0032"."封邊_背邊側mm二" IS '封邊：背邊測mm二';
 
--- 0.產品條件副檔一
+-- Files：0.產品條件副檔一
 CREATE TABLE "fil0033" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1179,7 +1181,7 @@ COMMENT ON COLUMN "fil0033"."開窗尺寸21" IS '開窗尺寸21(mm)';
 COMMENT ON COLUMN "fil0033"."開窗尺寸22" IS '開窗尺寸22(mm)';
 COMMENT ON COLUMN "fil0033"."鋁箔貼合面_三合一上" IS '鋁箔貼合面：三合一上';
 
--- 0.製袋箱號
+-- Files：0.製袋箱號
 CREATE TABLE "fil0033a" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1193,7 +1195,7 @@ COMMENT ON TABLE "fil0033a" IS '0.製袋箱號';
 COMMENT ON COLUMN "fil0033a"."製令單別" IS '製令單別(C11)';
 COMMENT ON COLUMN "fil0033a"."製令單號" IS '製令單號(C11)';
 
--- 0.成捲箱號
+-- Files：0.成捲箱號
 CREATE TABLE "fil0033b" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1207,7 +1209,7 @@ COMMENT ON TABLE "fil0033b" IS '0.成捲箱號';
 COMMENT ON COLUMN "fil0033b"."製令單別" IS '製令單別(C11)';
 COMMENT ON COLUMN "fil0033b"."製令單號" IS '製令單號(C11)';
 
--- 0.產品條件製程檔
+-- Files：0.產品條件製程檔
 CREATE TABLE "fil0033c" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1241,7 +1243,7 @@ COMMENT ON COLUMN "fil0033c"."c31k" IS 'C31K.裁切檢品';
 COMMENT ON COLUMN "fil0033c"."c32d" IS 'C32D上臘';
 COMMENT ON COLUMN "fil0033c"."c32e" IS 'C32E版銅';
 
--- 0.產品條件材料
+-- Files：0.產品條件材料
 CREATE TABLE "fil0034" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1273,7 +1275,7 @@ COMMENT ON COLUMN "fil0034"."熟成_時間區間" IS '熟成：時間區間';
 COMMENT ON COLUMN "fil0034"."冷鏈_溫度區間" IS '冷鏈：溫度區間';
 COMMENT ON COLUMN "fil0034"."冷鏈_時間區間" IS '冷鏈：時間區間';
 
--- 0.產品條件變更
+-- Files：0.產品條件變更
 CREATE TABLE "fil0035" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1375,7 +1377,7 @@ COMMENT ON COLUMN "fil0035"."確認_製袋課_承辦人" IS '確認：製袋課(
 COMMENT ON COLUMN "fil0035"."確認_廠務課_承辦人" IS '確認：廠務課(承辦人)';
 COMMENT ON COLUMN "fil0035"."確認_其他單位_承辦人" IS '確認：其他單位(承辦人)';
 
--- 0.製稿工作指示
+-- Files：0.製稿工作指示
 CREATE TABLE "fil0036" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1492,7 +1494,7 @@ COMMENT ON COLUMN "fil0036"."下底" IS '下底(mm)';
 COMMENT ON COLUMN "fil0036"."以下為備註事項" IS '==以下為備註事項';
 COMMENT ON COLUMN "fil0036"."共版支" IS '共版支?';
 
--- 0.備註副檔二
+-- Files：0.備註副檔二
 CREATE TABLE "fil0037" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1517,7 +1519,7 @@ COMMENT ON COLUMN "fil0037"."製令單別" IS '單別';
 COMMENT ON COLUMN "fil0037"."製令單號" IS '單號';
 COMMENT ON COLUMN "fil0037"."製程代碼" IS '製程單號';
 
--- 0.行事曆說明
+-- Files：0.行事曆說明
 CREATE TABLE "fil0037a" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1530,7 +1532,7 @@ CREATE TABLE "fil0037a" (
 CREATE UNIQUE INDEX "fil0037akey1" ON "fil0037a" ("單據類別", "單據編號", "序號");
 COMMENT ON TABLE "fil0037a" IS '0.行事曆說明';
 
--- 0.客戶看色記錄
+-- Files：0.客戶看色記錄
 CREATE TABLE "fil0037b" (
     "製令單別" varchar(10) DEFAULT ' ' NOT NULL,
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1547,7 +1549,7 @@ COMMENT ON TABLE "fil0037b" IS '0.客戶看色記錄';
 COMMENT ON COLUMN "fil0037b"."製令單別" IS '單別';
 COMMENT ON COLUMN "fil0037b"."製令單號" IS '單號';
 
--- 0.其它說明主檔
+-- Files：0.其它說明主檔
 CREATE TABLE "fil0038" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1564,7 +1566,7 @@ CREATE TABLE "fil0038" (
 CREATE INDEX "fil0038_01" ON "fil0038" ("單別", "單號");
 COMMENT ON TABLE "fil0038" IS '0.其它說明主檔';
 
--- 0.產品條件製程
+-- Files：0.產品條件製程
 CREATE TABLE "fil0039" (
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
     "節點" varchar(60) DEFAULT ' ' NOT NULL,
@@ -1601,7 +1603,7 @@ COMMENT ON COLUMN "fil0039"."AB底側" IS 'AB底側一';
 COMMENT ON COLUMN "fil0039"."使用半成品" IS '使用半成品一';
 COMMENT ON COLUMN "fil0039"."物料編號" IS '物料編號一';
 
--- 0.產品條件產編
+-- Files：0.產品條件產編
 CREATE TABLE "fil003a" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1612,7 +1614,7 @@ CREATE UNIQUE INDEX "fil003a_01" ON "fil003a" ("單據類別", "單據編號", "
 CREATE UNIQUE INDEX "fil003a_02" ON "fil003a" ("單據類別", "單據編號", "產品編號");
 COMMENT ON TABLE "fil003a" IS '0.產品條件產編';
 
--- 0.產品條件半成品編碼
+-- Files：0.產品條件半成品編碼
 CREATE TABLE "fil003a1" (
     "單據類別" varchar(10) DEFAULT 'C11' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1627,7 +1629,7 @@ CREATE UNIQUE INDEX "fil003a1key2" ON "fil003a1" ("單據類別", "單據編號"
 CREATE INDEX "fil003a1key3" ON "fil003a1" ("半成品編號");
 COMMENT ON TABLE "fil003a1" IS '0.產品條件半成品編碼';
 
--- 0.產品條件共用製令
+-- Files：0.產品條件共用製令
 CREATE TABLE "fil003a2" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1638,7 +1640,7 @@ CREATE UNIQUE INDEX "fil003a2_01" ON "fil003a2" ("單據類別", "單據編號",
 CREATE UNIQUE INDEX "fil003a2_02" ON "fil003a2" ("單據類別", "單據編號", "製令單號");
 COMMENT ON TABLE "fil003a2" IS '0.產品條件共用製令';
 
--- 0.產品條件客戶要求
+-- Files：0.產品條件客戶要求
 CREATE TABLE "fil003a3" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1651,7 +1653,7 @@ CREATE TABLE "fil003a3" (
 CREATE UNIQUE INDEX "fil003a2key1" ON "fil003a3" ("單據類別", "單據編號", "半成品編號");
 COMMENT ON TABLE "fil003a3" IS '0.產品條件客戶要求';
 
--- 0.產品條件製程用料
+-- Files：0.產品條件製程用料
 CREATE TABLE "fil003b" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1667,7 +1669,7 @@ CREATE TABLE "fil003b" (
 CREATE UNIQUE INDEX "fil003b_key1" ON "fil003b" ("單據類別", "單據編號", "用途", "加工類別", "序號");
 COMMENT ON TABLE "fil003b" IS '0.產品條件製程用料';
 
--- 0.產品條件共版
+-- Files：0.產品條件共版
 CREATE TABLE "fil003c" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1682,7 +1684,7 @@ CREATE UNIQUE INDEX "fil003c_01" ON "fil003c" ("單據類別", "單據編號", "
 CREATE INDEX "fil003c_key2" ON "fil003c" ("版銅編號");
 COMMENT ON TABLE "fil003c" IS '0.產品條件共版';
 
--- 0.產品條件送貨地址
+-- Files：0.產品條件送貨地址
 CREATE TABLE "fil003d" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1696,7 +1698,7 @@ CREATE TABLE "fil003d" (
 CREATE UNIQUE INDEX "fil003d_key1" ON "fil003d" ("單據類別", "單據編號", "序號");
 COMMENT ON TABLE "fil003d" IS '0.產品條件送貨地址';
 
--- 0.成品檢驗記錄表/出廠檢驗報告
+-- Files：0.成品檢驗記錄表/出廠檢驗報告
 CREATE TABLE "fil003e" (
     "主檔流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "檢驗數量" numeric(10,0) DEFAULT 0 NOT NULL,
@@ -1840,7 +1842,7 @@ COMMENT ON COLUMN "fil003e"."標準邊封口寬度_背邊側mm" IS '標準邊封
 COMMENT ON COLUMN "fil003e"."標準氣閥" IS '標準氣閥(±2mm)';
 COMMENT ON COLUMN "fil003e"."標準鐵條" IS '標準鐵條(±2mm)';
 
--- 0.產品條件標籤
+-- Files：0.產品條件標籤
 CREATE TABLE "fil003f" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1937,7 +1939,7 @@ COMMENT ON COLUMN "fil003f"."cartonlabel_4" IS 'CartonLabel(客戶料號)_4';
 COMMENT ON COLUMN "fil003f"."item_4" IS 'ITEM(客戶品號)_4';
 COMMENT ON COLUMN "fil003f"."保存期限_4" IS '保存期限(月數)_4';
 
--- 0.產品裁切標籤
+-- Files：0.產品裁切標籤
 CREATE TABLE "fil003f1" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -1986,7 +1988,7 @@ CREATE TABLE "fil003f1" (
 CREATE UNIQUE INDEX "fil003f1_01" ON "fil003f1" ("單據類別", "單據編號", "單據序號", "類別");
 COMMENT ON TABLE "fil003f1" IS '0.產品裁切標籤';
 
--- 0.製袋線上巡檢記錄表
+-- Files：0.製袋線上巡檢記錄表
 CREATE TABLE "fil003g" (
     "主檔流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "機台代碼" varchar(10) DEFAULT ' ' NOT NULL,
@@ -2090,7 +2092,7 @@ COMMENT ON COLUMN "fil003g"."標準邊封口寬度_背邊側mm" IS '標準邊封
 COMMENT ON COLUMN "fil003g"."標準氣閥" IS '標準氣閥(±2mm)';
 COMMENT ON COLUMN "fil003g"."標準鐵條" IS '標準鐵條(±2mm)';
 
--- 0.氣閥鐵條線上巡檢表
+-- Files：0.氣閥鐵條線上巡檢表
 CREATE TABLE "fil003h" (
     "主檔流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "巡檢項目" varchar(10) DEFAULT ' ' NOT NULL,
@@ -2113,7 +2115,7 @@ COMMENT ON TABLE "fil003h" IS '0.氣閥鐵條線上巡檢表';
 COMMENT ON COLUMN "fil003h"."Y牢固完整度" IS 'y牢固完整度';
 COMMENT ON COLUMN "fil003h"."N牢固完整度" IS 'n牢固完整度';
 
--- 0.估價單主檔
+-- Files：0.估價單主檔
 CREATE TABLE "fil003i" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2267,7 +2269,7 @@ COMMENT ON COLUMN "fil003i"."單別" IS '單別(B01)';
 COMMENT ON COLUMN "fil003i"."單號" IS '單號(B01)';
 COMMENT ON COLUMN "fil003i"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.估價單袋型
+-- Files：0.估價單袋型
 CREATE TABLE "fil003j" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -2282,7 +2284,7 @@ COMMENT ON TABLE "fil003j" IS '0.估價單袋型';
 COMMENT ON COLUMN "fil003j"."價格" IS '價格(元)';
 COMMENT ON COLUMN "fil003j"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.估價單燙金
+-- Files：0.估價單燙金
 CREATE TABLE "fil003j1" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單據序號" integer NOT NULL,
@@ -2304,7 +2306,7 @@ CREATE TABLE "fil003j1" (
 COMMENT ON TABLE "fil003j1" IS '0.估價單燙金';
 COMMENT ON COLUMN "fil003j1"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.客訴單主檔
+-- Files：0.客訴單主檔
 CREATE TABLE "fil003k1" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2338,7 +2340,7 @@ COMMENT ON COLUMN "fil003k1"."原因探討權責單位" IS '原因探討：權�
 COMMENT ON COLUMN "fil003k1"."改善對策權責單位" IS '改善對策：權責單位';
 COMMENT ON COLUMN "fil003k1"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.品質異常單主檔
+-- Files：0.品質異常單主檔
 CREATE TABLE "fil003l1" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2375,7 +2377,7 @@ COMMENT ON COLUMN "fil003l1"."單別" IS '單別(R02)';
 COMMENT ON COLUMN "fil003l1"."單號" IS '單號(R02)';
 COMMENT ON COLUMN "fil003l1"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.銷退處理記錄表主檔
+-- Files：0.銷退處理記錄表主檔
 CREATE TABLE "fil003m1" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2401,7 +2403,7 @@ COMMENT ON COLUMN "fil003m1"."單別" IS '單別(R03)';
 COMMENT ON COLUMN "fil003m1"."單號" IS '單號(R03)';
 COMMENT ON COLUMN "fil003m1"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.特採申請單主檔
+-- Files：0.特採申請單主檔
 CREATE TABLE "fil003n1" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2428,7 +2430,7 @@ COMMENT ON COLUMN "fil003n1"."單別" IS '單別(R04)';
 COMMENT ON COLUMN "fil003n1"."單號" IS '單號(R04)';
 COMMENT ON COLUMN "fil003n1"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.生產日報附加欄位
+-- Files：0.生產日報附加欄位
 CREATE TABLE "fil003o" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2438,7 +2440,7 @@ CREATE TABLE "fil003o" (
 CREATE UNIQUE INDEX "fil003okey1" ON "fil003o" ("單據類別", "單據編號");
 COMMENT ON TABLE "fil003o" IS '0.生產日報附加欄位';
 
--- 0.報價條文
+-- Files：0.報價條文
 CREATE TABLE "fil003p" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2452,7 +2454,7 @@ CREATE UNIQUE INDEX "fil003pkey1" ON "fil003p" ("單據類別", "單據編號", 
 COMMENT ON TABLE "fil003p" IS '0.報價條文';
 COMMENT ON COLUMN "fil003p"."選入" IS '估價選入';
 
--- 0.異動單明細
+-- Files：0.異動單明細
 CREATE TABLE "fil0040" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2532,7 +2534,7 @@ COMMENT ON COLUMN "fil0040"."logical1" IS 'Logical1/待補';
 COMMENT ON COLUMN "fil0040"."數值4" IS '數值4(採購:ex.米)';
 COMMENT ON COLUMN "fil0040"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.異動單明細中繼檔
+-- Files：0.異動單明細中繼檔
 CREATE TABLE "fil0040_a" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2594,7 +2596,7 @@ COMMENT ON COLUMN "fil0040_a"."毛重" IS '毛重(kg)';
 COMMENT ON COLUMN "fil0040_a"."折讓" IS '折讓(明細)';
 COMMENT ON COLUMN "fil0040_a"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.異動單刪除註記
+-- Files：0.異動單刪除註記
 CREATE TABLE "fil0040_b" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2607,7 +2609,7 @@ CREATE TABLE "fil0040_b" (
 CREATE UNIQUE INDEX "fil0040_b_key1" ON "fil0040_b" ("單據類別", "單據編號", "單據序號", "刪除次數");
 COMMENT ON TABLE "fil0040_b" IS '0.異動單刪除註記';
 
--- 0.異動單切分
+-- Files：0.異動單切分
 CREATE TABLE "fil00401" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2650,7 +2652,7 @@ COMMENT ON COLUMN "fil00401"."數字三" IS '數字三(採購:單價)';
 COMMENT ON COLUMN "fil00401"."數字四" IS '數字四(採購:採購數(RS)';
 COMMENT ON COLUMN "fil00401"."數字五" IS '數字五(採購:出貨規格)';
 
--- 0.特殊欄位明細
+-- Files：0.特殊欄位明細
 CREATE TABLE "fil0041" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2744,7 +2746,7 @@ COMMENT ON COLUMN "fil0041"."文數字7" IS '文數字7(unicode)';
 COMMENT ON COLUMN "fil0041"."文數字8" IS '文數字8(unicode)';
 COMMENT ON COLUMN "fil0041"."文數字9" IS '文數字9(unicode)';
 
--- 0.特殊欄位明細中繼檔
+-- Files：0.特殊欄位明細中繼檔
 CREATE TABLE "fil0041_a" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2833,7 +2835,7 @@ COMMENT ON COLUMN "fil0041_a"."文數字7" IS '文數字7(unicode)';
 COMMENT ON COLUMN "fil0041_a"."文數字8" IS '文數字8(unicode)';
 COMMENT ON COLUMN "fil0041_a"."文數字9" IS '文數字9(unicode)';
 
--- 0.熟成室管制表
+-- Files：0.熟成室管制表
 CREATE TABLE "fil0041_b" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2857,7 +2859,7 @@ CREATE TABLE "fil0041_b" (
 );
 COMMENT ON TABLE "fil0041_b" IS '0.熟成室管制表';
 
--- 0.冷鏈室管制表
+-- Files：0.冷鏈室管制表
 CREATE TABLE "fil0041_ba" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2881,7 +2883,7 @@ CREATE TABLE "fil0041_ba" (
 );
 COMMENT ON TABLE "fil0041_ba" IS '0.冷鏈室管制表';
 
--- 0.費用明細檔
+-- Files：0.費用明細檔
 CREATE TABLE "fil0042" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -2901,7 +2903,7 @@ CREATE TABLE "fil0042" (
 COMMENT ON TABLE "fil0042" IS '0.費用明細檔';
 COMMENT ON COLUMN "fil0042"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.條碼管理檔
+-- Files：0.條碼管理檔
 CREATE TABLE "fil0043" (
     "條碼" varchar(40) NOT NULL,
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
@@ -2947,7 +2949,7 @@ COMMENT ON COLUMN "fil0043"."庫存結算數" IS '庫存結算數(ex.米)';
 COMMENT ON COLUMN "fil0043"."填表日" IS '填表日 / 填表時';
 COMMENT ON COLUMN "fil0043"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.條碼異動檔
+-- Files：0.條碼異動檔
 CREATE TABLE "fil0044" (
     "條碼" varchar(40) NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -2977,7 +2979,7 @@ COMMENT ON COLUMN "fil0044"."其它單號" IS '請領單號';
 COMMENT ON COLUMN "fil0044"."其它單號1" IS '製令單號';
 COMMENT ON COLUMN "fil0044"."其它單號2" IS '日報單號';
 
--- 0.條碼列印記錄
+-- Files：0.條碼列印記錄
 CREATE TABLE "fil0044a" (
     "條碼" varchar(40) DEFAULT ' ' NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -2995,7 +2997,7 @@ CREATE UNIQUE INDEX "fil0044a_01" ON "fil0044a" ("條碼", "序號");
 CREATE UNIQUE INDEX "fil0044akey2" ON "fil0044a" ("列印批號", "條碼", "序號");
 COMMENT ON TABLE "fil0044a" IS '0.條碼列印記錄';
 
--- 0.總標籤位置
+-- Files：0.總標籤位置
 CREATE TABLE "fil0044b" (
     "產品標籤" varchar(46) DEFAULT ' ' NOT NULL,
     "最後總標籤" varchar(40) DEFAULT ' ' NOT NULL
@@ -3003,7 +3005,7 @@ CREATE TABLE "fil0044b" (
 CREATE UNIQUE INDEX "fil0044bkey1" ON "fil0044b" ("產品標籤");
 COMMENT ON TABLE "fil0044b" IS '0.總標籤位置';
 
--- xx0.半成品領用
+-- Files：xx0.半成品領用
 CREATE TABLE "fil0045" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "領用編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -3018,7 +3020,7 @@ COMMENT ON TABLE "fil0045" IS 'xx0.半成品領用';
 COMMENT ON COLUMN "fil0045"."領用編號" IS '領用編號(條碼)';
 COMMENT ON COLUMN "fil0045"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- xx0.油墨領用檔
+-- Files：xx0.油墨領用檔
 CREATE TABLE "fil0046" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3034,7 +3036,7 @@ CREATE TABLE "fil0046" (
 COMMENT ON TABLE "fil0046" IS 'xx0.油墨領用檔';
 COMMENT ON COLUMN "fil0046"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.加熱器名稱
+-- Files：0.加熱器名稱
 CREATE TABLE "fil0047" (
     "加熱器序號" numeric(10,0) DEFAULT 0 NOT NULL,
     "製程代碼" varchar(10) DEFAULT ' ' NOT NULL,
@@ -3049,7 +3051,7 @@ CREATE INDEX "fil0047_02" ON "fil0047" ("製程代碼", "機台代碼", "機台�
 COMMENT ON TABLE "fil0047" IS '0.加熱器名稱';
 COMMENT ON COLUMN "fil0047"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.加熱器溫度
+-- Files：0.加熱器溫度
 CREATE TABLE "fil0048" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3067,7 +3069,7 @@ COMMENT ON COLUMN "fil0048"."單別" IS '單別(C41)';
 COMMENT ON COLUMN "fil0048"."單號" IS '單號(C41)';
 COMMENT ON COLUMN "fil0048"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.自主檢查檔
+-- Files：0.自主檢查檔
 CREATE TABLE "fil0049" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3098,7 +3100,7 @@ COMMENT ON COLUMN "fil0049"."單別" IS '單別(C41)';
 COMMENT ON COLUMN "fil0049"."單號" IS '單號(C41)';
 COMMENT ON COLUMN "fil0049"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.標籤列印記錄
+-- Files：0.標籤列印記錄
 CREATE TABLE "fil004a" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3124,7 +3126,7 @@ CREATE INDEX "fil004a_03" ON "fil004a" ("製令單號", "製造日期");
 COMMENT ON TABLE "fil004a" IS '0.標籤列印記錄';
 COMMENT ON COLUMN "fil004a"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.製成品屬性
+-- Files：0.製成品屬性
 CREATE TABLE "fil004b" (
     "製令單號" varchar(20) DEFAULT ' ' NOT NULL,
     "箱號" numeric(14,4) NOT NULL,
@@ -3141,7 +3143,7 @@ CREATE UNIQUE INDEX "fil004b_01" ON "fil004b" ("製令單號", "箱號");
 COMMENT ON TABLE "fil004b" IS '0.製成品屬性';
 COMMENT ON COLUMN "fil004b"."條鐵重量" IS '鐵條重量';
 
--- 0.檢驗水準
+-- Files：0.檢驗水準
 CREATE TABLE "fil004c" (
     "生產數量起" numeric(10,0) DEFAULT 0 NOT NULL,
     "抽樣數量" numeric(10,0) DEFAULT 0 NOT NULL,
@@ -3151,7 +3153,7 @@ CREATE TABLE "fil004c" (
 CREATE UNIQUE INDEX "fil004c_01" ON "fil004c" ("生產數量起");
 COMMENT ON TABLE "fil004c" IS '0.檢驗水準';
 
--- 0.版銅入庫檔
+-- Files：0.版銅入庫檔
 CREATE TABLE "fil004d" (
     "版銅代碼" varchar(20) NOT NULL,
     "入庫日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -3172,7 +3174,7 @@ COMMENT ON COLUMN "fil004d"."歸屬流水編號" IS '歸屬流水編號(送修�
 COMMENT ON COLUMN "fil004d"."回廠日期" IS '回廠日期 / 回廠時間';
 COMMENT ON COLUMN "fil004d"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.版銅異動檔
+-- Files：0.版銅異動檔
 CREATE TABLE "fil004e" (
     "序號" numeric(10,0) DEFAULT 0 NOT NULL,
     "版銅代碼" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3187,7 +3189,7 @@ CREATE UNIQUE INDEX "fil004e_03" ON "fil004e" ("歸屬代碼", "序號");
 COMMENT ON TABLE "fil004e" IS '0.版銅異動檔';
 COMMENT ON COLUMN "fil004e"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.裁切OPRP檢查
+-- Files：0.裁切OPRP檢查
 CREATE TABLE "fil004f" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3209,7 +3211,7 @@ COMMENT ON COLUMN "fil004f"."單別" IS '單別(C41)';
 COMMENT ON COLUMN "fil004f"."單號" IS '單號(C41)';
 COMMENT ON COLUMN "fil004f"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.報價對應估價明細
+-- Files：0.報價對應估價明細
 CREATE TABLE "fil004g" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3240,7 +3242,7 @@ CREATE UNIQUE INDEX "fil004gkey1" ON "fil004g" ("單別", "單號", "序號");
 COMMENT ON TABLE "fil004g" IS '0.報價對應估價明細';
 COMMENT ON COLUMN "fil004g"."最後更新日" IS '最後更新日 / 最後更新日_time';
 
--- 0.成品批號庫存
+-- Files：0.成品批號庫存
 CREATE TABLE "fil004h" (
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
     "製袋" smallint DEFAULT 0 NOT NULL,
@@ -3263,7 +3265,7 @@ CREATE TABLE "fil004h" (
 );
 COMMENT ON TABLE "fil004h" IS '0.成品批號庫存';
 
--- 0.積層CCP檢查
+-- Files：0.積層CCP檢查
 CREATE TABLE "fil004i" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3301,7 +3303,7 @@ COMMENT ON COLUMN "fil004i"."單別" IS '單別(C41)';
 COMMENT ON COLUMN "fil004i"."單號" IS '單號(C41)';
 COMMENT ON COLUMN "fil004i"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.熟成室管制歷履
+-- Files：0.熟成室管制歷履
 CREATE TABLE "fil004j" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3353,7 +3355,7 @@ COMMENT ON COLUMN "fil004j"."應入庫日期" IS '應入庫時間';
 COMMENT ON COLUMN "fil004j"."應出庫日時起" IS '應出庫日期起 / 應出庫時間起';
 COMMENT ON COLUMN "fil004j"."應出庫日時迄" IS '應出庫日期迄 / 應出庫時間迄';
 
--- 0.冷鏈室管制歷履
+-- Files：0.冷鏈室管制歷履
 CREATE TABLE "fil004ja" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3405,7 +3407,7 @@ COMMENT ON COLUMN "fil004ja"."應入庫日期" IS '應入庫時間';
 COMMENT ON COLUMN "fil004ja"."應出庫日時起" IS '應出庫日期起 / 應出庫時間起';
 COMMENT ON COLUMN "fil004ja"."應出庫日時迄" IS '應出庫日期迄 / 應出庫時間迄';
 
--- 0.熟成室其它製程轉入
+-- Files：0.熟成室其它製程轉入
 CREATE TABLE "fil004k" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3455,7 +3457,7 @@ COMMENT ON COLUMN "fil004k"."應入庫日期" IS '應入庫時間';
 COMMENT ON COLUMN "fil004k"."應出庫日時起" IS '應出庫日期起 / 應出庫時間起';
 COMMENT ON COLUMN "fil004k"."應出庫日時迄" IS '應出庫日期迄 / 應出庫時間迄';
 
--- 0.冷鏈室其它製程轉入
+-- Files：0.冷鏈室其它製程轉入
 CREATE TABLE "fil004ka" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3513,7 +3515,7 @@ COMMENT ON COLUMN "fil004ka"."應出庫日時迄" IS '應出庫日期迄 / 應�
 COMMENT ON COLUMN "fil004ka"."熟成條件" IS '冷鏈條件';
 COMMENT ON COLUMN "fil004ka"."熟成狀態" IS '冷鏈狀態';
 
--- 0.製程批號異動明細
+-- Files：0.製程批號異動明細
 CREATE TABLE "fil004l" (
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
@@ -3542,7 +3544,7 @@ CREATE INDEX "fil004lkey2" ON "fil004l" ("批號", "作業日期", "最後更新
 CREATE INDEX "fil004lkey3" ON "fil004l" ("批號", "來源", "作業日期", "最後更新日時");
 COMMENT ON TABLE "fil004l" IS '0.製程批號異動明細';
 
--- 0.原物料異動明細(批號)
+-- Files：0.原物料異動明細(批號)
 CREATE TABLE "fil004m" (
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
@@ -3563,7 +3565,7 @@ CREATE INDEX "fil004mkey2" ON "fil004m" ("批號", "最後更新日時");
 CREATE INDEX "fil004mkey3" ON "fil004m" ("物料編號", "最後更新日時");
 COMMENT ON TABLE "fil004m" IS '0.原物料異動明細(批號)';
 
--- 0.原物料異動明細
+-- Files：0.原物料異動明細
 CREATE TABLE "fil004n" (
     "單別" varchar(10) NOT NULL,
     "單號" varchar(20) NOT NULL,
@@ -3581,7 +3583,7 @@ CREATE UNIQUE INDEX "fil004nkey1" ON "fil004n" ("單別", "單號", "序號", "�
 COMMENT ON TABLE "fil004n" IS '0.原物料異動明細';
 COMMENT ON COLUMN "fil004n"."最後更新日" IS '最後更新日 / 最後更新日_time';
 
--- 0.客供品異動明細
+-- Files：0.客供品異動明細
 CREATE TABLE "fil004o" (
     "單別" varchar(10) NOT NULL,
     "單號" varchar(20) NOT NULL,
@@ -3599,7 +3601,7 @@ CREATE UNIQUE INDEX "fil004okey1" ON "fil004o" ("單別", "單號", "序號", "�
 COMMENT ON TABLE "fil004o" IS '0.客供品異動明細';
 COMMENT ON COLUMN "fil004o"."最後更新日" IS '最後更新日 / 最後更新日_time';
 
--- 0.單據編號檔
+-- Files：0.單據編號檔
 CREATE TABLE "fil0050" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -3608,7 +3610,7 @@ CREATE TABLE "fil0050" (
 );
 COMMENT ON TABLE "fil0050" IS '0.單據編號檔';
 
--- 0.臨時單號檔
+-- Files：0.臨時單號檔
 CREATE TABLE "fil0051" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -3617,7 +3619,7 @@ CREATE TABLE "fil0051" (
 );
 COMMENT ON TABLE "fil0051" IS '0.臨時單號檔';
 
--- 0.表單確認檔
+-- Files：0.表單確認檔
 CREATE TABLE "fil0060" (
     "ctxid" varchar(40) DEFAULT ' ' NOT NULL,
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
@@ -3628,7 +3630,7 @@ CREATE TABLE "fil0060" (
 CREATE UNIQUE INDEX "fil0060_02" ON "fil0060" ("選擇", "ctxid", "單據類別", "單據編號");
 COMMENT ON TABLE "fil0060" IS '0.表單確認檔';
 
--- 0.表單送簽檔
+-- Files：0.表單送簽檔
 CREATE TABLE "fil0070" (
     "類別" varchar(1) DEFAULT ' ' NOT NULL,
     "ctxid" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3640,7 +3642,7 @@ CREATE TABLE "fil0070" (
 CREATE UNIQUE INDEX "fil0070_02" ON "fil0070" ("類別", "選擇", "ctxid", "單據類別", "單據編號");
 COMMENT ON TABLE "fil0070" IS '0.表單送簽檔';
 
--- 0.表單簽核檔
+-- Files：0.表單簽核檔
 CREATE TABLE "fil0080" (
     "類別" varchar(1) DEFAULT ' ' NOT NULL,
     "ctxid" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3653,7 +3655,7 @@ CREATE TABLE "fil0080" (
 CREATE UNIQUE INDEX "fil0080_02" ON "fil0080" ("類別", "選擇", "ctxid", "簽核編號", "序號");
 COMMENT ON TABLE "fil0080" IS '0.表單簽核檔';
 
--- 0.相片資料檔
+-- Files：0.相片資料檔
 CREATE TABLE "fil0090" (
     "groupid" varchar(50) DEFAULT ' ' NOT NULL,
     "remark" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3668,7 +3670,7 @@ COMMENT ON COLUMN "fil0090"."groupid" IS '流水編號';
 COMMENT ON COLUMN "fil0090"."remark" IS '備註說明';
 COMMENT ON COLUMN "fil0090"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 0.相片明細檔
+-- Files：0.相片明細檔
 CREATE TABLE "fil0100" (
     "groupid" varchar(50) DEFAULT ' ' NOT NULL,
     "seqno" smallint DEFAULT 0 NOT NULL,
@@ -3683,7 +3685,7 @@ COMMENT ON TABLE "fil0100" IS '0.相片明細檔';
 COMMENT ON COLUMN "fil0100"."groupid" IS '流水編號';
 COMMENT ON COLUMN "fil0100"."modifydate" IS 'ModifyDate / ModifyTime';
 
--- 0.資料匯入暫存
+-- Files：0.資料匯入暫存
 CREATE TABLE "fil0120" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" integer NOT NULL,
@@ -3715,7 +3717,7 @@ CREATE UNIQUE INDEX "fil0120key1" ON "fil0120" ("流水編號", "序號");
 CREATE UNIQUE INDEX "fil0120key2" ON "fil0120" ("匯入日期", "流水編號", "序號");
 COMMENT ON TABLE "fil0120" IS '0.資料匯入暫存';
 
--- 1.功能表選單
+-- Files：1.功能表選單
 CREATE TABLE "fil1000" (
     "序號" integer DEFAULT 0 NOT NULL,
     "父階" varchar(10) DEFAULT ' ' NOT NULL,
@@ -3740,7 +3742,7 @@ CREATE INDEX "fil1000_04" ON "fil1000" ("子階");
 COMMENT ON TABLE "fil1000" IS '1.功能表選單';
 COMMENT ON COLUMN "fil1000"."node" IS 'Node?';
 
--- 1.外部合併檔
+-- Files：1.外部合併檔
 CREATE TABLE "fil1001" (
     "類別" varchar(20) DEFAULT ' ' NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -3751,7 +3753,7 @@ CREATE TABLE "fil1001" (
 );
 COMMENT ON TABLE "fil1001" IS '1.外部合併檔';
 
--- 1.發佈新聞檔
+-- Files：1.發佈新聞檔
 CREATE TABLE "fil1002" (
     "系統別" varchar(20) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) DEFAULT 0 NOT NULL,
@@ -3767,7 +3769,7 @@ CREATE UNIQUE INDEX "fil1002_02" ON "fil1002" ("系統別", "發佈起日", "序
 COMMENT ON TABLE "fil1002" IS '1.發佈新聞檔';
 COMMENT ON COLUMN "fil1002"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 1.工作記錄檔
+-- Files：1.工作記錄檔
 CREATE TABLE "fil1003" (
     "pid" varchar(100) DEFAULT ' ' NOT NULL,
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3781,7 +3783,7 @@ CREATE UNIQUE INDEX "fil1003_02" ON "fil1003" ("建立日期", "pid");
 COMMENT ON TABLE "fil1003" IS '1.工作記錄檔';
 COMMENT ON COLUMN "fil1003"."建立日期" IS '建立日期 / 建立時間';
 
--- 1.登入記錄檔
+-- Files：1.登入記錄檔
 CREATE TABLE "fil1004" (
     "id" varchar(10) DEFAULT ' ' NOT NULL,
     "登入日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -3795,7 +3797,7 @@ CREATE TABLE "fil1004" (
 CREATE UNIQUE INDEX "fil1004_02" ON "fil1004" ("登入日期", "登入時間", "序號", "id");
 COMMENT ON TABLE "fil1004" IS '1.登入記錄檔';
 
--- 1.使用者角色
+-- Files：1.使用者角色
 CREATE TABLE "fil1005" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "權限金鑰" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3807,7 +3809,7 @@ CREATE UNIQUE INDEX "fil1005_02" ON "fil1005" ("權限金鑰", "員工編號");
 COMMENT ON TABLE "fil1005" IS '1.使用者角色';
 COMMENT ON COLUMN "fil1005"."授權日期" IS '授權日期 / 授權時間';
 
--- 1.系統使用記錄
+-- Files：1.系統使用記錄
 CREATE TABLE "fil1006" (
     "西元日期" char(8) DEFAULT '00000000' NOT NULL,
     "時間" char(6) DEFAULT '000000' NOT NULL,
@@ -3823,7 +3825,7 @@ CREATE UNIQUE INDEX "fil1006_02" ON "fil1006" ("類別", "對應編號", "西元
 CREATE UNIQUE INDEX "fil1006_03" ON "fil1006" ("類別", "西元日期", "時間", "序號");
 COMMENT ON TABLE "fil1006" IS '1.系統使用記錄';
 
--- 1.使用者權限
+-- Files：1.使用者權限
 CREATE TABLE "fil1007" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3839,7 +3841,7 @@ CREATE UNIQUE INDEX "fil1007_02" ON "fil1007" ("publicname", "員工編號");
 COMMENT ON TABLE "fil1007" IS '1.使用者權限';
 COMMENT ON COLUMN "fil1007"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 1.特殊權限檔
+-- Files：1.特殊權限檔
 CREATE TABLE "fil1008" (
     "權限金鑰" varchar(10) DEFAULT ' ' NOT NULL,
     "權限說明" varchar(100) DEFAULT ' ' NOT NULL,
@@ -3847,7 +3849,7 @@ CREATE TABLE "fil1008" (
 );
 COMMENT ON TABLE "fil1008" IS '1.特殊權限檔';
 
--- 1.簽核發送檔
+-- Files：1.簽核發送檔
 CREATE TABLE "fil1009" (
     "簽核編號" numeric(10,0) DEFAULT 0 NOT NULL,
     "簽核系統" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3868,7 +3870,7 @@ CREATE UNIQUE INDEX "fil1009_03" ON "fil1009" ("簽核狀態", "簽核系統", "
 COMMENT ON TABLE "fil1009" IS '1.簽核發送檔';
 COMMENT ON COLUMN "fil1009"."刪除退回日" IS '刪除退回日 / 刪除退回時';
 
--- 1.簽核流程檔
+-- Files：1.簽核流程檔
 CREATE TABLE "fil1010" (
     "簽核編號" numeric(10,0) DEFAULT 0 NOT NULL,
     "序號" smallint DEFAULT 0 NOT NULL,
@@ -3888,7 +3890,7 @@ CREATE UNIQUE INDEX "fil1010_03" ON "fil1010" ("簽核編號", "簽核流程順�
 CREATE INDEX "fil1010_04" ON "fil1010" ("guid");
 COMMENT ON TABLE "fil1010" IS '1.簽核流程檔';
 
--- 1.簽核附件檔
+-- Files：1.簽核附件檔
 CREATE TABLE "fil1011" (
     "簽核系統" varchar(40) DEFAULT ' ' NOT NULL,
     "單號" varchar(30) DEFAULT ' ' NOT NULL,
@@ -3912,7 +3914,7 @@ COMMENT ON TABLE "fil1011" IS '1.簽核附件檔';
 COMMENT ON COLUMN "fil1011"."附件" IS '附件(作廢)';
 COMMENT ON COLUMN "fil1011"."更新日" IS '更新日 / 更新時';
 
--- 1.簽核組別檔
+-- Files：1.簽核組別檔
 CREATE TABLE "fil1012" (
     "簽核系統" varchar(40) DEFAULT ' ' NOT NULL,
     "組別" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3924,7 +3926,7 @@ CREATE TABLE "fil1012" (
 COMMENT ON TABLE "fil1012" IS '1.簽核組別檔';
 COMMENT ON COLUMN "fil1012"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 1.簽核人員檔
+-- Files：1.簽核人員檔
 CREATE TABLE "fil1013" (
     "簽核系統" varchar(40) DEFAULT ' ' NOT NULL,
     "組別" varchar(40) DEFAULT ' ' NOT NULL,
@@ -3942,7 +3944,7 @@ CREATE UNIQUE INDEX "fil1013_02" ON "fil1013" ("員工編號", "簽核系統", "
 COMMENT ON TABLE "fil1013" IS '1.簽核人員檔';
 COMMENT ON COLUMN "fil1013"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 1.系統代碼檔
+-- Files：1.系統代碼檔
 CREATE TABLE "fil1014" (
     "代碼類別" varchar(20) DEFAULT ' ' NOT NULL,
     "系統代碼" varchar(20) DEFAULT ' ' NOT NULL,
@@ -3984,7 +3986,7 @@ CREATE TABLE "fil1014" (
 COMMENT ON TABLE "fil1014" IS '1.系統代碼檔';
 COMMENT ON COLUMN "fil1014"."最後更新日期" IS '最後更新時';
 
--- 1.系統代碼檔明細
+-- Files：1.系統代碼檔明細
 CREATE TABLE "fil1014a" (
     "代碼類別" varchar(20) DEFAULT ' ' NOT NULL,
     "系統代碼" varchar(20) DEFAULT ' ' NOT NULL,
@@ -4010,7 +4012,7 @@ CREATE INDEX "fil1014akey2" ON "fil1014a" ("代碼類別", "系統代碼", "日�
 COMMENT ON TABLE "fil1014a" IS '1.系統代碼檔明細';
 COMMENT ON COLUMN "fil1014a"."最後更新日期" IS '最後更新時';
 
--- 1.月曆資料檔
+-- Files：1.月曆資料檔
 CREATE TABLE "fil1016" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "年月" integer DEFAULT 0 NOT NULL,
@@ -4055,7 +4057,7 @@ COMMENT ON COLUMN "fil1016"."四休假" IS '四.休假';
 COMMENT ON COLUMN "fil1016"."五休假" IS '五.休假';
 COMMENT ON COLUMN "fil1016"."六休假" IS '六.休假';
 
--- 1.通知記錄檔
+-- Files：1.通知記錄檔
 CREATE TABLE "fil1017" (
     "寄件者" varchar(10) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) DEFAULT 0 NOT NULL,
@@ -4077,7 +4079,7 @@ CREATE UNIQUE INDEX "fil1017_04" ON "fil1017" ("簽核系統", "寄件者", "序
 COMMENT ON TABLE "fil1017" IS '1.通知記錄檔';
 COMMENT ON COLUMN "fil1017"."寄件日" IS '寄件日 / 寄件時';
 
--- 1.修改記錄檔
+-- Files：1.修改記錄檔
 CREATE TABLE "fil1018" (
     "單據類別" varchar(10) DEFAULT ' ' NOT NULL,
     "單據編號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -4091,7 +4093,7 @@ CREATE TABLE "fil1018" (
 COMMENT ON TABLE "fil1018" IS '1.修改記錄檔';
 COMMENT ON COLUMN "fil1018"."修改日" IS '修改日 / 修改時';
 
--- 1.工作行事曆
+-- Files：1.工作行事曆
 CREATE TABLE "fil1019" (
     "年月" integer DEFAULT 0 NOT NULL,
     "週" smallint DEFAULT 0 NOT NULL,
@@ -4130,7 +4132,7 @@ CREATE TABLE "fil1019" (
 COMMENT ON TABLE "fil1019" IS '1.工作行事曆';
 COMMENT ON COLUMN "fil1019"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 1.通知記錄檔(外部)
+-- Files：1.通知記錄檔(外部)
 CREATE TABLE "fil1020" (
     "guid" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) DEFAULT 0 NOT NULL,
@@ -4146,7 +4148,7 @@ CREATE INDEX "fil1020_02" ON "fil1020" ("發送", "guid", "序號");
 COMMENT ON TABLE "fil1020" IS '1.通知記錄檔(外部)';
 COMMENT ON COLUMN "fil1020"."寄件日" IS '寄件日 / 寄件時';
 
--- 1.ISO編號對照
+-- Files：1.ISO編號對照
 CREATE TABLE "fil1021" (
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
     "ISO編號" varchar(30) DEFAULT ' ' NOT NULL,
@@ -4160,7 +4162,7 @@ CREATE UNIQUE INDEX "fil1021key1" ON "fil1021" ("publicname");
 COMMENT ON TABLE "fil1021" IS '1.ISO編號對照';
 COMMENT ON COLUMN "fil1021"."ISO編號" IS 'ISO文件編號';
 
--- 1.ISO編號變更明細
+-- Files：1.ISO編號變更明細
 CREATE TABLE "fil1022" (
     "publicname" varchar(100) DEFAULT ' ' NOT NULL,
     "ISO編號" varchar(30) DEFAULT ' ' NOT NULL,
@@ -4174,7 +4176,7 @@ CREATE UNIQUE INDEX "fil1022key1" ON "fil1022" ("publicname", "版次");
 COMMENT ON TABLE "fil1022" IS '1.ISO編號變更明細';
 COMMENT ON COLUMN "fil1022"."ISO編號" IS 'ISO文件編號';
 
--- 1.製程成本月彙總
+-- Files：1.製程成本月彙總
 CREATE TABLE "fil1051" (
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
     "製程代碼" varchar(10) DEFAULT ' ' NOT NULL,
@@ -4187,7 +4189,7 @@ CREATE UNIQUE INDEX "fil1051key1" ON "fil1051" ("年月", "製程代碼");
 CREATE UNIQUE INDEX "fil1051key2" ON "fil1051" ("製程代碼", "年月");
 COMMENT ON TABLE "fil1051" IS '1.製程成本月彙總';
 
--- 2.字詞對照檔
+-- Files：2.字詞對照檔
 CREATE TABLE "fil2001" (
     "pagecode" varchar(5) DEFAULT ' ' NOT NULL,
     "localname" varchar(100) DEFAULT ' ' NOT NULL,
@@ -4197,7 +4199,7 @@ CREATE TABLE "fil2001" (
 CREATE UNIQUE INDEX "fil2001_01" ON "fil2001" ("pagecode", "localname", "translateto");
 COMMENT ON TABLE "fil2001" IS '2.字詞對照檔';
 
--- 3.機台.管制
+-- Files：3.機台.管制
 CREATE TABLE "fil3009" (
     "機台號碼" varchar(10) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) NOT NULL,
@@ -4213,7 +4215,7 @@ CREATE INDEX "fil3009_04" ON "fil3009" ("機台號碼", "排序");
 COMMENT ON TABLE "fil3009" IS '3.機台.管制';
 COMMENT ON COLUMN "fil3009"."最後更新日期" IS '最後更新日期 / 最後更新時間';
 
--- 3.機台.管制歷史
+-- Files：3.機台.管制歷史
 CREATE TABLE "fil3009h" (
     "機台號碼" varchar(10) DEFAULT ' ' NOT NULL,
     "序號" numeric(10,0) NOT NULL,
@@ -4230,7 +4232,7 @@ CREATE INDEX "fil3009_04h" ON "fil3009h" ("記錄日期", "機台號碼", "排�
 COMMENT ON TABLE "fil3009h" IS '3.機台.管制歷史';
 COMMENT ON COLUMN "fil3009h"."最後更新日期" IS '最後更新日期 / 最後更新時間';
 
--- 3.機台.PLCDataOracle
+-- Files：3.機台.PLCDataOracle
 CREATE TABLE "fil300b" (
     "機台代碼" varchar(10) DEFAULT ' ' NOT NULL,
     "位置" varchar(1) DEFAULT ' ' NOT NULL,
@@ -4260,7 +4262,7 @@ COMMENT ON COLUMN "fil300b"."行" IS 'ROW';
 COMMENT ON COLUMN "fil300b"."列" IS 'COL';
 COMMENT ON COLUMN "fil300b"."讀取日時" IS '變更日時';
 
--- 3.機台.PLCDataCode
+-- Files：3.機台.PLCDataCode
 CREATE TABLE "fil300c" (
     "中文說明" varchar(100) NOT NULL,
     "英文說明" varchar(100) NOT NULL,
@@ -4281,7 +4283,7 @@ CREATE TABLE "fil300c" (
 CREATE UNIQUE INDEX "fil300c_01" ON "fil300c" ("代碼");
 COMMENT ON TABLE "fil300c" IS '3.機台.PLCDataCode';
 
--- 3.機台.裁切PLC_DATA_Oracle
+-- Files：3.機台.裁切PLC_DATA_Oracle
 CREATE TABLE "fil300d" (
     "vsprimarykey" varchar(25) DEFAULT ' ' NOT NULL,
     "no_order" varchar(10) DEFAULT ' ',
@@ -4339,7 +4341,7 @@ COMMENT ON COLUMN "fil300d"."data_18" IS '收捲下張力遞減設定';
 COMMENT ON COLUMN "fil300d"."data_19" IS '收捲下張力控制輸出';
 COMMENT ON COLUMN "fil300d"."0" IS '單據序號';
 
--- 3.機台.拉力機封口測試記錄表
+-- Files：3.機台.拉力機封口測試記錄表
 CREATE TABLE "fil3011" (
     "guid" varchar(60) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -4367,7 +4369,7 @@ COMMENT ON TABLE "fil3011" IS '3.機台.拉力機封口測試記錄表';
 COMMENT ON COLUMN "fil3011"."guid" IS '流水編號';
 COMMENT ON COLUMN "fil3011"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 3.機台.溶濟殘留異味測試記錄表
+-- Files：3.機台.溶濟殘留異味測試記錄表
 CREATE TABLE "fil3012" (
     "guid" varchar(60) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -4391,7 +4393,7 @@ COMMENT ON TABLE "fil3012" IS '3.機台.溶濟殘留異味測試記錄表';
 COMMENT ON COLUMN "fil3012"."guid" IS '流水編號';
 COMMENT ON COLUMN "fil3012"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 3.機台.摩擦係數測定檢測記錄表
+-- Files：3.機台.摩擦係數測定檢測記錄表
 CREATE TABLE "fil3013" (
     "guid" varchar(60) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -4423,7 +4425,7 @@ COMMENT ON TABLE "fil3013" IS '3.機台.摩擦係數測定檢測記錄表';
 COMMENT ON COLUMN "fil3013"."guid" IS '流水編號';
 COMMENT ON COLUMN "fil3013"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 4.機台.原料測試記錄表
+-- Files：4.機台.原料測試記錄表
 CREATE TABLE "fil3014" (
     "guid" varchar(60) DEFAULT ' ' NOT NULL,
     "日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -4492,7 +4494,7 @@ COMMENT ON COLUMN "fil3014"."檢測日期2" IS '檢測日期2 / 檢測時間2';
 COMMENT ON COLUMN "fil3014"."檢測日期3" IS '檢測日期3 / 檢測時間3';
 COMMENT ON COLUMN "fil3014"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 4.網站.詢價
+-- Files：4.網站.詢價
 CREATE TABLE "fil4001" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "聯絡人" varchar(50) DEFAULT ' ' NOT NULL,
@@ -4555,7 +4557,7 @@ CREATE INDEX "fil4001key3" ON "fil4001" ("新增日期", "新增時間");
 CREATE UNIQUE INDEX "fil4001key1" ON "fil4001" ("流水編號", "聯絡人");
 COMMENT ON TABLE "fil4001" IS '4.網站.詢價';
 
--- 4.材料.報價
+-- Files：4.材料.報價
 CREATE TABLE "fil4002" (
     "代碼" varchar(20) DEFAULT ' ' NOT NULL,
     "生效日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -4566,7 +4568,7 @@ CREATE UNIQUE INDEX "fil4002key1" ON "fil4002" ("代碼", "生效日期");
 CREATE UNIQUE INDEX "fil4002key2" ON "fil4002" ("生效日期", "代碼");
 COMMENT ON TABLE "fil4002" IS '4.材料.報價';
 
--- 4.璿揚ARInvAdd
+-- Files：4.璿揚ARInvAdd
 CREATE TABLE "fil4003" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "connectid" varchar(30) NOT NULL,
@@ -4595,7 +4597,7 @@ CREATE INDEX "fil4003_key2" ON "fil4003" ("新增日期", "新增時間");
 COMMENT ON TABLE "fil4003" IS '4.璿揚ARInvAdd';
 COMMENT ON COLUMN "fil4003"."流水編號" IS '0.流水編號';
 
--- 5..材料月批號庫存(分倉)
+-- Files：5..材料月批號庫存(分倉)
 CREATE TABLE "fil5001" (
     "材料編號" varchar(70) NOT NULL,
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
@@ -4607,7 +4609,7 @@ CREATE TABLE "fil5001" (
 CREATE UNIQUE INDEX "fil5001_02" ON "fil5001" ("月份", "材料編號", "批號", "倉庫代碼");
 COMMENT ON TABLE "fil5001" IS '5..材料月批號庫存(分倉)';
 
--- 5..材料月批號庫存(不分倉)
+-- Files：5..材料月批號庫存(不分倉)
 CREATE TABLE "fil5002" (
     "材料編號" varchar(20) DEFAULT ' ' NOT NULL,
     "批號" varchar(40) DEFAULT ' ' NOT NULL,
@@ -4618,7 +4620,7 @@ CREATE TABLE "fil5002" (
 CREATE UNIQUE INDEX "fil5002_02" ON "fil5002" ("月份", "材料編號", "批號");
 COMMENT ON TABLE "fil5002" IS '5..材料月批號庫存(不分倉)';
 
--- A01單據屬性
+-- Files：A01單據屬性；EDB：單據屬性
 CREATE TABLE "a01" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "name" varchar(256) DEFAULT ' ' NOT NULL,
@@ -4634,12 +4636,12 @@ CREATE TABLE "a01" (
     "flowstatus" varchar(1) DEFAULT ' ' NOT NULL,
     "urgency" smallint DEFAULT 0 NOT NULL,
     "special" smallint DEFAULT 0 NOT NULL,
-    "duedate" numeric(10,0) DEFAULT 0 NOT NULL,
+    "duedate" char(8) DEFAULT '00000000' NOT NULL,
     "verified" smallint DEFAULT 0 NOT NULL,
     "needtransfer" smallint DEFAULT 0 NOT NULL,
     "ending" smallint DEFAULT 0 NOT NULL,
     "connectid" integer DEFAULT 0 NOT NULL,
-    "accmonth" numeric(10,0) DEFAULT 0 NOT NULL,
+    "accmonth" char(8) DEFAULT '00000000' NOT NULL,
     "locked" smallint DEFAULT 0 NOT NULL,
     "lockedby" varchar(60) DEFAULT ' ' NOT NULL,
     "fromid" varchar(60) DEFAULT ' ' NOT NULL,
@@ -4688,7 +4690,7 @@ COMMENT ON COLUMN "a01"."costdeptid" IS '成本歸屬部門';
 COMMENT ON COLUMN "a01"."objectid" IS '對象流水號';
 COMMENT ON COLUMN "a01"."proucdid" IS '產品流水號';
 
--- A30群組資料
+-- Files：A30群組資料；EDB：A30群組資料
 CREATE TABLE "a30" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "groupid" varchar(10) DEFAULT ' ' NOT NULL,
@@ -4715,7 +4717,7 @@ COMMENT ON COLUMN "a30"."description" IS '群組說明';
 COMMENT ON COLUMN "a30"."belongto" IS '所屬公司';
 COMMENT ON COLUMN "a30"."uppergroup" IS '上階部門';
 
--- A40職稱資料
+-- Files：A40職稱資料；EDB：A40職稱資料
 CREATE TABLE "a40" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "psoiid" varchar(5) DEFAULT ' ' NOT NULL,
@@ -4737,9 +4739,9 @@ COMMENT ON COLUMN "a40"."posiename" IS '職稱英文';
 COMMENT ON COLUMN "a40"."positype" IS '職稱識別碼';
 COMMENT ON COLUMN "a40"."depmanager" IS '限定部門';
 
--- A50公司資料
+-- Files：A50公司資料；EDB：A50公司資料
 CREATE TABLE "a50" (
-    "serial_num" varchar(10) DEFAULT ' ' NOT NULL,
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "cmpid" varchar(3) DEFAULT ' ' NOT NULL,
     "guname" varchar(50) DEFAULT ' ' NOT NULL,
     "country" varchar(20) DEFAULT ' ' NOT NULL,
@@ -4758,7 +4760,7 @@ COMMENT ON COLUMN "a50"."area" IS '區域';
 COMMENT ON COLUMN "a50"."taxrate" IS '公司稅率';
 COMMENT ON COLUMN "a50"."currency" IS '公司幣別';
 
--- A06代理人
+-- Files：A06代理人；EDB：A60代理人
 CREATE TABLE "a60_7" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "asignee" varchar(60) DEFAULT ' ' NOT NULL,
@@ -4774,7 +4776,7 @@ COMMENT ON COLUMN "a60_7"."asignee" IS '代理人流水號';
 COMMENT ON COLUMN "a60_7"."datefrom" IS '日期起';
 COMMENT ON COLUMN "a60_7"."dateto" IS '日期迄';
 
--- A60管轄部門
+-- Files：A60管轄部門；EDB：A60管轄部門
 CREATE TABLE "a60_8" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "serial_num_seq" integer NOT NULL,
@@ -4789,7 +4791,7 @@ COMMENT ON COLUMN "a60_8"."serial_num" IS '流水編號';
 COMMENT ON COLUMN "a60_8"."serial_num_seq" IS '表身序號';
 COMMENT ON COLUMN "a60_8"."depid" IS '部門流水號';
 
--- 卡鐘匯入資料
+-- Files：卡鐘匯入資料
 CREATE TABLE "dtfil001" (
     "人員識別碼" varchar(30) NOT NULL,
     "員工代號" varchar(30) NOT NULL,
@@ -4814,7 +4816,7 @@ CREATE UNIQUE INDEX "dtfil001_key1" ON "dtfil001" ("員工代號", "時間戳記
 CREATE INDEX "dtfil001_key2" ON "dtfil001" ("收集日期", "收集時間");
 COMMENT ON TABLE "dtfil001" IS '卡鐘匯入資料';
 
--- 卡鐘匯入資料二
+-- Files：卡鐘匯入資料二
 CREATE TABLE "dtfil002" (
     "人員識別碼" varchar(30) NOT NULL,
     "員工代號" varchar(30) NOT NULL,
@@ -4839,7 +4841,7 @@ CREATE UNIQUE INDEX "dtfil002_key1" ON "dtfil002" ("員工代號", "時間戳記
 CREATE INDEX "dtfil002_key2" ON "dtfil002" ("收集日期", "收集時間");
 COMMENT ON TABLE "dtfil002" IS '卡鐘匯入資料二';
 
--- View.材料庫存數_S(不分倉)_WK
+-- Files：View.材料庫存數_S(不分倉)_WK
 CREATE TABLE "film008s_wk" (
     "材料編號" varchar(30) DEFAULT ' ' NOT NULL,
     "庫存數" numeric(13,3) DEFAULT 0,
@@ -4849,7 +4851,7 @@ CREATE TABLE "film008s_wk" (
 CREATE UNIQUE INDEX "film008s_wkkey1" ON "film008s_wk" ("材料編號");
 COMMENT ON TABLE "film008s_wk" IS 'View.材料庫存數_S(不分倉)_WK';
 
--- WK.不分倉批號異動檔_H
+-- Files：WK.不分倉批號異動檔_H
 CREATE TABLE "wkfilm018h" (
     "單別" varchar(10) DEFAULT ' ',
     "單號" varchar(20) DEFAULT ' ',
@@ -4872,7 +4874,7 @@ CREATE INDEX "wkfilm018hkey2" ON "wkfilm018h" ("單據日期", "最後更新日"
 COMMENT ON TABLE "wkfilm018h" IS 'WK.不分倉批號異動檔_H';
 COMMENT ON COLUMN "wkfilm018h"."最後更新日" IS '最後更新日 / 最後更新日_time';
 
--- WK.材料不分倉批號庫存_S
+-- Files：WK.材料不分倉批號庫存_S
 CREATE TABLE "wkfilm017s" (
     "材料編號" varchar(30) NOT NULL,
     "物料大類" varchar(10) NOT NULL,
@@ -4886,7 +4888,7 @@ CREATE UNIQUE INDEX "wkfilm017skey1" ON "wkfilm017s" ("批號", "廠客編號", 
 CREATE INDEX "wkfilm017skey2" ON "wkfilm017s" ("批號", "材料編號", "物料大類", "品名", "規格");
 COMMENT ON TABLE "wkfilm017s" IS 'WK.材料不分倉批號庫存_S';
 
--- WK.材料異動數
+-- Files：WK.材料異動數
 CREATE TABLE "wkfil2022" (
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -4922,7 +4924,7 @@ COMMENT ON COLUMN "wkfil2022"."採購單別" IS '採購單別(D11)';
 COMMENT ON COLUMN "wkfil2022"."採購單號" IS '採購單號(D11)';
 COMMENT ON COLUMN "wkfil2022"."採購序號" IS '採購序號(D11)';
 
--- u.欄位異動記錄
+-- Files：u.欄位異動記錄；EDB：單據異動記錄
 CREATE TABLE "filu001" (
     "異動流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單據流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -4935,7 +4937,7 @@ CREATE TABLE "filu001" (
     "修改後" text,
     "異動批號" varchar(60) DEFAULT ' ' NOT NULL,
     "最後更新者" varchar(10) DEFAULT ' ' NOT NULL,
-    "最後更新日" timestamp(0) NOT NULL
+    "最後更新日" timestamp(0)
 );
 CREATE UNIQUE INDEX "filu001_01" ON "filu001" ("異動流水編號", "欄位名稱");
 CREATE INDEX "filu001_02" ON "filu001" ("單據流水編號", "單據序號1", "最後更新日");
@@ -4944,7 +4946,7 @@ CREATE INDEX "filu001_04" ON "filu001" ("異動批號", "最後更新日");
 COMMENT ON TABLE "filu001" IS 'u.欄位異動記錄';
 COMMENT ON COLUMN "filu001"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 薪資系統參數
+-- Files：薪資系統參數
 CREATE TABLE "hrfil1002" (
     "syskey" varchar(3) NOT NULL,
     "item1a" numeric(7,4) NOT NULL,
@@ -4980,7 +4982,7 @@ CREATE TABLE "hrfil1002" (
 CREATE UNIQUE INDEX "hrfil1002key1" ON "hrfil1002" ("syskey");
 COMMENT ON TABLE "hrfil1002" IS '薪資系統參數';
 
--- 薪資其它參數
+-- Files：薪資其它參數
 CREATE TABLE "hrfil1002a" (
     "syskey" varchar(10) DEFAULT 'EMP' NOT NULL,
     "基本薪點" smallint DEFAULT 200 NOT NULL,
@@ -5011,7 +5013,7 @@ COMMENT ON COLUMN "hrfil1002a"."其他說明一" IS '其他減項一';
 COMMENT ON COLUMN "hrfil1002a"."其他說明二" IS '其他減項二';
 COMMENT ON COLUMN "hrfil1002a"."其他說明三" IS '其他減項三';
 
--- 加班設定
+-- Files：加班設定
 CREATE TABLE "hrfil1003" (
     "序號" smallint NOT NULL,
     "類別名稱" varchar(8) NOT NULL,
@@ -5025,7 +5027,7 @@ CREATE TABLE "hrfil1003" (
 CREATE UNIQUE INDEX "hrfil1003key1" ON "hrfil1003" ("序號");
 COMMENT ON TABLE "hrfil1003" IS '加班設定';
 
--- 工作職稱
+-- Files：工作職稱
 CREATE TABLE "hrfil1004" (
     "職務代碼" varchar(5) DEFAULT ' ' NOT NULL,
     "職務名稱" varchar(30) NOT NULL,
@@ -5035,7 +5037,7 @@ CREATE TABLE "hrfil1004" (
 CREATE UNIQUE INDEX "hrfil1004key1" ON "hrfil1004" ("職務代碼");
 COMMENT ON TABLE "hrfil1004" IS '工作職稱';
 
--- 年假設定
+-- Files：年假設定
 CREATE TABLE "hrfil1005" (
     "年假起日" smallint NOT NULL,
     "年假迄日" smallint NOT NULL,
@@ -5045,7 +5047,7 @@ CREATE UNIQUE INDEX "hrfil1005key1" ON "hrfil1005" ("年假起日", "年假迄�
 CREATE UNIQUE INDEX "hrfil1005key2" ON "hrfil1005" ("年假起日");
 COMMENT ON TABLE "hrfil1005" IS '年假設定';
 
--- 員工每月出勤
+-- Files：員工每月出勤
 CREATE TABLE "hrfil1006" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
@@ -5066,7 +5068,7 @@ CREATE UNIQUE INDEX "hrfil1006key1" ON "hrfil1006" ("員工編號", "年月");
 CREATE UNIQUE INDEX "hrfil1006key2" ON "hrfil1006" ("年月", "員工編號");
 COMMENT ON TABLE "hrfil1006" IS '員工每月出勤';
 
--- 員工每日出勤
+-- Files：員工每日出勤
 CREATE TABLE "hrfil1007" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "出勤日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -5108,7 +5110,7 @@ COMMENT ON COLUMN "hrfil1007"."遲到" IS '計薪遲到';
 COMMENT ON COLUMN "hrfil1007"."早退" IS '計薪早退';
 COMMENT ON COLUMN "hrfil1007"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 員工每月職務薪資
+-- Files：員工每月職務薪資
 CREATE TABLE "hrfil1008" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
@@ -5122,7 +5124,7 @@ CREATE TABLE "hrfil1008" (
 CREATE UNIQUE INDEX "hrfil1008key1" ON "hrfil1008" ("員工流水編號", "年月", "日期", "職務代碼");
 COMMENT ON TABLE "hrfil1008" IS '員工每月職務薪資';
 
--- 離職其他清單
+-- Files：離職其他清單
 CREATE TABLE "hrfil1020" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5134,7 +5136,7 @@ CREATE UNIQUE INDEX "hrfil1020key1" ON "hrfil1020" ("guid");
 CREATE UNIQUE INDEX "hrfil1020key2" ON "hrfil1020" ("流水編號", "序號");
 COMMENT ON TABLE "hrfil1020" IS '離職其他清單';
 
--- 離職檔案清單
+-- Files：離職檔案清單
 CREATE TABLE "hrfil1021" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "item" smallint NOT NULL,
@@ -5147,7 +5149,7 @@ CREATE UNIQUE INDEX "hrfil1021key2" ON "hrfil1021" ("流水編號", "item");
 COMMENT ON TABLE "hrfil1021" IS '離職檔案清單';
 COMMENT ON COLUMN "hrfil1021"."item" IS '表身序號';
 
--- 離職文件清單
+-- Files：離職文件清單
 CREATE TABLE "hrfil1022" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5159,7 +5161,7 @@ CREATE UNIQUE INDEX "hrfil1022key1" ON "hrfil1022" ("guid");
 CREATE UNIQUE INDEX "hrfil1022key2" ON "hrfil1022" ("流水編號", "序號");
 COMMENT ON TABLE "hrfil1022" IS '離職文件清單';
 
--- 離職工作清單
+-- Files：離職工作清單
 CREATE TABLE "hrfil1023" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5171,7 +5173,7 @@ CREATE UNIQUE INDEX "hrfil1023key1" ON "hrfil1023" ("guid");
 CREATE UNIQUE INDEX "hrfil1023key2" ON "hrfil1023" ("流水編號", "序號");
 COMMENT ON TABLE "hrfil1023" IS '離職工作清單';
 
--- 離職財產歸還
+-- Files：離職財產歸還
 CREATE TABLE "hrfil1024" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5184,7 +5186,7 @@ CREATE UNIQUE INDEX "hrfil1024key1" ON "hrfil1024" ("guid");
 CREATE UNIQUE INDEX "hrfil1024key2" ON "hrfil1024" ("流水編號", "序號");
 COMMENT ON TABLE "hrfil1024" IS '離職財產歸還';
 
--- 離職執行
+-- Files：離職執行
 CREATE TABLE "hrfil1025" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) NOT NULL,
@@ -5201,7 +5203,7 @@ CREATE UNIQUE INDEX "hrfil1025key2" ON "hrfil1025" ("單號");
 CREATE INDEX "hrfil1025key3" ON "hrfil1025" ("源頭單號");
 COMMENT ON TABLE "hrfil1025" IS '離職執行';
 
--- 離職單
+-- Files：離職單
 CREATE TABLE "hrfil1026" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) NOT NULL,
@@ -5233,7 +5235,7 @@ CREATE UNIQUE INDEX "hrfil1026key3" ON "hrfil1026" ("單號");
 COMMENT ON TABLE "hrfil1026" IS '離職單';
 COMMENT ON COLUMN "hrfil1026"."持有相關技術檔案程式" IS '持有相關技術檔案/程式';
 
--- 請假單
+-- Files：請假單
 CREATE TABLE "hrfil1031" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單別" varchar(10) DEFAULT ' ' NOT NULL,
@@ -5260,7 +5262,7 @@ CREATE INDEX "hrfil1031key2" ON "hrfil1031" ("填寫人", "填寫日期");
 CREATE UNIQUE INDEX "hrfil1031key3" ON "hrfil1031" ("單別", "單號");
 COMMENT ON TABLE "hrfil1031" IS '請假單';
 
--- 特休排定表
+-- Files：特休排定表
 CREATE TABLE "hrfil1032" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(20) DEFAULT ' ' NOT NULL,
@@ -5290,7 +5292,7 @@ CREATE INDEX "hrfil1032_03" ON "hrfil1032" ("填寫人", "填寫日期");
 CREATE INDEX "hrfil1032_04" ON "hrfil1032" ("申請人", "填寫日期");
 COMMENT ON TABLE "hrfil1032" IS '特休排定表';
 
--- 應特休日
+-- Files：應特休日
 CREATE TABLE "hrfil1033" (
     "員工" varchar(10) DEFAULT ' ' NOT NULL,
     "年度" smallint DEFAULT 0 NOT NULL,
@@ -5314,7 +5316,7 @@ COMMENT ON COLUMN "hrfil1033"."年資_月" IS '年資(月)';
 COMMENT ON COLUMN "hrfil1033"."建檔日" IS '建檔日 / 建檔時';
 COMMENT ON COLUMN "hrfil1033"."最後更新日" IS '最後更新日 / 最後更新時';
 
--- 出勤調整單
+-- Files：出勤調整單
 CREATE TABLE "hrfil1034" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) DEFAULT ' ' NOT NULL,
@@ -5340,7 +5342,7 @@ CREATE INDEX "hrfil1034key2" ON "hrfil1034" ("填寫人", "填寫日期");
 CREATE UNIQUE INDEX "hrfil1034key3" ON "hrfil1034" ("單號");
 COMMENT ON TABLE "hrfil1034" IS '出勤調整單';
 
--- 人事異動
+-- Files：人事異動
 CREATE TABLE "hrfil1041" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) NOT NULL,
@@ -5380,7 +5382,7 @@ CREATE INDEX "hrfil1041key3" ON "hrfil1041" ("異動對象", "生效日期");
 CREATE UNIQUE INDEX "hrfil1041key4" ON "hrfil1041" ("單號");
 COMMENT ON TABLE "hrfil1041" IS '人事異動';
 
--- 人資申請
+-- Files：人資申請
 CREATE TABLE "hrfil1051" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) NOT NULL,
@@ -5405,7 +5407,7 @@ CREATE INDEX "hrfil1051key2" ON "hrfil1051" ("填寫人", "填寫日期");
 CREATE UNIQUE INDEX "hrfil1051key3" ON "hrfil1051" ("單號");
 COMMENT ON TABLE "hrfil1051" IS '人資申請';
 
--- 帳號申請
+-- Files：帳號申請
 CREATE TABLE "hrfil1061" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "單號" varchar(15) NOT NULL,
@@ -5435,7 +5437,7 @@ CREATE INDEX "hrfil1061key2" ON "hrfil1061" ("填寫人", "填寫日期");
 CREATE UNIQUE INDEX "hrfil1061key3" ON "hrfil1061" ("單號");
 COMMENT ON TABLE "hrfil1061" IS '帳號申請';
 
--- 勞健保對照表
+-- Files：勞健保對照表
 CREATE TABLE "hrfil1071" (
     "序號" smallint NOT NULL,
     "級數" smallint NOT NULL,
@@ -5457,7 +5459,7 @@ CREATE UNIQUE INDEX "hrfil1071key1" ON "hrfil1071" ("序號");
 COMMENT ON TABLE "hrfil1071" IS '勞健保對照表';
 COMMENT ON COLUMN "hrfil1071"."工資" IS '工資墊償基金';
 
--- 薪資扣繳稅額表
+-- Files：薪資扣繳稅額表
 CREATE TABLE "hrfil1081" (
     "nodeid" integer NOT NULL,
     "parentid" integer NOT NULL,
@@ -5481,7 +5483,7 @@ CREATE TABLE "hrfil1081" (
 CREATE UNIQUE INDEX "hrfil1081key1" ON "hrfil1081" ("序號");
 COMMENT ON TABLE "hrfil1081" IS '薪資扣繳稅額表';
 
--- 個人薪資主檔
+-- Files：個人薪資主檔
 CREATE TABLE "hrfil2001" (
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -5530,7 +5532,7 @@ COMMENT ON COLUMN "hrfil2001"."othfee3" IS '固定所得稅';
 COMMENT ON COLUMN "hrfil2001"."othfee4" IS '退休金提撥';
 COMMENT ON COLUMN "hrfil2001"."othfee5" IS '固定時薪(計時)';
 
--- 所得扶養人數
+-- Files：所得扶養人數
 CREATE TABLE "hrfil2002" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "姓名" varchar(12) NOT NULL,
@@ -5542,7 +5544,7 @@ CREATE TABLE "hrfil2002" (
 CREATE UNIQUE INDEX "hrfil2002key1" ON "hrfil2002" ("員工編號", "身份證號");
 COMMENT ON TABLE "hrfil2002" IS '所得扶養人數';
 
--- 健保扶養人數
+-- Files：健保扶養人數
 CREATE TABLE "hrfil2003" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "姓名" varchar(12) NOT NULL,
@@ -5554,7 +5556,7 @@ CREATE TABLE "hrfil2003" (
 CREATE UNIQUE INDEX "hrfil2003key1" ON "hrfil2003" ("員工編號", "身份證號");
 COMMENT ON TABLE "hrfil2003" IS '健保扶養人數';
 
--- 薪資項目設定
+-- Files：薪資項目設定
 CREATE TABLE "hrfil2004" (
     "syskey" varchar(10) NOT NULL,
     "officetimefrom" char(6) NOT NULL,
@@ -5678,7 +5680,7 @@ COMMENT ON COLUMN "hrfil2004"."加班計算天數" IS '名稱:加班計算天數
 COMMENT ON COLUMN "hrfil2004"."日加班補貼" IS '名稱:日加班補貼';
 COMMENT ON COLUMN "hrfil2004"."月加班補貼" IS '名稱:月加班補貼';
 
--- 每月薪資明細
+-- Files：每月薪資明細
 CREATE TABLE "hrfil2005" (
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -5729,7 +5731,7 @@ CREATE UNIQUE INDEX "hrfil2005key1" ON "hrfil2005" ("員工編號", "年月");
 CREATE UNIQUE INDEX "hrfil2005key2" ON "hrfil2005" ("年月", "員工編號");
 COMMENT ON TABLE "hrfil2005" IS '每月薪資明細';
 
--- 每月薪資彙總
+-- Files：每月薪資彙總
 CREATE TABLE "hrfil2006" (
     "年月" char(8) DEFAULT ' ' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -5824,7 +5826,7 @@ COMMENT ON COLUMN "hrfil2006"."假別十四" IS '14.無薪假';
 COMMENT ON COLUMN "hrfil2006"."出勤日支" IS '時薪';
 COMMENT ON COLUMN "hrfil2006"."事病假薪點" IS '事病假扣支';
 
--- 薪資匯入明細
+-- Files：薪資匯入明細
 CREATE TABLE "hrfil2007" (
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -5858,7 +5860,7 @@ CREATE UNIQUE INDEX "hrfil2007key1" ON "hrfil2007" ("員工編號", "年月");
 CREATE UNIQUE INDEX "hrfil2007key2" ON "hrfil2007" ("年月", "員工編號");
 COMMENT ON TABLE "hrfil2007" IS '薪資匯入明細';
 
--- 職位薪點表
+-- Files：職位薪點表
 CREATE TABLE "hrfil2008" (
     "職等" smallint DEFAULT 1 NOT NULL,
     "級差" smallint NOT NULL,
@@ -5867,7 +5869,7 @@ CREATE TABLE "hrfil2008" (
 CREATE UNIQUE INDEX "hrfil2008key1" ON "hrfil2008" ("職等");
 COMMENT ON TABLE "hrfil2008" IS '職位薪點表';
 
--- 員工附檔一
+-- Files：員工附檔一
 CREATE TABLE "hrfil0011" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "介紹人" varchar(12) NOT NULL,
@@ -5892,7 +5894,7 @@ CREATE TABLE "hrfil0011" (
 COMMENT ON TABLE "hrfil0011" IS '員工附檔一';
 COMMENT ON COLUMN "hrfil0011"."主修系統" IS '主修科系';
 
--- 員工學歷
+-- Files：員工學歷
 CREATE TABLE "hrfil0012" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5906,7 +5908,7 @@ CREATE TABLE "hrfil0012" (
 CREATE INDEX "hrfil0012key2" ON "hrfil0012" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0012" IS '員工學歷';
 
--- 員工經歷
+-- Files：員工經歷
 CREATE TABLE "hrfil0013" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5920,7 +5922,7 @@ CREATE TABLE "hrfil0013" (
 CREATE INDEX "hrfil0013key2" ON "hrfil0013" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0013" IS '員工經歷';
 
--- 員工獎懲
+-- Files：員工獎懲
 CREATE TABLE "hrfil0014" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5934,7 +5936,7 @@ CREATE TABLE "hrfil0014" (
 CREATE INDEX "hrfil0014key2" ON "hrfil0014" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0014" IS '員工獎懲';
 
--- 員工職務
+-- Files：員工職務
 CREATE TABLE "hrfil0015" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5948,7 +5950,7 @@ CREATE TABLE "hrfil0015" (
 CREATE INDEX "hrfil0015key2" ON "hrfil0015" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0015" IS '員工職務';
 
--- 員工訓練
+-- Files：員工訓練
 CREATE TABLE "hrfil0016" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "序號" smallint NOT NULL,
@@ -5962,7 +5964,7 @@ CREATE TABLE "hrfil0016" (
 CREATE INDEX "hrfil0016key2" ON "hrfil0016" ("員工流水編號", "序號");
 COMMENT ON TABLE "hrfil0016" IS '員工訓練';
 
--- 代理人
+-- Files：代理人
 CREATE TABLE "hrfil0017" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "代理人流水編號" varchar(60) DEFAULT ' ' NOT NULL,
@@ -5974,7 +5976,7 @@ CREATE TABLE "hrfil0017" (
 CREATE INDEX "hrfil0017key2" ON "hrfil0017" ("員工流水編號", "代理人流水編號", "起始日期", "終止日期");
 COMMENT ON TABLE "hrfil0017" IS '代理人';
 
--- 最高權限
+-- Files：最高權限
 CREATE TABLE "hrfil0018" (
     "員工流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "最高權限" smallint NOT NULL
@@ -5982,7 +5984,7 @@ CREATE TABLE "hrfil0018" (
 CREATE UNIQUE INDEX "hrfil0018key1" ON "hrfil0018" ("員工流水編號");
 COMMENT ON TABLE "hrfil0018" IS '最高權限';
 
--- 請假匯入明細
+-- Files：請假匯入明細
 CREATE TABLE "hrfil0020" (
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
     "年月" varchar(6) DEFAULT ' ' NOT NULL,
@@ -6005,7 +6007,7 @@ COMMENT ON COLUMN "hrfil0020"."公傷假" IS '公傷假(日)';
 COMMENT ON COLUMN "hrfil0020"."事假" IS '事假(時)';
 COMMENT ON COLUMN "hrfil0020"."調補班" IS '調補班(時)';
 
--- 員工加班一
+-- Files：員工加班一
 CREATE TABLE "hrfil0021" (
     "申請人" varchar(20) DEFAULT ' ',
     "加班日期" char(8) DEFAULT '00000000' NOT NULL,
@@ -6019,7 +6021,7 @@ CREATE TABLE "hrfil0021" (
 CREATE UNIQUE INDEX "hrfil0021key1" ON "hrfil0021" ("申請人", "加班日期", "倍數欄位");
 COMMENT ON TABLE "hrfil0021" IS '員工加班一';
 
--- 每月其它扣支
+-- Files：每月其它扣支
 CREATE TABLE "hrfil0022" (
     "年月" char(8) DEFAULT '00000000' NOT NULL,
     "員工編號" varchar(10) DEFAULT ' ' NOT NULL,
@@ -6043,7 +6045,7 @@ COMMENT ON COLUMN "hrfil0022"."其他一" IS '其他減項一';
 COMMENT ON COLUMN "hrfil0022"."其他二" IS '其他減項二';
 COMMENT ON COLUMN "hrfil0022"."其他三" IS '其他減項三';
 
--- 門禁資料
+-- Files：門禁資料
 CREATE TABLE "hrfil0023" (
     "裝置名稱" varchar(30) NOT NULL,
     "門禁點" varchar(30) NOT NULL,
@@ -6063,7 +6065,7 @@ CREATE UNIQUE INDEX "hrfil0023key1" ON "hrfil0023" ("裝置名稱", "工號", "�
 CREATE INDEX "hrfil0023key2" ON "hrfil0023" ("工號", "時間戳記");
 COMMENT ON TABLE "hrfil0023" IS '門禁資料';
 
--- xxMobile.Server.AP log
+-- Files：xxMobile.Server.AP log
 CREATE TABLE "mobile0001" (
     "employee_id" varchar(20) DEFAULT ' ' NOT NULL,
     "id" varchar(16) DEFAULT ' ' NOT NULL,
@@ -6082,7 +6084,7 @@ COMMENT ON COLUMN "mobile0001"."client_os" IS 'client os';
 COMMENT ON COLUMN "mobile0001"."client_ip" IS 'client IP';
 COMMENT ON COLUMN "mobile0001"."start_timestam" IS 'start timestamp';
 
--- xxMobile.Server.DataSync
+-- Files：xxMobile.Server.DataSync
 CREATE TABLE "mobile0002" (
     "master" varchar(1) DEFAULT 'M' NOT NULL,
     "lastsynctimestamp" varchar(14) DEFAULT ' ' NOT NULL,
@@ -6090,7 +6092,7 @@ CREATE TABLE "mobile0002" (
 );
 COMMENT ON TABLE "mobile0002" IS 'xxMobile.Server.DataSync';
 
--- 合一智感.感測器記錄
+-- Files：合一智感.感測器記錄
 CREATE TABLE "fili0001" (
     "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
     "感測器編號" varchar(20) NOT NULL,
@@ -6119,3 +6121,1126 @@ CREATE TABLE "fili0001" (
 CREATE UNIQUE INDEX "fili0001key1" ON "fili0001" ("流水編號");
 CREATE UNIQUE INDEX "fili0001key2" ON "fili0001" ("感測器編號", "感測器序號", "讀取日期", "讀取時間");
 COMMENT ON TABLE "fili0001" IS '合一智感.感測器記錄';
+
+-- EDB：模組參數
+CREATE TABLE "app" (
+    "appkey" integer DEFAULT 0 NOT NULL,
+    "appname" varchar(10) NOT NULL,
+    "ecf" varchar(20) NOT NULL,
+    "entrance" varchar(16) DEFAULT 'Entrance' NOT NULL,
+    "available" smallint NOT NULL,
+    PRIMARY KEY ("appkey")
+);
+COMMENT ON TABLE "app" IS '模組參數';
+
+-- EDB：單據記錄
+CREATE TABLE "a01_1" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "seqno" numeric(10,0) DEFAULT 0 NOT NULL,
+    "objectdetailid" varchar(60) DEFAULT ' ' NOT NULL,
+    "modifiedby" varchar(60) DEFAULT ' ' NOT NULL,
+    "modifieddate" char(8) DEFAULT '00000000' NOT NULL,
+    "modifiedtime" char(6) DEFAULT '000000' NOT NULL,
+    "modifiedfield" varchar(50) DEFAULT ' ' NOT NULL,
+    "modifiedcontent" bytea,
+    PRIMARY KEY ("serial_num", "seqno")
+);
+CREATE INDEX "a01_1key2" ON "a01_1" ("serial_num", "objectdetailid");
+COMMENT ON TABLE "a01_1" IS '單據記錄';
+COMMENT ON COLUMN "a01_1"."serial_num" IS 'ID';
+COMMENT ON COLUMN "a01_1"."objectdetailid" IS 'DetailID';
+COMMENT ON COLUMN "a01_1"."modifieddate" IS 'Date';
+COMMENT ON COLUMN "a01_1"."modifiedtime" IS 'Time';
+COMMENT ON COLUMN "a01_1"."modifiedfield" IS 'Field';
+COMMENT ON COLUMN "a01_1"."modifiedcontent" IS 'Content';
+
+-- EDB：單據流程
+CREATE TABLE "a01_2" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "version" integer DEFAULT 0 NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "assignedto" varchar(60) DEFAULT ' ' NOT NULL,
+    "signedby" varchar(60) DEFAULT ' ' NOT NULL,
+    "signeddate" char(8) DEFAULT '00000000' NOT NULL,
+    "signedtime" char(6) DEFAULT '000000' NOT NULL,
+    "signedtype" varchar(1) DEFAULT '0' NOT NULL,
+    "read" smallint DEFAULT 0 NOT NULL,
+    "signorcc" smallint DEFAULT 0 NOT NULL,
+    "free2sign" smallint DEFAULT 0 NOT NULL,
+    "folder" varchar(1) DEFAULT ' ' NOT NULL,
+    "actionguid" varchar(60) DEFAULT ' ' NOT NULL,
+    "actioncompleted" smallint DEFAULT 0 NOT NULL,
+    "actionresult" varchar(60) DEFAULT ' ' NOT NULL,
+    "dataedit" varchar(30) DEFAULT ' ' NOT NULL,
+    "processfor" varchar(60) DEFAULT ' ' NOT NULL,
+    "addflow" smallint DEFAULT 0 NOT NULL,
+    "assigncostdept" smallint DEFAULT 0 NOT NULL,
+    "foroption" smallint DEFAULT 0 NOT NULL,
+    "opento" smallint DEFAULT 0 NOT NULL,
+    "fromid" varchar(60) DEFAULT ' ' NOT NULL,
+    "會簽判定" smallint DEFAULT 0 NOT NULL,
+    "會簽方式" varchar(1) DEFAULT ' ' NOT NULL,
+    "signbackto" varchar(60) DEFAULT ' ' NOT NULL,
+    "singature_header" varchar(100) DEFAULT ' ' NOT NULL,
+    "singature_line" integer DEFAULT 0 NOT NULL,
+    "singature_seq" integer DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    "opnion" text,
+    "註解" text,
+    "加簽通知" smallint DEFAULT 0 NOT NULL,
+    PRIMARY KEY ("serial_num", "serial_num_seq")
+);
+CREATE INDEX "a01_2key3" ON "a01_2" ("serial_num", "signorcc" DESC, "serial_num_seq");
+CREATE INDEX "a01_2key4" ON "a01_2" ("serial_num", "signedby");
+CREATE INDEX "a01_2key5" ON "a01_2" ("serial_num", "assignedto");
+CREATE INDEX "objflowkey6" ON "a01_2" ("recordid");
+CREATE INDEX "objflowkey7" ON "a01_2" ("actionguid");
+CREATE INDEX "objflowkey8" ON "a01_2" ("serial_num", "singature_seq", "serial_num_seq");
+COMMENT ON TABLE "a01_2" IS '單據流程';
+COMMENT ON COLUMN "a01_2"."serial_num" IS '單據流水號';
+COMMENT ON COLUMN "a01_2"."version" IS '父階序號';
+COMMENT ON COLUMN "a01_2"."serial_num_seq" IS '流程序號';
+COMMENT ON COLUMN "a01_2"."assignedto" IS '應簽核人員';
+COMMENT ON COLUMN "a01_2"."signedby" IS '簽核人員';
+COMMENT ON COLUMN "a01_2"."signeddate" IS '簽核日期';
+COMMENT ON COLUMN "a01_2"."signedtime" IS '簽核時間';
+COMMENT ON COLUMN "a01_2"."signedtype" IS '簽核結果';
+COMMENT ON COLUMN "a01_2"."read" IS '已讀取';
+COMMENT ON COLUMN "a01_2"."signorcc" IS '正副本';
+COMMENT ON COLUMN "a01_2"."free2sign" IS '免簽';
+COMMENT ON COLUMN "a01_2"."folder" IS '資料夾';
+COMMENT ON COLUMN "a01_2"."actionguid" IS '程序GUID';
+COMMENT ON COLUMN "a01_2"."actioncompleted" IS '程序完成';
+COMMENT ON COLUMN "a01_2"."actionresult" IS '程序結果';
+COMMENT ON COLUMN "a01_2"."dataedit" IS '內容修正';
+COMMENT ON COLUMN "a01_2"."processfor" IS '執行說明';
+COMMENT ON COLUMN "a01_2"."addflow" IS '加簽';
+COMMENT ON COLUMN "a01_2"."assigncostdept" IS '成本歸屬';
+COMMENT ON COLUMN "a01_2"."foroption" IS '意見收集';
+COMMENT ON COLUMN "a01_2"."opento" IS '並簽';
+COMMENT ON COLUMN "a01_2"."fromid" IS '來源或加簽人';
+COMMENT ON COLUMN "a01_2"."signbackto" IS '指定退簽人';
+COMMENT ON COLUMN "a01_2"."singature_header" IS '簽名抬頭';
+COMMENT ON COLUMN "a01_2"."singature_line" IS '簽名行號';
+COMMENT ON COLUMN "a01_2"."singature_seq" IS '簽名序號';
+COMMENT ON COLUMN "a01_2"."opnion" IS '簽核意見';
+
+-- EDB：單據活動
+CREATE TABLE "a01_3" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "version" integer DEFAULT 0 NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "activity_seqno" integer DEFAULT 0 NOT NULL,
+    "activity" varchar(1) DEFAULT ' ' NOT NULL,
+    "date_" char(8) DEFAULT '00000000' NOT NULL,
+    "time_" char(6) DEFAULT '000000' NOT NULL,
+    "employeeid" varchar(60) DEFAULT ' ' NOT NULL,
+    "refdocid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("serial_num", "version", "serial_num_seq", "activity_seqno")
+);
+CREATE INDEX "a01_3key2" ON "a01_3" ("serial_num", "version", "date_", "time_");
+COMMENT ON TABLE "a01_3" IS '單據活動';
+COMMENT ON COLUMN "a01_3"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_3"."version" IS '單據階層';
+COMMENT ON COLUMN "a01_3"."serial_num_seq" IS '流程序號';
+COMMENT ON COLUMN "a01_3"."activity_seqno" IS '活動序號';
+COMMENT ON COLUMN "a01_3"."activity" IS '活動項目';
+COMMENT ON COLUMN "a01_3"."date_" IS '日期';
+COMMENT ON COLUMN "a01_3"."time_" IS '時間';
+COMMENT ON COLUMN "a01_3"."employeeid" IS '人員';
+COMMENT ON COLUMN "a01_3"."refdocid" IS '參考單據';
+
+-- EDB：單據授權
+CREATE TABLE "a01_4" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "toid" varchar(60) DEFAULT ' ' NOT NULL,
+    "write" smallint DEFAULT 0 NOT NULL,
+    "read" smallint DEFAULT 0 NOT NULL,
+    "download" smallint DEFAULT 0 NOT NULL,
+    "pdfcopy" smallint DEFAULT 0 NOT NULL,
+    "pdfprint" smallint DEFAULT 0 NOT NULL,
+    "pdfwrite" smallint DEFAULT 0 NOT NULL,
+    "pdfannotation" smallint DEFAULT 0 NOT NULL,
+    "duedate" char(8) DEFAULT '00000000' NOT NULL,
+    PRIMARY KEY ("serial_num", "toid")
+);
+CREATE INDEX "a01_4key2" ON "a01_4" ("toid");
+COMMENT ON TABLE "a01_4" IS '單據授權';
+COMMENT ON COLUMN "a01_4"."serial_num" IS '單據流水號';
+COMMENT ON COLUMN "a01_4"."toid" IS '人員流水號';
+
+-- EDB：單據附件
+CREATE TABLE "a01_5" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "version" integer DEFAULT 0 NOT NULL,
+    "detail_item_num" integer DEFAULT 0 NOT NULL,
+    "attfile" varchar(50) DEFAULT ' ' NOT NULL,
+    "說明" varchar(100) DEFAULT ' ' NOT NULL,
+    "createby" varchar(60) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a01_5key1" ON "a01_5" ("serial_num", "version", "detail_item_num");
+COMMENT ON TABLE "a01_5" IS '單據附件';
+COMMENT ON COLUMN "a01_5"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_5"."version" IS '單據階層';
+COMMENT ON COLUMN "a01_5"."detail_item_num" IS '表身序號';
+COMMENT ON COLUMN "a01_5"."attfile" IS '附件名稱';
+COMMENT ON COLUMN "a01_5"."createby" IS '建檔人';
+
+-- EDB：單據受文者
+CREATE TABLE "a01_6" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "copytoid" varchar(512) DEFAULT ' ' NOT NULL,
+    "copytoname" varchar(1024) DEFAULT ' ' NOT NULL,
+    "duedate" char(8) DEFAULT '00000000' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_6key1" ON "a01_6" ("serial_num");
+COMMENT ON TABLE "a01_6" IS '單據受文者';
+COMMENT ON COLUMN "a01_6"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_6"."copytoid" IS '受文者ID';
+COMMENT ON COLUMN "a01_6"."copytoname" IS '受文者Name';
+COMMENT ON COLUMN "a01_6"."duedate" IS '簽核期限';
+
+-- EDB：單據自定內容
+CREATE TABLE "a01_7" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "defined_seq" integer DEFAULT 0 NOT NULL,
+    "content" varchar(512) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_7key0" ON "a01_7" ("recordid");
+CREATE UNIQUE INDEX "a01_7key1" ON "a01_7" ("serial_num", "serial_num_seq", "defined_seq");
+COMMENT ON TABLE "a01_7" IS '單據自定內容';
+COMMENT ON COLUMN "a01_7"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_7"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_7"."defined_seq" IS '自定檔序號';
+COMMENT ON COLUMN "a01_7"."content" IS '內容';
+
+-- EDB：單據自定資料
+CREATE TABLE "a01_8" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "itemtype" varchar(4) DEFAULT ' ' NOT NULL,
+    "description" varchar(100) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_8key0" ON "a01_8" ("recordid");
+CREATE UNIQUE INDEX "a01_8key1" ON "a01_8" ("serial_num", "serial_num_seq");
+COMMENT ON TABLE "a01_8" IS '單據自定資料';
+COMMENT ON COLUMN "a01_8"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_8"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_8"."itemtype" IS '自定大類';
+COMMENT ON COLUMN "a01_8"."description" IS '項目說明';
+
+-- EDB：單據傳票明細
+CREATE TABLE "a01_9" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "借貸" smallint DEFAULT 0 NOT NULL,
+    "科目代號" varchar(8) DEFAULT ' ' NOT NULL,
+    "amount" numeric(12,2) DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a10_9key0" ON "a01_9" ("recordid");
+CREATE UNIQUE INDEX "a10_9key1" ON "a01_9" ("serial_num", "serial_num_seq");
+COMMENT ON TABLE "a01_9" IS '單據傳票明細';
+COMMENT ON COLUMN "a01_9"."serial_num" IS '單據流水號';
+COMMENT ON COLUMN "a01_9"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_9"."amount" IS '金額';
+
+-- EDB：單據傳票表頭
+CREATE TABLE "a01_10" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "trandate" char(8) DEFAULT '00000000' NOT NULL,
+    "dramount" numeric(12,2) DEFAULT 0 NOT NULL,
+    "cramount" numeric(12,2) DEFAULT 0 NOT NULL,
+    "noteid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_10key0" ON "a01_10" ("serial_num");
+CREATE UNIQUE INDEX "a01_10key1" ON "a01_10" ("noteid");
+COMMENT ON TABLE "a01_10" IS '單據傳票表頭';
+COMMENT ON COLUMN "a01_10"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_10"."trandate" IS '結轉日期';
+COMMENT ON COLUMN "a01_10"."dramount" IS '借方金額';
+COMMENT ON COLUMN "a01_10"."cramount" IS '貸方金額';
+COMMENT ON COLUMN "a01_10"."noteid" IS '傳票識別碼';
+
+-- EDB：單據付款記錄
+CREATE TABLE "a01_11" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "付款類別" varchar(1) DEFAULT '1' NOT NULL,
+    "付款日期" char(8) DEFAULT ' ' NOT NULL,
+    "現金匯款" varchar(1) DEFAULT ' ' NOT NULL,
+    "實付金額" numeric(12,2) DEFAULT 0 NOT NULL,
+    "相關單號" varchar(20) DEFAULT ' ' NOT NULL,
+    "幣別" varchar(4) DEFAULT ' ' NOT NULL,
+    "匯率" numeric(5,2) DEFAULT 0 NOT NULL,
+    "請款金額" numeric(12,2) DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_11key1" ON "a01_11" ("serial_num", "serial_num_seq");
+COMMENT ON TABLE "a01_11" IS '單據付款記錄';
+COMMENT ON COLUMN "a01_11"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_11"."serial_num_seq" IS '付款序號';
+
+-- EDB：單據動作確認
+CREATE TABLE "a01_12" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "取消執行" smallint DEFAULT 0 NOT NULL,
+    "執行狀態" varchar(1) DEFAULT ' ' NOT NULL,
+    "相關單號" varchar(60) DEFAULT ' ' NOT NULL,
+    "相關序號" integer DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "a01_12key1" ON "a01_12" ("serial_num", "serial_num_seq");
+CREATE INDEX "a01_12key2" ON "a01_12" ("相關單號", "相關序號");
+COMMENT ON TABLE "a01_12" IS '單據動作確認';
+COMMENT ON COLUMN "a01_12"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_12"."serial_num_seq" IS '動作序號';
+
+-- EDB：單據意見設計
+CREATE TABLE "a01_13" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "options" varchar(20) DEFAULT ' ' NOT NULL,
+    "allowdescrip" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "a01_13key1" ON "a01_13" ("serial_num", "serial_num_seq");
+COMMENT ON TABLE "a01_13" IS '單據意見設計';
+COMMENT ON COLUMN "a01_13"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_13"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_13"."options" IS '選項說明';
+COMMENT ON COLUMN "a01_13"."allowdescrip" IS '附說明';
+
+-- EDB：單據意見回覆
+CREATE TABLE "a01_14" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "repliedby" varchar(60) DEFAULT ' ' NOT NULL,
+    "optionselected" integer DEFAULT 0 NOT NULL,
+    "opion" varchar(50) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_14key1" ON "a01_14" ("serial_num", "repliedby");
+COMMENT ON TABLE "a01_14" IS '單據意見回覆';
+COMMENT ON COLUMN "a01_14"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_14"."repliedby" IS '回覆者ID';
+COMMENT ON COLUMN "a01_14"."optionselected" IS '選項';
+COMMENT ON COLUMN "a01_14"."opion" IS '意見';
+
+-- EDB：單據個人註解
+CREATE TABLE "a01_15" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "repliedby" varchar(60) DEFAULT ' ' NOT NULL,
+    "日期" char(8) DEFAULT '00000000' NOT NULL,
+    "時間" char(6) DEFAULT '000000' NOT NULL,
+    "remarks" text
+);
+CREATE UNIQUE INDEX "a01_15key1" ON "a01_15" ("serial_num", "serial_num_seq");
+COMMENT ON TABLE "a01_15" IS '單據個人註解';
+COMMENT ON COLUMN "a01_15"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_15"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_15"."repliedby" IS '回覆者ID';
+COMMENT ON COLUMN "a01_15"."remarks" IS '註解';
+
+-- EDB：單據關鍵字
+CREATE TABLE "a01_16" (
+    "guid" varchar(60) DEFAULT ' ' NOT NULL,
+    "keyword" varchar(128) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_16key1" ON "a01_16" ("guid", "keyword");
+CREATE UNIQUE INDEX "a01_16key2" ON "a01_16" ("keyword", "guid");
+COMMENT ON TABLE "a01_16" IS '單據關鍵字';
+COMMENT ON COLUMN "a01_16"."guid" IS '流水編號';
+
+-- EDB：單據外部簽核記錄
+CREATE TABLE "a01_17" (
+    "guid" varchar(60) DEFAULT ' ' NOT NULL,
+    "docguid" varchar(60) DEFAULT ' ' NOT NULL,
+    "signflag" varchar(10) DEFAULT ' ' NOT NULL,
+    "filelocatiion" varchar(256) DEFAULT ' ' NOT NULL,
+    "content" text,
+    "updatedate" char(8) DEFAULT '00000000' NOT NULL,
+    "updatetime" char(6) DEFAULT '000000' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_17key1" ON "a01_17" ("guid");
+CREATE INDEX "a01_17key2" ON "a01_17" ("docguid", "updatedate", "updatetime");
+CREATE INDEX "a01_17key3" ON "a01_17" ("updatedate", "updatetime");
+COMMENT ON TABLE "a01_17" IS '單據外部簽核記錄';
+COMMENT ON COLUMN "a01_17"."guid" IS '流水編號';
+COMMENT ON COLUMN "a01_17"."docguid" IS '文件GUID';
+COMMENT ON COLUMN "a01_17"."signflag" IS '簽核註記';
+COMMENT ON COLUMN "a01_17"."filelocatiion" IS '附件位置';
+COMMENT ON COLUMN "a01_17"."content" IS '簽核內容';
+COMMENT ON COLUMN "a01_17"."updatedate" IS '異動日期';
+COMMENT ON COLUMN "a01_17"."updatetime" IS '異動時間';
+
+-- EDB：單據留言板
+CREATE TABLE "a01_18" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "emp_id" varchar(60) DEFAULT ' ' NOT NULL,
+    "新增日期" char(8) DEFAULT '00000000' NOT NULL,
+    "新增時間" char(6) DEFAULT '000000' NOT NULL,
+    "產品編號" varchar(60) DEFAULT ' ' NOT NULL,
+    "客戶編號" varchar(60) DEFAULT ' ' NOT NULL,
+    "廠商編號" varchar(60) DEFAULT ' ' NOT NULL,
+    "留言" text,
+    "手繪" bytea
+);
+CREATE UNIQUE INDEX "a01_18key1" ON "a01_18" ("serial_num", "serial_num_seq");
+CREATE INDEX "a01_18key2" ON "a01_18" ("serial_num", "emp_id", "新增日期", "新增時間");
+CREATE INDEX "a01_18key3" ON "a01_18" ("產品編號", "新增日期", "新增時間");
+CREATE INDEX "a01_18key4" ON "a01_18" ("客戶編號", "新增日期", "新增時間");
+CREATE INDEX "a01_18key5" ON "a01_18" ("廠商編號", "新增日期", "新增時間");
+COMMENT ON TABLE "a01_18" IS '單據留言板';
+COMMENT ON COLUMN "a01_18"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a01_18"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a01_18"."emp_id" IS '留言人ID';
+
+-- EDB：單據變更日期
+CREATE TABLE "a01_19" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "PDF新增日期" char(8) DEFAULT '00000000' NOT NULL,
+    "PDF新增時間" char(6) DEFAULT '000000' NOT NULL
+);
+CREATE UNIQUE INDEX "a01_19key1" ON "a01_19" ("serial_num");
+CREATE INDEX "a01_19key2" ON "a01_19" ("PDF新增日期", "PDF新增時間");
+COMMENT ON TABLE "a01_19" IS '單據變更日期';
+COMMENT ON COLUMN "a01_19"."serial_num" IS '流水編號';
+
+-- EDB：Translation
+CREATE TABLE "a02" (
+    "pagecode" varchar(5) DEFAULT ' ' NOT NULL,
+    "localname" varchar(100) DEFAULT ' ' NOT NULL,
+    "translateto" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("pagecode", "localname", "translateto")
+);
+COMMENT ON TABLE "a02" IS 'Translation';
+
+-- EDB：SignHistory
+CREATE TABLE "a03" (
+    "empserialno" varchar(60) DEFAULT ' ' NOT NULL,
+    "logondate" char(8) DEFAULT '00000000' NOT NULL,
+    "logontime" char(6) DEFAULT '000000' NOT NULL,
+    "ipaddr" varchar(30) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("empserialno")
+);
+COMMENT ON TABLE "a03" IS 'SignHistory';
+
+-- EDB：TalkingStatus
+CREATE TABLE "a04" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "talkto" varchar(60) DEFAULT ' ' NOT NULL,
+    "logondate" char(8) DEFAULT '00000000' NOT NULL,
+    "time_" char(6) DEFAULT '000000' NOT NULL,
+    "status" varchar(1) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("serial_num", "talkto")
+);
+COMMENT ON TABLE "a04" IS 'TalkingStatus';
+COMMENT ON COLUMN "a04"."serial_num" IS 'MyID';
+COMMENT ON COLUMN "a04"."time_" IS 'LogonTime';
+
+-- EDB：LogonSetting
+CREATE TABLE "a05" (
+    "loginname" varchar(16) DEFAULT ' ' NOT NULL,
+    "username" varchar(30) DEFAULT ' ' NOT NULL,
+    "tempdir" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("loginname")
+);
+COMMENT ON TABLE "a05" IS 'LogonSetting';
+COMMENT ON COLUMN "a05"."loginname" IS 'LoginID';
+
+-- EDB：CntList
+CREATE TABLE "a06" (
+    "user_" varchar(16) DEFAULT ' ' NOT NULL,
+    "ip" varchar(50) DEFAULT ' ' NOT NULL,
+    "date_" char(8) DEFAULT '00000000' NOT NULL,
+    "starttime" char(6) DEFAULT '000000' NOT NULL,
+    "endtime" char(6) DEFAULT '000000' NOT NULL,
+    "jobtype" varchar(50) DEFAULT ' ' NOT NULL,
+    "instseqno" varchar(20) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("user_", "ip", "date_")
+);
+CREATE INDEX "a06key2" ON "a06" ("user_", "date_", "endtime");
+COMMENT ON TABLE "a06" IS 'CntList';
+COMMENT ON COLUMN "a06"."user_" IS 'User';
+COMMENT ON COLUMN "a06"."date_" IS 'Date';
+
+-- EDB：Tree Menu
+CREATE TABLE "a07" (
+    "node" smallint DEFAULT 0 NOT NULL,
+    "parent" smallint DEFAULT 0 NOT NULL,
+    "description" varchar(50) DEFAULT ' ' NOT NULL,
+    "visiable" smallint DEFAULT 1 NOT NULL,
+    "enable" smallint DEFAULT 1 NOT NULL,
+    "accountsonly" smallint DEFAULT 0 NOT NULL,
+    "programid" varchar(3) DEFAULT ' ' NOT NULL,
+    "forall" smallint DEFAULT 0 NOT NULL,
+    PRIMARY KEY ("parent", "node")
+);
+CREATE UNIQUE INDEX "a07key2" ON "a07" ("node");
+COMMENT ON TABLE "a07" IS 'Tree Menu';
+
+-- EDB：A10系統代碼
+CREATE TABLE "a10" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "codetype" varchar(30) DEFAULT ' ' NOT NULL,
+    "codeid" varchar(30) DEFAULT ' ' NOT NULL,
+    "codename" varchar(60) DEFAULT ' ' NOT NULL,
+    "codepara" numeric(16,6) DEFAULT 0 NOT NULL,
+    "reftype" varchar(30) DEFAULT ' ' NOT NULL,
+    "guname" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("serial_num")
+);
+CREATE UNIQUE INDEX "a10_key2" ON "a10" ("codetype", "codeid");
+COMMENT ON TABLE "a10" IS 'A10系統代碼';
+COMMENT ON COLUMN "a10"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a10"."codetype" IS '代碼類別';
+COMMENT ON COLUMN "a10"."codeid" IS '代碼索引';
+COMMENT ON COLUMN "a10"."codename" IS '代碼內容';
+COMMENT ON COLUMN "a10"."codepara" IS '代碼系數';
+COMMENT ON COLUMN "a10"."reftype" IS '參考類別';
+
+-- EDB：A20元件註冊
+CREATE TABLE "a20" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "job_type" varchar(3) DEFAULT ' ' NOT NULL,
+    "job_id" varchar(50) DEFAULT ' ' NOT NULL,
+    "guname" varchar(50) DEFAULT ' ' NOT NULL,
+    "job_description" varchar(200) DEFAULT ' ' NOT NULL,
+    "query_fieldname_c" varchar(20) DEFAULT ' ' NOT NULL,
+    "query_fieldname_e" varchar(20) DEFAULT ' ' NOT NULL,
+    "rights_create_object" varchar(15) DEFAULT ' ' NOT NULL,
+    "rights_modify_object" varchar(15) DEFAULT ' ' NOT NULL,
+    "rights_delete_object" varchar(15) DEFAULT ' ' NOT NULL,
+    "表單查詢權限" varchar(15) DEFAULT ' ' NOT NULL,
+    "rights_excute_object" varchar(15) DEFAULT ' ' NOT NULL,
+    "rights_print_object" varchar(15) DEFAULT ' ' NOT NULL,
+    "visible" smallint DEFAULT 0 NOT NULL,
+    "headcontrol" varchar(50) DEFAULT ' ' NOT NULL,
+    "detailcontrol" varchar(50) DEFAULT ' ' NOT NULL,
+    "產品庫存參數" smallint DEFAULT 0 NOT NULL,
+    "應收參數" smallint DEFAULT 0 NOT NULL,
+    "應付參數" smallint DEFAULT 0 NOT NULL,
+    "材料銷貨參數" smallint DEFAULT 0 NOT NULL,
+    "材料實際庫存" smallint DEFAULT 0 NOT NULL,
+    "編碼方式" varchar(1) DEFAULT ' ' NOT NULL,
+    "序號位數" smallint DEFAULT 3 NOT NULL,
+    "產品庫存主檔" smallint DEFAULT 0 NOT NULL,
+    "產品來源檔名" varchar(30) DEFAULT ' ' NOT NULL,
+    "產品編號欄位" varchar(20) DEFAULT ' ' NOT NULL,
+    "材料庫存主檔" smallint DEFAULT 0 NOT NULL,
+    "iso" varchar(20) DEFAULT ' ' NOT NULL,
+    "publicname" varchar(30) DEFAULT 'Main' NOT NULL,
+    "ecffile" varchar(30) DEFAULT ' ' NOT NULL,
+    "產品單頭或單身" smallint DEFAULT 0 NOT NULL,
+    "材料單頭或單身" smallint DEFAULT 0 NOT NULL,
+    "單據前置碼" varchar(4) DEFAULT ' ' NOT NULL,
+    "表單類別" varchar(1) DEFAULT '1' NOT NULL,
+    "庫存類別" varchar(1) DEFAULT ' ' NOT NULL,
+    "流程獨立否" smallint DEFAULT 0 NOT NULL,
+    "屬性大類名稱" varchar(60) DEFAULT ' ' NOT NULL,
+    "屬性中類名稱" varchar(60) DEFAULT ' ' NOT NULL,
+    "個人資料總灠" varchar(30) DEFAULT ' ' NOT NULL,
+    "關帳" char(8) DEFAULT '00000000' NOT NULL,
+    "startstatus" varchar(1) DEFAULT ' ' NOT NULL,
+    "laststatus" varchar(1) DEFAULT ' ' NOT NULL,
+    "同人合併" smallint DEFAULT 1 NOT NULL,
+    "singature_header" varchar(100) DEFAULT ' ' NOT NULL,
+    "加簽給自己" smallint DEFAULT 0 NOT NULL,
+    "允許退簽" smallint DEFAULT 1 NOT NULL,
+    "icons" bytea,
+    PRIMARY KEY ("serial_num")
+);
+CREATE UNIQUE INDEX "a20key2" ON "a20" ("job_type");
+CREATE UNIQUE INDEX "a20key3" ON "a20" ("job_id");
+CREATE UNIQUE INDEX "a20key4" ON "a20" ("guname");
+COMMENT ON TABLE "a20" IS 'A20元件註冊';
+COMMENT ON COLUMN "a20"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a20"."job_type" IS '表單代碼';
+COMMENT ON COLUMN "a20"."job_id" IS '表單代號';
+COMMENT ON COLUMN "a20"."guname" IS '表單名稱';
+COMMENT ON COLUMN "a20"."job_description" IS '表單說明';
+COMMENT ON COLUMN "a20"."query_fieldname_c" IS '查詢欄位_中文';
+COMMENT ON COLUMN "a20"."query_fieldname_e" IS '查詢欄位_英文';
+COMMENT ON COLUMN "a20"."rights_create_object" IS '表單新增權限';
+COMMENT ON COLUMN "a20"."rights_modify_object" IS '表單修改權限';
+COMMENT ON COLUMN "a20"."rights_delete_object" IS '表單刪除權限';
+COMMENT ON COLUMN "a20"."rights_excute_object" IS '表單流灠權限';
+COMMENT ON COLUMN "a20"."rights_print_object" IS '表單列印權限';
+COMMENT ON COLUMN "a20"."visible" IS '免送簽核';
+COMMENT ON COLUMN "a20"."材料銷貨參數" IS '材料虛擬庫存';
+COMMENT ON COLUMN "a20"."產品庫存主檔" IS '淮許代理';
+COMMENT ON COLUMN "a20"."產品來源檔名" IS '流程選項程式';
+COMMENT ON COLUMN "a20"."產品編號欄位" IS '部門選項程式';
+COMMENT ON COLUMN "a20"."材料庫存主檔" IS '可以更改單據流程';
+COMMENT ON COLUMN "a20"."產品單頭或單身" IS '限定公司';
+COMMENT ON COLUMN "a20"."材料單頭或單身" IS '限定部門';
+COMMENT ON COLUMN "a20"."流程獨立否" IS '申請人免簽';
+COMMENT ON COLUMN "a20"."屬性大類名稱" IS '部門選項';
+COMMENT ON COLUMN "a20"."屬性中類名稱" IS '簽核後程式';
+COMMENT ON COLUMN "a20"."個人資料總灠" IS '主檔名稱';
+COMMENT ON COLUMN "a20"."關帳" IS '關帳日期';
+COMMENT ON COLUMN "a20"."startstatus" IS '開始狀態';
+COMMENT ON COLUMN "a20"."laststatus" IS '最後狀態';
+COMMENT ON COLUMN "a20"."singature_header" IS '簽核抬頭';
+
+-- EDB：A20元件流程
+CREATE TABLE "a20_1" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "compid" varchar(60) DEFAULT ' ' NOT NULL,
+    "level_" integer DEFAULT 0 NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "指定人員" varchar(60) DEFAULT ' ' NOT NULL,
+    "posiid" varchar(60) DEFAULT ' ' NOT NULL,
+    "signorcc" smallint DEFAULT 1 NOT NULL,
+    "bydept" smallint DEFAULT 0 NOT NULL,
+    "bycomp" smallint DEFAULT 0 NOT NULL,
+    "freesign" smallint DEFAULT 0 NOT NULL,
+    "cndfile" varchar(30) DEFAULT ' ' NOT NULL,
+    "cndfield" varchar(30) DEFAULT ' ' NOT NULL,
+    "cndexpression" varchar(2) DEFAULT ' ' NOT NULL,
+    "cndcontent" varchar(30) DEFAULT ' ' NOT NULL,
+    "cndattribute" varchar(1) DEFAULT ' ' NOT NULL,
+    "cndexpression2" varchar(2) DEFAULT ' ' NOT NULL,
+    "cndcontent2" varchar(30) DEFAULT ' ' NOT NULL,
+    "dataedit" varchar(30) DEFAULT ' ' NOT NULL,
+    "addflow" smallint DEFAULT 0 NOT NULL,
+    "assigncostdept" smallint DEFAULT 0 NOT NULL,
+    "appdept" varchar(60) DEFAULT ' ' NOT NULL,
+    "flowdept" varchar(60) DEFAULT ' ' NOT NULL,
+    "會簽判定" smallint DEFAULT 0 NOT NULL,
+    "會簽方式" varchar(1) DEFAULT '1' NOT NULL,
+    "singature_line" integer DEFAULT 0 NOT NULL,
+    "singature_seq" integer DEFAULT 0 NOT NULL,
+    "加簽通知" smallint DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE INDEX "a20_1key0" ON "a20_1" ("serial_num");
+CREATE UNIQUE INDEX "a20_1key1" ON "a20_1" ("serial_num", "compid", "serial_num_seq");
+CREATE INDEX "a20_1key2" ON "a20_1" ("serial_num", "compid", "posiid");
+CREATE INDEX "a20_1key3" ON "a20_1" ("serial_num", "compid", "signorcc" DESC, "serial_num_seq");
+COMMENT ON TABLE "a20_1" IS 'A20元件流程';
+COMMENT ON COLUMN "a20_1"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a20_1"."compid" IS '公司流水號';
+COMMENT ON COLUMN "a20_1"."level_" IS '父階序號';
+COMMENT ON COLUMN "a20_1"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a20_1"."posiid" IS '職稱代碼';
+COMMENT ON COLUMN "a20_1"."signorcc" IS '正副本';
+COMMENT ON COLUMN "a20_1"."bydept" IS '限定部門';
+COMMENT ON COLUMN "a20_1"."bycomp" IS '指定欄位';
+COMMENT ON COLUMN "a20_1"."freesign" IS '免簽';
+COMMENT ON COLUMN "a20_1"."cndfile" IS '條件檔案';
+COMMENT ON COLUMN "a20_1"."cndfield" IS '條件欄位';
+COMMENT ON COLUMN "a20_1"."cndexpression" IS '條件式';
+COMMENT ON COLUMN "a20_1"."cndcontent" IS '條件內容';
+COMMENT ON COLUMN "a20_1"."cndattribute" IS '條件屬性';
+COMMENT ON COLUMN "a20_1"."cndexpression2" IS '免簽條件式';
+COMMENT ON COLUMN "a20_1"."cndcontent2" IS '免簽內容';
+COMMENT ON COLUMN "a20_1"."dataedit" IS '內容修正';
+COMMENT ON COLUMN "a20_1"."addflow" IS '可以加簽';
+COMMENT ON COLUMN "a20_1"."assigncostdept" IS '設定成本';
+COMMENT ON COLUMN "a20_1"."appdept" IS '限定申請部門';
+COMMENT ON COLUMN "a20_1"."flowdept" IS '簽核部門欄位';
+COMMENT ON COLUMN "a20_1"."singature_line" IS '簽名列號';
+COMMENT ON COLUMN "a20_1"."singature_seq" IS '簽名序號';
+
+-- EDB：A20元件取號
+CREATE TABLE "a20_3" (
+    "表單代碼" varchar(3) DEFAULT ' ' NOT NULL,
+    "keygroup" varchar(20) DEFAULT ' ' NOT NULL,
+    "nextno" integer DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a20_3key1" ON "a20_3" ("表單代碼", "keygroup");
+COMMENT ON TABLE "a20_3" IS 'A20元件取號';
+
+-- EDB：A20元件參考
+CREATE TABLE "a20_2" (
+    "doccode" varchar(3) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "itemname" varchar(30) DEFAULT ' ' NOT NULL,
+    "publicname" varchar(30) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a20_2key1" ON "a20_2" ("doccode", "serial_num_seq");
+COMMENT ON TABLE "a20_2" IS 'A20元件參考';
+COMMENT ON COLUMN "a20_2"."doccode" IS '表單代碼';
+COMMENT ON COLUMN "a20_2"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a20_2"."itemname" IS '相關查詢';
+
+-- EDB：A20元件自定欄位
+CREATE TABLE "a20_4" (
+    "doccode" varchar(3) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "itemtype" varchar(4) DEFAULT ' ' NOT NULL,
+    "itemcode" varchar(4) DEFAULT ' ' NOT NULL,
+    "itemattribute" varchar(1) DEFAULT ' ' NOT NULL,
+    "itemformat" varchar(20) DEFAULT ' ' NOT NULL,
+    "借貸" smallint DEFAULT 0 NOT NULL,
+    "科目代號" varchar(8) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a20_4key1" ON "a20_4" ("doccode", "serial_num_seq");
+CREATE UNIQUE INDEX "a20_4key2" ON "a20_4" ("doccode", "itemtype", "itemcode");
+COMMENT ON TABLE "a20_4" IS 'A20元件自定欄位';
+COMMENT ON COLUMN "a20_4"."doccode" IS '表單代碼';
+COMMENT ON COLUMN "a20_4"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a20_4"."itemtype" IS '自定大類';
+COMMENT ON COLUMN "a20_4"."itemcode" IS '自定細目';
+COMMENT ON COLUMN "a20_4"."itemattribute" IS '屬性';
+COMMENT ON COLUMN "a20_4"."itemformat" IS '格式';
+
+-- EDB：A20元件執行
+CREATE TABLE "a20_6" (
+    "job_type" varchar(3) DEFAULT ' ' NOT NULL,
+    "compid" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "action" varchar(3) DEFAULT ' ' NOT NULL,
+    "publicname" varchar(30) DEFAULT ' ' NOT NULL,
+    "excutedby" varchar(60) DEFAULT ' ' NOT NULL,
+    "enable" smallint DEFAULT 0 NOT NULL,
+    "deptassigned" varchar(60) DEFAULT ' ' NOT NULL,
+    "條件檔案" varchar(30) DEFAULT ' ' NOT NULL,
+    "條件欄位" varchar(30) DEFAULT ' ' NOT NULL,
+    "條件式" varchar(2) DEFAULT ' ' NOT NULL,
+    "條件內容" varchar(30) DEFAULT ' ' NOT NULL,
+    "條件屬性" varchar(1) DEFAULT ' ' NOT NULL,
+    "processfor" varchar(60) DEFAULT ' ' NOT NULL,
+    "手動確認" smallint DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a20_6key1" ON "a20_6" ("job_type", "compid", "serial_num_seq");
+CREATE UNIQUE INDEX "a20_6key2" ON "a20_6" ("recordid");
+CREATE UNIQUE INDEX "a20_6key3" ON "a20_6" ("job_type", "compid", "action");
+COMMENT ON TABLE "a20_6" IS 'A20元件執行';
+COMMENT ON COLUMN "a20_6"."job_type" IS '表單代碼';
+COMMENT ON COLUMN "a20_6"."compid" IS '公司流水號';
+COMMENT ON COLUMN "a20_6"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a20_6"."action" IS '程序';
+COMMENT ON COLUMN "a20_6"."publicname" IS '功能';
+COMMENT ON COLUMN "a20_6"."excutedby" IS '執行者';
+COMMENT ON COLUMN "a20_6"."enable" IS '啟用/關閉';
+COMMENT ON COLUMN "a20_6"."deptassigned" IS '限定部門';
+COMMENT ON COLUMN "a20_6"."processfor" IS '執行說明';
+
+-- EDB：A20元件科目
+CREATE TABLE "a20_5" (
+    "job_type" varchar(3) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "借貸" smallint DEFAULT 0 NOT NULL,
+    "科目代號" varchar(8) DEFAULT ' ' NOT NULL,
+    "參考欄位" varchar(30) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a20_5key0" ON "a20_5" ("recordid");
+CREATE UNIQUE INDEX "a20_5key1" ON "a20_5" ("job_type", "serial_num_seq");
+COMMENT ON TABLE "a20_5" IS 'A20元件科目';
+COMMENT ON COLUMN "a20_5"."job_type" IS '表單代碼';
+COMMENT ON COLUMN "a20_5"."serial_num_seq" IS '表身序號';
+
+-- EDB：A20元件階層
+CREATE TABLE "a20_7" (
+    "job_type" varchar(3) DEFAULT ' ' NOT NULL,
+    "level_" integer DEFAULT 0 NOT NULL,
+    "method" smallint DEFAULT 0 NOT NULL,
+    "決議" varchar(1) DEFAULT '1' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a20_7key1" ON "a20_7" ("recordid");
+CREATE UNIQUE INDEX "a20_7key2" ON "a20_7" ("job_type", "level_");
+COMMENT ON TABLE "a20_7" IS 'A20元件階層';
+COMMENT ON COLUMN "a20_7"."job_type" IS '表單代碼';
+COMMENT ON COLUMN "a20_7"."level_" IS '階層';
+COMMENT ON COLUMN "a20_7"."method" IS '簽法';
+
+-- EDB：A20元件簽核類別
+CREATE TABLE "a20_8" (
+    "job_type" varchar(3) DEFAULT ' ' NOT NULL,
+    "類別代碼" varchar(2) NOT NULL,
+    "說明" varchar(50) NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a20_8key0" ON "a20_8" ("recordid");
+CREATE UNIQUE INDEX "a20_8key1" ON "a20_8" ("job_type", "類別代碼");
+COMMENT ON TABLE "a20_8" IS 'A20元件簽核類別';
+COMMENT ON COLUMN "a20_8"."job_type" IS '表單代碼';
+
+-- EDB：A30群組成員
+CREATE TABLE "a30_1" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "empserialno" varchar(60) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a30_1key1" ON "a30_1" ("serial_num", "serial_num_seq");
+CREATE UNIQUE INDEX "a30_1key2" ON "a30_1" ("serial_num", "empserialno");
+CREATE UNIQUE INDEX "a30_1key3" ON "a30_1" ("empserialno", "serial_num");
+COMMENT ON TABLE "a30_1" IS 'A30群組成員';
+COMMENT ON COLUMN "a30_1"."serial_num" IS '群組識別碼';
+COMMENT ON COLUMN "a30_1"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a30_1"."empserialno" IS '員工識別碼';
+
+-- EDB：A30群組表單
+CREATE TABLE "a30_2" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "serial_num_seq" integer DEFAULT 0 NOT NULL,
+    "docserialno" varchar(60) DEFAULT ' ' NOT NULL,
+    "createflag" smallint DEFAULT 0 NOT NULL,
+    "queryflag" smallint DEFAULT 0 NOT NULL,
+    "printflag" smallint DEFAULT 0 NOT NULL,
+    "amountflag" smallint DEFAULT 0 NOT NULL,
+    "querylimited" smallint DEFAULT 0 NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("recordid")
+);
+CREATE INDEX "a30_2key1" ON "a30_2" ("serial_num", "serial_num_seq");
+CREATE UNIQUE INDEX "a30_2key2" ON "a30_2" ("serial_num", "docserialno");
+COMMENT ON TABLE "a30_2" IS 'A30群組表單';
+COMMENT ON COLUMN "a30_2"."serial_num" IS '群組識別碼';
+COMMENT ON COLUMN "a30_2"."serial_num_seq" IS '表身序號';
+COMMENT ON COLUMN "a30_2"."docserialno" IS '單據識別碼';
+COMMENT ON COLUMN "a30_2"."createflag" IS '增修';
+COMMENT ON COLUMN "a30_2"."queryflag" IS '查詢';
+COMMENT ON COLUMN "a30_2"."printflag" IS '列印';
+COMMENT ON COLUMN "a30_2"."amountflag" IS '金額';
+COMMENT ON COLUMN "a30_2"."querylimited" IS '限定查詢';
+
+-- EDB：A30群組歸屬
+CREATE TABLE "a30_3" (
+    "上階群組" varchar(60) DEFAULT ' ' NOT NULL,
+    "下階群組" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a30_3key1" ON "a30_3" ("上階群組", "下階群組");
+COMMENT ON TABLE "a30_3" IS 'A30群組歸屬';
+
+-- EDB：A35單位資料
+CREATE TABLE "a35" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "subdeptid" varchar(5) DEFAULT ' ' NOT NULL,
+    "subdeptname" varchar(20) DEFAULT ' ' NOT NULL,
+    "description" varchar(100) DEFAULT ' ' NOT NULL,
+    "engname" varchar(20) DEFAULT ' ' NOT NULL,
+    "groupid" varchar(60) DEFAULT ' ' NOT NULL,
+    "guname" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("serial_num")
+);
+CREATE UNIQUE INDEX "a35key2" ON "a35" ("groupid", "subdeptid");
+COMMENT ON TABLE "a35" IS 'A35單位資料';
+COMMENT ON COLUMN "a35"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a35"."subdeptid" IS '單位代碼';
+COMMENT ON COLUMN "a35"."subdeptname" IS '單位名稱';
+COMMENT ON COLUMN "a35"."description" IS '單位說明';
+COMMENT ON COLUMN "a35"."engname" IS '英文名稱';
+COMMENT ON COLUMN "a35"."groupid" IS '所屬部門';
+
+-- EDB：A70作業程序
+CREATE TABLE "a70" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "作業代碼" varchar(12) DEFAULT ' ' NOT NULL,
+    "作業名稱" varchar(60) DEFAULT ' ' NOT NULL,
+    "作業說明" varchar(256) DEFAULT ' ' NOT NULL,
+    "用於表單" varchar(3) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a70key1" ON "a70" ("serial_num");
+CREATE UNIQUE INDEX "a70key2" ON "a70" ("用於表單", "作業代碼");
+CREATE UNIQUE INDEX "a70key3" ON "a70" ("作業名稱");
+COMMENT ON TABLE "a70" IS 'A70作業程序';
+COMMENT ON COLUMN "a70"."serial_num" IS '流水編號';
+
+-- EDB：A70作業明細
+CREATE TABLE "a70_1" (
+    "流水編號" varchar(60) DEFAULT ' ' NOT NULL,
+    "表身序號" integer DEFAULT 0 NOT NULL,
+    "表單代碼" varchar(3) DEFAULT ' ' NOT NULL,
+    "recordid" varchar(60) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a70_1key0" ON "a70_1" ("recordid");
+CREATE UNIQUE INDEX "a70_1key1" ON "a70_1" ("流水編號", "表身序號");
+COMMENT ON TABLE "a70_1" IS 'A70作業明細';
+
+-- EDB：公告記錄
+CREATE TABLE "a80" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "createdby" varchar(60) DEFAULT ' ' NOT NULL,
+    "applyby" varchar(60) DEFAULT ' ' NOT NULL,
+    "itemno" varchar(50) DEFAULT ' ' NOT NULL,
+    "guname" varchar(256) DEFAULT ' ' NOT NULL,
+    "description" varchar(256) DEFAULT ' ' NOT NULL,
+    "issuedate" char(8) DEFAULT '00000000' NOT NULL,
+    "enddate" char(8) DEFAULT '00000000' NOT NULL,
+    "issuetime" char(6) DEFAULT '000000' NOT NULL,
+    "type" smallint DEFAULT 0 NOT NULL,
+    PRIMARY KEY ("serial_num")
+);
+CREATE INDEX "a80key2" ON "a80" ("issuedate", "serial_num");
+COMMENT ON TABLE "a80" IS '公告記錄';
+COMMENT ON COLUMN "a80"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a80"."createdby" IS '填單人';
+COMMENT ON COLUMN "a80"."applyby" IS '製單人';
+COMMENT ON COLUMN "a80"."itemno" IS '字號';
+COMMENT ON COLUMN "a80"."guname" IS '主旨';
+COMMENT ON COLUMN "a80"."description" IS '說明';
+COMMENT ON COLUMN "a80"."issuedate" IS '公告日期';
+COMMENT ON COLUMN "a80"."enddate" IS '公告結束日期';
+COMMENT ON COLUMN "a80"."issuetime" IS '通知時間';
+COMMENT ON COLUMN "a80"."type" IS '通知/公告';
+
+-- EDB：通知對象
+CREATE TABLE "a80_1" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "messageto" varchar(60) DEFAULT ' ' NOT NULL,
+    "calserialno" varchar(60) DEFAULT ' ' NOT NULL,
+    "notifytype" varchar(1) DEFAULT 'Q' NOT NULL,
+    "createdate" char(8) DEFAULT '00000000' NOT NULL,
+    "createtime" char(6) DEFAULT '000000' NOT NULL,
+    "ending" smallint DEFAULT 0 NOT NULL,
+    "notified" smallint DEFAULT 0 NOT NULL,
+    PRIMARY KEY ("serial_num", "messageto")
+);
+CREATE INDEX "a80_1key2" ON "a80_1" ("calserialno");
+COMMENT ON TABLE "a80_1" IS '通知對象';
+COMMENT ON COLUMN "a80_1"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "a80_1"."messageto" IS '收訊人';
+COMMENT ON COLUMN "a80_1"."calserialno" IS '行事曆編號';
+COMMENT ON COLUMN "a80_1"."notifytype" IS '類型';
+COMMENT ON COLUMN "a80_1"."createdate" IS '日期';
+COMMENT ON COLUMN "a80_1"."createtime" IS '時間';
+COMMENT ON COLUMN "a80_1"."ending" IS '結案';
+COMMENT ON COLUMN "a80_1"."notified" IS '已通知';
+
+-- EDB：匯率資料
+CREATE TABLE "a90" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "幣別" varchar(4) DEFAULT ' ' NOT NULL,
+    "更正日期" char(8) DEFAULT '00000000' NOT NULL,
+    "匯率" numeric(7,4) DEFAULT 0 NOT NULL,
+    "小數位" smallint DEFAULT 0 NOT NULL,
+    "guname" varchar(4) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "a90key1" ON "a90" ("serial_num");
+CREATE UNIQUE INDEX "a90key2" ON "a90" ("幣別", "更正日期");
+COMMENT ON TABLE "a90" IS '匯率資料';
+COMMENT ON COLUMN "a90"."serial_num" IS '流水編號';
+
+-- EDB：倉庫資料
+CREATE TABLE "aa0" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "whid" varchar(5) DEFAULT ' ' NOT NULL,
+    "whname" varchar(20) DEFAULT ' ' NOT NULL,
+    "description" varchar(100) DEFAULT ' ' NOT NULL,
+    "whename" varchar(20) DEFAULT ' ' NOT NULL,
+    "companyid" varchar(60) DEFAULT ' ' NOT NULL,
+    "guname" varchar(100) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("serial_num")
+);
+CREATE UNIQUE INDEX "aa0key2" ON "aa0" ("whid");
+CREATE INDEX "aa0key3" ON "aa0" ("companyid", "whid");
+COMMENT ON TABLE "aa0" IS '倉庫資料';
+COMMENT ON COLUMN "aa0"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "aa0"."whid" IS '倉庫代碼';
+COMMENT ON COLUMN "aa0"."whname" IS '倉庫名稱';
+COMMENT ON COLUMN "aa0"."description" IS '倉庫說明';
+COMMENT ON COLUMN "aa0"."whename" IS '英文名稱';
+COMMENT ON COLUMN "aa0"."companyid" IS '所屬公司';
+
+-- EDB：訊息記錄
+CREATE TABLE "messages" (
+    "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
+    "createby" varchar(60) DEFAULT ' ' NOT NULL,
+    "messageto" varchar(60) DEFAULT ' ' NOT NULL,
+    "formessage" varchar(60) DEFAULT ' ' NOT NULL,
+    "refdocument" varchar(60) DEFAULT ' ' NOT NULL,
+    "類型" varchar(1) DEFAULT 'Q' NOT NULL,
+    "createdate" char(8) DEFAULT '00000000' NOT NULL,
+    "createtime" char(6) DEFAULT '000000' NOT NULL,
+    "ending" smallint DEFAULT 0 NOT NULL,
+    "message" text,
+    "attachedaction" varchar(1) DEFAULT ' ' NOT NULL,
+    "notified" smallint DEFAULT 0 NOT NULL,
+    "imflag" smallint DEFAULT 0 NOT NULL,
+    "attacheddocid" varchar(60) DEFAULT ' ' NOT NULL,
+    "enddate" char(8) DEFAULT '00000000' NOT NULL,
+    "endtime" char(6) DEFAULT '000000' NOT NULL,
+    "invaliddate" char(8) DEFAULT '00000000' NOT NULL,
+    PRIMARY KEY ("serial_num")
+);
+CREATE INDEX "mesgkey2" ON "messages" ("createby", "imflag", "createdate", "createtime", "serial_num");
+CREATE INDEX "mesgkey3" ON "messages" ("messageto", "imflag", "createdate", "createtime", "serial_num");
+CREATE INDEX "mesgkey4" ON "messages" ("refdocument", "createdate", "createtime");
+CREATE INDEX "mesgkey5" ON "messages" ("formessage", "createby");
+CREATE INDEX "mesgkey6" ON "messages" ("ending", "createdate", "createtime");
+CREATE INDEX "mesgkey7" ON "messages" ("notified", "createdate" DESC, "createtime" DESC);
+COMMENT ON TABLE "messages" IS '訊息記錄';
+COMMENT ON COLUMN "messages"."serial_num" IS '流水編號';
+COMMENT ON COLUMN "messages"."createby" IS '發訊人';
+COMMENT ON COLUMN "messages"."messageto" IS '收訊人';
+COMMENT ON COLUMN "messages"."formessage" IS '來源訊息';
+COMMENT ON COLUMN "messages"."refdocument" IS '相關單據';
+COMMENT ON COLUMN "messages"."createdate" IS '日期';
+COMMENT ON COLUMN "messages"."createtime" IS '時間';
+COMMENT ON COLUMN "messages"."ending" IS '讀取否？';
+COMMENT ON COLUMN "messages"."message" IS '訊息內容';
+COMMENT ON COLUMN "messages"."notified" IS '已通知';
+COMMENT ON COLUMN "messages"."imflag" IS '列入IM清單';
+COMMENT ON COLUMN "messages"."attacheddocid" IS '附件流水編號';
+COMMENT ON COLUMN "messages"."enddate" IS '讀取日期';
+COMMENT ON COLUMN "messages"."endtime" IS '讀取時間';
+COMMENT ON COLUMN "messages"."invaliddate" IS '截止日期';
+
+-- EDB：IM連絡人
+CREATE TABLE "imcontact" (
+    "myid" varchar(60) DEFAULT ' ' NOT NULL,
+    "contactid" varchar(60) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("myid", "contactid")
+);
+COMMENT ON TABLE "imcontact" IS 'IM連絡人';
+
+-- EDB：CtxCheckList
+CREATE TABLE "ctxchecklist" (
+    "ctxid" varchar(60) DEFAULT ' ' NOT NULL,
+    "lastdate" char(8) DEFAULT '00000000' NOT NULL,
+    "lasttime" char(6) DEFAULT '000000' NOT NULL,
+    PRIMARY KEY ("ctxid")
+);
+COMMENT ON TABLE "ctxchecklist" IS 'CtxCheckList';
+
+-- EDB：User Logins
+CREATE TABLE "user_logins" (
+    "uniqueid_usr" varchar(60) DEFAULT ' ' NOT NULL,
+    "userid_usr" varchar(20) DEFAULT ' ' NOT NULL,
+    "name_usr" varchar(20) DEFAULT ' ' NOT NULL,
+    "status_usr" varchar(1) DEFAULT 'A' NOT NULL,
+    "password_usr" varchar(20) DEFAULT ' ' NOT NULL,
+    "numgroups_usr" smallint NOT NULL,
+    "numrights_usr" smallint NOT NULL,
+    "defaultapp" smallint DEFAULT 1 NOT NULL,
+    "otherinformation" varchar(300) DEFAULT ' ' NOT NULL,
+    "desktoptype" smallint DEFAULT 0 NOT NULL,
+    PRIMARY KEY ("uniqueid_usr")
+);
+COMMENT ON TABLE "user_logins" IS 'User Logins';
+COMMENT ON COLUMN "user_logins"."otherinformation" IS 'OtherInformation_USR';
+
+-- EDB：User Rights
+CREATE TABLE "user_rights" (
+    "parent_id_rght" varchar(20) DEFAULT ' ' NOT NULL,
+    "unique_id_rgt" varchar(20) DEFAULT ' ' NOT NULL,
+    "user_id" varchar(20) DEFAULT ' ' NOT NULL,
+    "right_rgt" varchar(30) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("parent_id_rght", "unique_id_rgt")
+);
+CREATE INDEX "userrithskey2" ON "user_rights" ("user_id", "right_rgt");
+COMMENT ON TABLE "user_rights" IS 'User Rights';
+COMMENT ON COLUMN "user_rights"."parent_id_rght" IS 'Parent_ID_RGT';
+COMMENT ON COLUMN "user_rights"."unique_id_rgt" IS 'Unique ID_RGT';
+COMMENT ON COLUMN "user_rights"."user_id" IS 'User ID_RGT';
+
+-- EDB：User Groups
+CREATE TABLE "user_groups" (
+    "parent_id_grp" varchar(20) DEFAULT ' ' NOT NULL,
+    "unique_id_rgt" varchar(20) DEFAULT ' ' NOT NULL,
+    "user_id" varchar(20) DEFAULT ' ' NOT NULL,
+    "right_rgt" varchar(30) DEFAULT ' ' NOT NULL,
+    PRIMARY KEY ("parent_id_grp", "unique_id_rgt")
+);
+CREATE INDEX "usergroupskey2" ON "user_groups" ("user_id", "right_rgt");
+COMMENT ON TABLE "user_groups" IS 'User Groups';
+COMMENT ON COLUMN "user_groups"."parent_id_grp" IS 'Parent ID_GRP';
+COMMENT ON COLUMN "user_groups"."unique_id_rgt" IS 'Unique ID_GRP';
+COMMENT ON COLUMN "user_groups"."user_id" IS 'User ID_GRP';
+COMMENT ON COLUMN "user_groups"."right_rgt" IS 'Group_GRP';
+
+-- EDB：User_Modules
+CREATE TABLE "user_modules" (
+    "uniqueid_usr" varchar(40) NOT NULL,
+    "seq_no" integer NOT NULL,
+    "modulename" varchar(20) NOT NULL,
+    "ecf" varchar(50) NOT NULL,
+    "publicname" varchar(20) NOT NULL
+);
+CREATE UNIQUE INDEX "user_modulekey1" ON "user_modules" ("uniqueid_usr", "seq_no");
+COMMENT ON TABLE "user_modules" IS 'User_Modules';
+
+-- EDB：Calendar
+CREATE TABLE "calendar" (
+    "userid" varchar(40) DEFAULT ' ' NOT NULL,
+    "serialno" varchar(40) DEFAULT ' ' NOT NULL,
+    "subject" varchar(128) DEFAULT ' ' NOT NULL,
+    "place" varchar(128) DEFAULT ' ' NOT NULL,
+    "datefrom" char(8) DEFAULT '00000000' NOT NULL,
+    "dateto" char(8) DEFAULT '00000000' NOT NULL,
+    "timefrom" char(6) DEFAULT '000000' NOT NULL,
+    "timeto" char(6) DEFAULT '000000' NOT NULL,
+    "content" varchar(256) DEFAULT ' ' NOT NULL,
+    "completed" smallint DEFAULT 0 NOT NULL,
+    "flag" smallint NOT NULL,
+    "fromserialno" varchar(40) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "CalKey1%EntryID%" ON "calendar" ("serialno");
+CREATE INDEX "CalKey2%EntryID%" ON "calendar" ("userid", "datefrom", "timefrom");
+CREATE INDEX "CalKey3%EntryID%" ON "calendar" ("userid", "completed", "datefrom", "timefrom");
+COMMENT ON TABLE "calendar" IS 'Calendar';
+COMMENT ON COLUMN "calendar"."flag" IS 'Level';
+
+-- EDB：CalSeqNo
+CREATE TABLE "calendarsn" (
+    "date_" char(8) DEFAULT '00000000' NOT NULL,
+    "seqno" smallint NOT NULL
+);
+CREATE UNIQUE INDEX "SNOKey1%EntryID%" ON "calendarsn" ("date_");
+COMMENT ON TABLE "calendarsn" IS 'CalSeqNo';
+COMMENT ON COLUMN "calendarsn"."date_" IS 'CalDate';
+
+-- EDB：CalTZData
+CREATE TABLE "calendartz" (
+    "userid" varchar(40) DEFAULT ' ' NOT NULL,
+    "date_" char(8) DEFAULT '00000000' NOT NULL,
+    "time" char(6) DEFAULT '000000' NOT NULL,
+    "zdata" varchar(2048) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "CalTZKey1%EntryID%" ON "calendartz" ("userid", "date_", "time");
+COMMENT ON TABLE "calendartz" IS 'CalTZData';
+COMMENT ON COLUMN "calendartz"."date_" IS 'Date';
+
+-- EDB：CalTimeLine
+CREATE TABLE "caltimeline" (
+    "time" char(6) DEFAULT '000000' NOT NULL,
+    "endtime" char(6) DEFAULT '000000' NOT NULL
+);
+CREATE UNIQUE INDEX "cltlkey1" ON "caltimeline" ("time", "endtime");
+COMMENT ON TABLE "caltimeline" IS 'CalTimeLine';
+COMMENT ON COLUMN "caltimeline"."time" IS 'StartTime';
+
+-- EDB：CalendarTemp
+CREATE TABLE "calendartemp" (
+    "userid" varchar(40) DEFAULT ' ' NOT NULL,
+    "serialno" varchar(40) DEFAULT ' ' NOT NULL,
+    "subject" varchar(128) DEFAULT ' ' NOT NULL,
+    "place" varchar(128) DEFAULT ' ' NOT NULL,
+    "datefrom" char(8) DEFAULT '00000000' NOT NULL,
+    "dateto" char(8) DEFAULT '00000000' NOT NULL,
+    "timefrom" char(6) DEFAULT '000000' NOT NULL,
+    "timeto" char(6) DEFAULT '000000' NOT NULL,
+    "content" varchar(256) DEFAULT ' ' NOT NULL,
+    "completed" smallint DEFAULT 0 NOT NULL,
+    "flag" smallint NOT NULL,
+    "status" smallint DEFAULT 0 NOT NULL,
+    "createdate" char(8) DEFAULT '00000000' NOT NULL,
+    "createtime" char(6) DEFAULT '000000' NOT NULL,
+    "processed" smallint DEFAULT 0 NOT NULL,
+    "fromserialno" varchar(40) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "calkeymain" ON "calendartemp" ("serialno");
+CREATE INDEX "calkey1temp" ON "calendartemp" ("userid", "createdate", "createtime");
+CREATE INDEX "caltempkey2" ON "calendartemp" ("processed", "userid", "createdate", "createtime");
+COMMENT ON TABLE "calendartemp" IS 'CalendarTemp';
+COMMENT ON COLUMN "calendartemp"."flag" IS 'Level';
+COMMENT ON COLUMN "calendartemp"."status" IS 'Create/Delete';
