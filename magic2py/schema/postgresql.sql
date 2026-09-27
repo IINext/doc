@@ -1,4 +1,4 @@
--- 由 magic_schema.py 從 Files、EDB 產生，請勿手動修改
+-- 由 magic_schema.py 從 Files、EDB、Doc、PLC、UserFunctionality 產生，請勿手動修改
 -- 型態衝突：A01.DueDate Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
 -- 型態衝突：A01.AccMonth Files=numeric(10,0)、EDB=char(8)，採用 char(8)（EDB 有 SqlType）
 -- 型態衝突：A50.TaxRate Files=varchar(1)、EDB=numeric(3,1)，採用 varchar(1)（都沒有 SqlType，請用 Oracle 確認）
@@ -4690,7 +4690,7 @@ COMMENT ON COLUMN "a01"."costdeptid" IS '成本歸屬部門';
 COMMENT ON COLUMN "a01"."objectid" IS '對象流水號';
 COMMENT ON COLUMN "a01"."proucdid" IS '產品流水號';
 
--- Files：A30群組資料；EDB：A30群組資料
+-- Files：A30群組資料；EDB：A30群組資料；Doc：Group
 CREATE TABLE "a30" (
     "serial_num" varchar(60) DEFAULT ' ' NOT NULL,
     "groupid" varchar(10) DEFAULT ' ' NOT NULL,
@@ -4706,6 +4706,9 @@ CREATE TABLE "a30" (
 );
 CREATE UNIQUE INDEX "a30key2" ON "a30" ("groupid");
 CREATE INDEX "a30key3" ON "a30" ("belongto", "groupid");
+CREATE UNIQUE INDEX "doc_a30key1" ON "a30" ("serial_num");
+CREATE UNIQUE INDEX "doc_a30key2" ON "a30" ("groupid");
+CREATE INDEX "doc_a30key3" ON "a30" ("belongto", "groupid");
 COMMENT ON TABLE "a30" IS 'A30群組資料';
 COMMENT ON COLUMN "a30"."serial_num" IS '流水編號';
 COMMENT ON COLUMN "a30"."groupid" IS '群組代碼';
@@ -7244,3 +7247,300 @@ CREATE INDEX "caltempkey2" ON "calendartemp" ("processed", "userid", "createdate
 COMMENT ON TABLE "calendartemp" IS 'CalendarTemp';
 COMMENT ON COLUMN "calendartemp"."flag" IS 'Level';
 COMMENT ON COLUMN "calendartemp"."status" IS 'Create/Delete';
+
+-- Doc：文件類別
+CREATE TABLE "doc_type" (
+    "doctype" varchar(1) DEFAULT ' ' NOT NULL,
+    "typename" varchar(20) NOT NULL,
+    "description" varchar(100) NOT NULL
+);
+CREATE UNIQUE INDEX "doc_typekey1" ON "doc_type" ("doctype");
+COMMENT ON TABLE "doc_type" IS '文件類別';
+COMMENT ON COLUMN "doc_type"."doctype" IS '類別代號';
+COMMENT ON COLUMN "doc_type"."typename" IS '類別名稱';
+COMMENT ON COLUMN "doc_type"."description" IS '說明';
+
+-- Doc：文件屬性
+CREATE TABLE "doc_docbytool" (
+    "category" varchar(50) DEFAULT ' ' NOT NULL,
+    "nodeid" varchar(20) DEFAULT ' ' NOT NULL,
+    "itemno" varchar(20) DEFAULT ' ' NOT NULL,
+    "title" varchar(100) NOT NULL,
+    "version" integer DEFAULT 0 NOT NULL,
+    "issuedept" varchar(10) DEFAULT ' ' NOT NULL,
+    "issuedate" char(8) DEFAULT '00000000' NOT NULL,
+    "pages" integer DEFAULT 0 NOT NULL,
+    "fiename" varchar(256) DEFAULT ' ' NOT NULL,
+    "fileext" varchar(10) DEFAULT ' ' NOT NULL,
+    "remark" varchar(256) DEFAULT ' ' NOT NULL,
+    "doctype" varchar(1) DEFAULT ' ' NOT NULL,
+    "createdby" varchar(16) DEFAULT ' ' NOT NULL,
+    "blobsize" numeric(10,0) DEFAULT 0 NOT NULL,
+    "open2read" smallint DEFAULT 0 NOT NULL,
+    "homepage" smallint DEFAULT 0 NOT NULL,
+    "deleted" smallint DEFAULT 0 NOT NULL,
+    "encryption" smallint DEFAULT 0 NOT NULL,
+    "password" varchar(10) DEFAULT ' ' NOT NULL,
+    "watermarklines" smallint DEFAULT 1 NOT NULL,
+    "watermark" smallint DEFAULT 0 NOT NULL,
+    "createdate" char(8) DEFAULT '00000000' NOT NULL,
+    "createtime" char(6) DEFAULT '000000' NOT NULL,
+    "lastseqno" integer DEFAULT 0 NOT NULL,
+    "objid" varchar(50) DEFAULT ' ' NOT NULL,
+    "logical1" smallint DEFAULT 0 NOT NULL,
+    "logical2" smallint DEFAULT 0 NOT NULL,
+    "logical3" smallint DEFAULT 0 NOT NULL,
+    "主旨2" varchar(100) DEFAULT ' ' NOT NULL
+);
+CREATE INDEX "docbytoolkey5" ON "doc_docbytool" ("deleted", "category", "nodeid", "主旨2");
+CREATE UNIQUE INDEX "docbytoolkey3" ON "doc_docbytool" ("deleted", "category", "nodeid", "itemno", "version");
+CREATE INDEX "docbytoolkey4" ON "doc_docbytool" ("deleted", "category", "nodeid", "createdate" DESC, "createtime" DESC);
+CREATE INDEX "docbytoolkey2" ON "doc_docbytool" ("doctype", "category", "nodeid", "itemno");
+CREATE UNIQUE INDEX "docbytoolkey1" ON "doc_docbytool" ("category", "nodeid", "itemno", "version");
+CREATE INDEX "docbytoolkeyz" ON "doc_docbytool" ("objid");
+COMMENT ON TABLE "doc_docbytool" IS '文件屬性';
+COMMENT ON COLUMN "doc_docbytool"."category" IS '頁籤';
+COMMENT ON COLUMN "doc_docbytool"."nodeid" IS '節點';
+COMMENT ON COLUMN "doc_docbytool"."itemno" IS '文件編號';
+COMMENT ON COLUMN "doc_docbytool"."title" IS '主旨';
+COMMENT ON COLUMN "doc_docbytool"."version" IS '文件版次';
+COMMENT ON COLUMN "doc_docbytool"."issuedept" IS '發行部門';
+COMMENT ON COLUMN "doc_docbytool"."issuedate" IS '制修定日期';
+COMMENT ON COLUMN "doc_docbytool"."pages" IS '頁數';
+COMMENT ON COLUMN "doc_docbytool"."fiename" IS '檔案位置';
+COMMENT ON COLUMN "doc_docbytool"."fileext" IS '副檔名';
+COMMENT ON COLUMN "doc_docbytool"."remark" IS '制修定摘要';
+COMMENT ON COLUMN "doc_docbytool"."doctype" IS '檔案類型';
+COMMENT ON COLUMN "doc_docbytool"."createdby" IS '擁有者';
+COMMENT ON COLUMN "doc_docbytool"."blobsize" IS '檔案大小';
+COMMENT ON COLUMN "doc_docbytool"."open2read" IS '開放流灠';
+COMMENT ON COLUMN "doc_docbytool"."homepage" IS '網頁位址';
+COMMENT ON COLUMN "doc_docbytool"."deleted" IS '已刪除';
+COMMENT ON COLUMN "doc_docbytool"."encryption" IS '檔案加密';
+COMMENT ON COLUMN "doc_docbytool"."password" IS '密碼';
+COMMENT ON COLUMN "doc_docbytool"."watermarklines" IS '浮水印行數';
+COMMENT ON COLUMN "doc_docbytool"."watermark" IS '浮水印檢核';
+COMMENT ON COLUMN "doc_docbytool"."createdate" IS '建檔日期';
+COMMENT ON COLUMN "doc_docbytool"."createtime" IS '建檔時間';
+COMMENT ON COLUMN "doc_docbytool"."lastseqno" IS '修改次數';
+COMMENT ON COLUMN "doc_docbytool"."objid" IS '流水編號';
+COMMENT ON COLUMN "doc_docbytool"."logical1" IS '選項1';
+COMMENT ON COLUMN "doc_docbytool"."logical2" IS '選項2';
+COMMENT ON COLUMN "doc_docbytool"."logical3" IS '選項3';
+
+-- Doc：頁籤
+CREATE TABLE "doc_kmcategory" (
+    "category" varchar(50) NOT NULL,
+    "user_" varchar(20) NOT NULL,
+    "seqno" smallint NOT NULL,
+    "modulename" varchar(30) NOT NULL,
+    "description" varchar(100) NOT NULL
+);
+CREATE UNIQUE INDEX "moduleskey1" ON "doc_kmcategory" ("category");
+CREATE INDEX "kmcatkey2" ON "doc_kmcategory" ("user_", "seqno");
+COMMENT ON TABLE "doc_kmcategory" IS '頁籤';
+COMMENT ON COLUMN "doc_kmcategory"."category" IS '頁籤';
+COMMENT ON COLUMN "doc_kmcategory"."user_" IS '使用者';
+COMMENT ON COLUMN "doc_kmcategory"."seqno" IS '序號';
+COMMENT ON COLUMN "doc_kmcategory"."modulename" IS '名稱';
+COMMENT ON COLUMN "doc_kmcategory"."description" IS '說明';
+
+-- Doc：樹狀結構
+CREATE TABLE "doc_kmtree" (
+    "category" varchar(50) NOT NULL,
+    "nodeid" varchar(20) NOT NULL,
+    "subject" varchar(50) NOT NULL,
+    "parentid" varchar(20) NOT NULL,
+    "folder" smallint NOT NULL,
+    "open2write" smallint NOT NULL,
+    "description" varchar(100) NOT NULL,
+    "objid" varchar(50) DEFAULT ' ' NOT NULL,
+    "createdby" varchar(20) DEFAULT ' ' NOT NULL,
+    "open2tran" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "menutreekey1" ON "doc_kmtree" ("category", "nodeid");
+CREATE INDEX "menutreekey2" ON "doc_kmtree" ("subject");
+CREATE INDEX "menutreekey3" ON "doc_kmtree" ("category", "subject");
+COMMENT ON TABLE "doc_kmtree" IS '樹狀結構';
+COMMENT ON COLUMN "doc_kmtree"."category" IS '頁籤';
+COMMENT ON COLUMN "doc_kmtree"."nodeid" IS '節點';
+COMMENT ON COLUMN "doc_kmtree"."subject" IS '名稱';
+COMMENT ON COLUMN "doc_kmtree"."parentid" IS '父節點';
+COMMENT ON COLUMN "doc_kmtree"."folder" IS '資料夾';
+COMMENT ON COLUMN "doc_kmtree"."open2write" IS '寫入權限';
+COMMENT ON COLUMN "doc_kmtree"."description" IS '說明';
+COMMENT ON COLUMN "doc_kmtree"."objid" IS '流水編號';
+COMMENT ON COLUMN "doc_kmtree"."createdby" IS '新增人員';
+COMMENT ON COLUMN "doc_kmtree"."open2tran" IS '開放移轉';
+
+-- Doc：日期序號
+CREATE TABLE "doc_docseqno" (
+    "date_" char(8) DEFAULT '00000000' NOT NULL,
+    "seqno" smallint NOT NULL
+);
+CREATE UNIQUE INDEX "docseqnokey1" ON "doc_docseqno" ("date_");
+COMMENT ON TABLE "doc_docseqno" IS '日期序號';
+COMMENT ON COLUMN "doc_docseqno"."date_" IS '日期';
+COMMENT ON COLUMN "doc_docseqno"."seqno" IS '序號';
+
+-- Doc：頁籤節點群組
+CREATE TABLE "doc_folderopen2gr" (
+    "categoryid" varchar(50) NOT NULL,
+    "nodeid" varchar(20) NOT NULL,
+    "group_" varchar(20) NOT NULL
+);
+CREATE UNIQUE INDEX "doc_fdropn2grkey1" ON "doc_folderopen2gr" ("categoryid", "nodeid", "group_");
+COMMENT ON TABLE "doc_folderopen2gr" IS '頁籤節點群組';
+COMMENT ON COLUMN "doc_folderopen2gr"."categoryid" IS '頁籤';
+COMMENT ON COLUMN "doc_folderopen2gr"."nodeid" IS '節點';
+COMMENT ON COLUMN "doc_folderopen2gr"."group_" IS '群組';
+
+-- Doc：頁籤節點使用者
+CREATE TABLE "doc_folderrights" (
+    "categoryid" varchar(50) NOT NULL,
+    "nodeid" varchar(20) NOT NULL,
+    "user_" varchar(16) NOT NULL
+);
+CREATE UNIQUE INDEX "doc_fdrrightskey1" ON "doc_folderrights" ("categoryid", "nodeid", "user_");
+COMMENT ON TABLE "doc_folderrights" IS '頁籤節點使用者';
+COMMENT ON COLUMN "doc_folderrights"."categoryid" IS '頁籤';
+COMMENT ON COLUMN "doc_folderrights"."nodeid" IS '節點';
+COMMENT ON COLUMN "doc_folderrights"."user_" IS '使用者';
+
+-- Doc：上傳履歷
+CREATE TABLE "doc_uploadhistory" (
+    "categoryid" varchar(50) DEFAULT ' ' NOT NULL,
+    "nodeid" varchar(20) DEFAULT ' ' NOT NULL,
+    "itemno" varchar(20) DEFAULT ' ' NOT NULL,
+    "seq_no" integer NOT NULL,
+    "version" integer DEFAULT 0 NOT NULL,
+    "uploadby" varchar(16) DEFAULT ' ' NOT NULL,
+    "uploaddate" char(8) DEFAULT '00000000' NOT NULL,
+    "uploadtime" char(6) DEFAULT '000000' NOT NULL,
+    "filename" varchar(256) DEFAULT ' ' NOT NULL,
+    "extname" varchar(10) DEFAULT ' ' NOT NULL,
+    "remark" varchar(256) DEFAULT ' ' NOT NULL,
+    "description" varchar(256) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "doc_upldhtrykey1" ON "doc_uploadhistory" ("categoryid", "nodeid", "itemno", "seq_no");
+COMMENT ON TABLE "doc_uploadhistory" IS '上傳履歷';
+COMMENT ON COLUMN "doc_uploadhistory"."categoryid" IS '頁籤';
+COMMENT ON COLUMN "doc_uploadhistory"."nodeid" IS '節點';
+COMMENT ON COLUMN "doc_uploadhistory"."itemno" IS '案號';
+COMMENT ON COLUMN "doc_uploadhistory"."seq_no" IS '序號';
+COMMENT ON COLUMN "doc_uploadhistory"."version" IS '版本';
+COMMENT ON COLUMN "doc_uploadhistory"."uploadby" IS '上傳者';
+COMMENT ON COLUMN "doc_uploadhistory"."uploaddate" IS '上傳日期';
+COMMENT ON COLUMN "doc_uploadhistory"."uploadtime" IS '上傳時間';
+COMMENT ON COLUMN "doc_uploadhistory"."filename" IS '檔名';
+COMMENT ON COLUMN "doc_uploadhistory"."extname" IS '副檔名';
+COMMENT ON COLUMN "doc_uploadhistory"."remark" IS '備註';
+COMMENT ON COLUMN "doc_uploadhistory"."description" IS '說明';
+
+-- Doc：JobStatus
+CREATE TABLE "doc_jobstatus" (
+    "objid" varchar(50) DEFAULT ' ' NOT NULL,
+    "status" varchar(1) DEFAULT ' ' NOT NULL,
+    "createdby" varchar(16) DEFAULT ' ' NOT NULL,
+    "createddate" char(8) DEFAULT ' ' NOT NULL,
+    "createtime" char(6) DEFAULT '000000' NOT NULL,
+    "modifyedby" varchar(16) DEFAULT ' ' NOT NULL,
+    "modifyeddate" char(8) DEFAULT '00000000' NOT NULL,
+    "modifyedtime" char(8) DEFAULT '00000000' NOT NULL,
+    "checkedby" varchar(16) DEFAULT ' ' NOT NULL,
+    "checkeddate" char(8) DEFAULT '00000000' NOT NULL,
+    "checkedtime" char(6) DEFAULT '000000' NOT NULL,
+    "level_" smallint DEFAULT 0 NOT NULL,
+    "accesscode" varchar(6) DEFAULT ' '
+);
+CREATE UNIQUE INDEX "jobstatuskey1" ON "doc_jobstatus" ("objid");
+COMMENT ON TABLE "doc_jobstatus" IS 'JobStatus';
+
+-- Doc：Status
+CREATE TABLE "doc_status" (
+    "seqno" varchar(1) DEFAULT ' ' NOT NULL,
+    "jobstatus" varchar(10) DEFAULT ' ' NOT NULL
+);
+CREATE UNIQUE INDEX "statuskey1" ON "doc_status" ("seqno");
+CREATE UNIQUE INDEX "statuskey2" ON "doc_status" ("jobstatus");
+COMMENT ON TABLE "doc_status" IS 'Status';
+
+-- Doc：UserObj
+CREATE TABLE "doc_userobj" (
+    "userid" varchar(20) DEFAULT ' ' NOT NULL,
+    "objid" varchar(50) DEFAULT ' ' NOT NULL,
+    "read_" smallint DEFAULT 0 NOT NULL,
+    "modify_" smallint DEFAULT 0 NOT NULL,
+    "delete_" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "userobjkey1" ON "doc_userobj" ("userid", "objid");
+CREATE UNIQUE INDEX "userobjkey2" ON "doc_userobj" ("objid", "userid");
+COMMENT ON TABLE "doc_userobj" IS 'UserObj';
+COMMENT ON COLUMN "doc_userobj"."read_" IS 'Read';
+COMMENT ON COLUMN "doc_userobj"."modify_" IS 'Modify';
+COMMENT ON COLUMN "doc_userobj"."delete_" IS 'Delete';
+
+-- Doc：GroupObj
+CREATE TABLE "doc_groupobj" (
+    "groupid" varchar(10) DEFAULT ' ' NOT NULL,
+    "objid" varchar(50) DEFAULT ' ' NOT NULL,
+    "read_" smallint DEFAULT 0 NOT NULL,
+    "modify_" smallint DEFAULT 0 NOT NULL,
+    "delete_" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "doc_groupobjkey1" ON "doc_groupobj" ("groupid", "objid");
+CREATE UNIQUE INDEX "doc_groupobjkey2" ON "doc_groupobj" ("objid", "groupid");
+COMMENT ON TABLE "doc_groupobj" IS 'GroupObj';
+COMMENT ON COLUMN "doc_groupobj"."read_" IS 'Read';
+COMMENT ON COLUMN "doc_groupobj"."modify_" IS 'Modify';
+COMMENT ON COLUMN "doc_groupobj"."delete_" IS 'Delete';
+
+-- Doc：GroupUsers
+CREATE TABLE "doc_groupusers" (
+    "groupid" varchar(10) DEFAULT ' ' NOT NULL,
+    "userid" varchar(20) NOT NULL
+);
+CREATE UNIQUE INDEX "doc_groupuserskey1" ON "doc_groupusers" ("groupid", "userid");
+CREATE UNIQUE INDEX "doc_groupuserskey2" ON "doc_groupusers" ("userid", "groupid");
+COMMENT ON TABLE "doc_groupusers" IS 'GroupUsers';
+
+-- Doc：個人限定
+CREATE TABLE "doc_allowedsize" (
+    "userid" varchar(20) NOT NULL,
+    "allowedsize" numeric(10,0) DEFAULT 500 NOT NULL,
+    "allowcategory" smallint DEFAULT 0 NOT NULL,
+    "allownode" smallint DEFAULT 0 NOT NULL,
+    "allowdoc" smallint DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX "doc_allowedsizekey1" ON "doc_allowedsize" ("userid");
+COMMENT ON TABLE "doc_allowedsize" IS '個人限定';
+COMMENT ON COLUMN "doc_allowedsize"."userid" IS '使用者';
+COMMENT ON COLUMN "doc_allowedsize"."allowedsize" IS '上傳總容量';
+COMMENT ON COLUMN "doc_allowedsize"."allowcategory" IS '允許新增頁籤';
+COMMENT ON COLUMN "doc_allowedsize"."allownode" IS '允許新增文件夾';
+COMMENT ON COLUMN "doc_allowedsize"."allowdoc" IS '允許新增文件';
+
+-- UserFunctionality：ExcelSelectedColummns (Local)
+CREATE TABLE "excelselectedcolummnslocal" (
+    "tasksequence" numeric(10,0) NOT NULL,
+    "variableindex" integer NOT NULL,
+    "variablename" varchar(30) NOT NULL,
+    "variabledisplayname" varchar(30) NOT NULL,
+    "selected" smallint NOT NULL,
+    "date_as_monthyear" smallint NOT NULL,
+    "columnorder" smallint NOT NULL
+);
+CREATE UNIQUE INDEX "excelselectedcolummnsindex" ON "excelselectedcolummnslocal" ("tasksequence", "columnorder", "variableindex");
+COMMENT ON TABLE "excelselectedcolummnslocal" IS 'ExcelSelectedColummns (Local)';
+COMMENT ON COLUMN "excelselectedcolummnslocal"."date_as_monthyear" IS 'date as monthYear';
+
+-- UserFunctionality：ExcelInfo (Local)
+CREATE TABLE "excelinfolocal" (
+    "tasksequence" numeric(10,0) NOT NULL,
+    "plot_by_row" smallint NOT NULL,
+    "chart_type" smallint NOT NULL
+);
+CREATE UNIQUE INDEX "excelinfolocalindex" ON "excelinfolocal" ("tasksequence");
+COMMENT ON TABLE "excelinfolocal" IS 'ExcelInfo (Local)';
+COMMENT ON COLUMN "excelinfolocal"."plot_by_row" IS 'Plot by Row';
+COMMENT ON COLUMN "excelinfolocal"."chart_type" IS 'Chart Type';

@@ -4,9 +4,13 @@
 
 | 專案 | 內容 | 說明文件 |
 |---|---|---|
-| `Project.xml` | 共用函式庫，68 支程式 | 本文件「專案盤點」 |
-| `Files.xml` | 資料表元件（`Files.ecf`），864 個資料表／View | 本文件「資料表結構」 |
-| `EDB.xml` | 電子表單簽核引擎，141 支程式、95 個資料表 | [`EDB.md`](EDB.md) |
+| `Project.xml`（專案名稱 Utility） | 共用函式庫（`Utility.ecf`），68 支程式 | 本文件「專案盤點」 |
+| `Files.xml` | 資料表元件（`Files.ecf`；在 PLC 專案裡叫「PLC」元件），864 個資料表／View | 本文件「資料表結構」 |
+| `EDB.xml` | 電子表單簽核引擎（`edb.ecf`），141 支程式、95 個資料表 | [`EDB.md`](EDB.md) |
+| `Doc.xml` | 文件管理系統，63 支程式、24 個資料表 | 待整理（與 repo 的 Flask 系統功能相近） |
+| `PLC.xml` | 製袋機台資料、倉庫儲位、感測器監控，53 支程式 | 待整理 |
+| `UserFunctionality.xml` | Magic 內建的 Range／Locate／排序／列印畫面，44 支程式 | 網頁版以篩選、排序、匯出功能取代，不需逐支轉換 |
+| （尚未提供）`Chart.ecf` | PLC 呼叫的圖表元件 | — |
 
 ## 檔案
 
@@ -18,7 +22,7 @@
 | `test_amount_to_chinese.py` | 範例的測試 |
 | `magic_schema.py` | 從一個或多個專案 XML 產生合併後的 PostgreSQL 建表 SQL 和欄位字典 |
 | `test_magic_schema.py` | 型態對應規則的測試 |
-| `schema/postgresql.sql` | 產生的建表 SQL（Files＋EDB 合併：253 個資料表、522 個索引） |
+| `schema/postgresql.sql` | 產生的建表 SQL（Files＋EDB＋Doc 合併：269 個資料表） |
 | `schema/tables.csv`、`schema/columns.csv` | 資料表清單與欄位字典，可直接用 Excel 開 |
 | `schema/conflicts.csv` | 兩個專案對同一個欄位定義不一致的清單 |
 
@@ -28,11 +32,14 @@
 python magic_dump.py Project.xml                     # 列出 68 支程式
 python magic_dump.py Project.xml 14                  # 展開第 14 支程式
 python magic_dump.py Project.xml 10 --with Files.xml # 用到 Files 元件的資料表時，加上它才能顯示欄位名稱
+python magic_dump.py PLC.xml --out dump/plc --with Files.xml --with EDB.xml --with Project.xml
+                                                     # 整個專案每支程式輸出成一個檔案，另附 index.txt
 ```
 
 `magic_dump.py` 輸出的讀法：
 
 - `BM: Real 單據流水號   Locate: E` — 變數代號、種類、欄位名稱，後面是 Init／Range／Locate 條件。
+  （Virtual／Parameter 依任務欄位清單的「位置」對應名稱，Real 依資料表欄位的 id 對應。）
 - `Link Query 單據屬性 (A01)` — Magic 表名和 Oracle 實體名稱；Link 種類有 Query、Write、Create、Inner Join、Left Outer Join。
 - `=== 刪除流程  [Batch, Mode=Delete]` — 任務的初始模式。**Delete 模式的 Batch 任務會刪除所有符合 Range 的記錄**，
   就算沒有任何邏輯行也一樣。
@@ -79,8 +86,8 @@ python magic_dump.py Project.xml 10 --with Files.xml # 用到 Files 元件的資
 ## 資料表結構
 
 ```
-python magic_schema.py schema/ Files.xml EDB.xml                  # 保留原本的儲存方式（預設）
-python magic_schema.py schema/ Files.xml EDB.xml --native-types   # 日期/時間/邏輯改用 date/time/boolean
+python magic_schema.py schema/ Files.xml EDB.xml Doc.xml PLC.xml UserFunctionality.xml                 # 保留原本的儲存方式（預設）
+python magic_schema.py schema/ Files.xml EDB.xml Doc.xml PLC.xml UserFunctionality.xml --native-types  # 日期/時間/邏輯改用 date/time/boolean
 ```
 
 `Files` 和 `EDB` 連到同一個 **Oracle** 資料庫，所以合併成一份結構：同名資料表的欄位取聯集，
@@ -92,7 +99,7 @@ python magic_schema.py schema/ Files.xml EDB.xml --native-types   # 日期/時�
 | A01.AccMonth（帳月） | `numeric(10,0)` | `char(8)` | `char(8)`（EDB 有 SqlType） |
 | A50.TaxRate（公司稅率） | `varchar(1)` | `numeric(3,1)` | `varchar(1)`，**請用 Oracle 確認** |
 
-EDB 另外新增 58 個資料表，合併後共 253 個資料表、522 個索引（其中 129 個是主鍵）。
+EDB 另外新增 58 個資料表、Doc 新增 16 個（PLC、UserFunctionality 只有本機暫存表），合併後共 269 個資料表。
 
 `Files.xml` 共 864 個 DataObject：
 

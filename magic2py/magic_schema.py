@@ -128,7 +128,7 @@ def main_source(objs):
         src = d.get('data_source') or ''
         if val(d, 'ObjectType') == 'T' and d.findall('Columns/Column') and not src.startswith(LOCAL_SOURCES):
             counts[src] = counts.get(src, 0) + 1
-    return max(counts, key=counts.get)
+    return max(counts, key=counts.get) if counts else None   # 只有本機暫存表的專案
 
 
 def parse_project(objs, native, project):

@@ -6,9 +6,12 @@
 用法：
     python magic_dump.py EDB.xml                     # 列出所有程式的清單與統計
     python magic_dump.py EDB.xml 7                   # 輸出第 7 支程式的完整邏輯
-    python magic_dump.py Project.xml 3 --with Files.xml
-        # 程式用到其他元件（.ecf）的資料表時，加上該元件的專案 XML 才能顯示欄位名稱
+    python magic_dump.py EDB.xml --out dump/edb      # 每支程式輸出成一個檔案（含 index.txt 清單）
+    python magic_dump.py PLC.xml 5 --with Files.xml --with EDB.xml --with Project.xml
+        # 程式用到其他元件（.ecf）的資料表或程式時，加上該元件的專案 XML 才能顯示欄位與程式名稱
 """
+import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -45,17 +48,32 @@ class Project:
         self.tasks = self.root.findall('ProgramsRepository/Programs/Task')
         self.objs = self.root.findall('DataSourceRepository/DataObjects/DataObject')
         # 其他元件專案的資料表，用 Public 名稱對應
-        public = {}
+        public, programs = {}, {}
         for p in extra:
-            for d in ET.parse(p).getroot().findall('DataSourceRepository/DataObjects/DataObject'):
-                if d.get('Public'):
-                    public.setdefault(d.get('Public'), d)
-        self.comp = {}
+            root = ET.parse(p).getroot()
+            pname = val(root, 'ProjectProperties/ProjectData/ProjectName') or p
+            for d in root.findall('DataSourceRepository/DataObjects/DataObject'):
+                for key in (d.get('Public'), d.get('name')):
+                    if key:
+                        public.setdefault((pname.lower(), key), d)
+                        public.setdefault((None, key), d)
+            for i, t in enumerate(root.findall('ProgramsRepository/Programs/Task'), 1):
+                pub = val(t, 'Header/Public')
+                if pub:
+                    programs[(pname.lower(), pub)] = f'{pname} #{i} {t.find("Header").get("Description")}'
+        # 元件的資料表、程式：LNK/DB、TaskID 的 obj 是元件清單中的「位置」（第幾個），不是 id
+        self.comp, self.comp_prg = {}, {}
         for ci, c in enumerate(self.root.findall('ComponentsRepository/Components/Component'), 1):
-            # LNK/DB 的 obj 是元件資料表的「位置」（第幾個），不是 id
+            # 元件名稱和專案名稱不一定相同（例如 Files.ecf 在 PLC 專案裡叫 PLC），用 .ecf 檔名對應
+            cab = re.search(r'([^\\/%]*)\.ecf$', val(c, 'CABINET_FILE') or '', re.I)
+            cab = cab.group(1) if cab else c.get('name')
             for pos, o in enumerate(c.findall('ComponentDataObjects/Object'), 1):
                 pub = val(o, 'PublicName')
-                self.comp[(str(ci), str(pos))] = Table(f'{c.get("name")}:{pub}', public.get(pub))
+                obj = public.get((cab.lower(), pub)) or public.get((None, pub))
+                self.comp[(str(ci), str(pos))] = Table(f'{c.get("name")}:{pub}', obj)
+            for pos, o in enumerate(c.findall('ComponentPrograms/Object'), 1):
+                pub = val(o, 'PublicName')
+                self.comp_prg[(str(ci), str(pos))] = programs.get((cab.lower(), pub)) or f'{c.get("name")}:{pub}'
 
     def table(self, db):
         """db 是含 obj/comp 屬性的元素（LNK/DB、Information/DB）。"""
@@ -69,7 +87,9 @@ class Project:
             return Table(self.objs[i - 1].get('name'), self.objs[i - 1])
         return Table(f'obj{obj}')
 
-    def program_name(self, obj):
+    def program_name(self, obj, comp=None):
+        if comp and comp != '-1':
+            return self.comp_prg.get((comp, obj), f'comp{comp}.prg{obj}')
         i = int(obj)
         return self.tasks[i - 1].find('Header').get('Description') if 1 <= i <= len(self.tasks) else f'prg{obj}'
 
@@ -80,23 +100,30 @@ class Task:
         self.task = task
         self.parent = parent
         self.exprs = [x.get('val') for x in task.findall('Expressions/Expression/ExpSyntax')]
-        self.cols = {c.get('id'): c.get('name') for c in task.findall('Resource/Columns/Column')}
+        # Virtual／Parameter 的 Column 是任務欄位清單的「位置」；Real 的 Column 則是資料表欄位的 id
+        self.cols = {str(i): c.get('name') for i, c in enumerate(task.findall('Resource/Columns/Column'), 1)}
         self.main = project.table(task.find('Information/DB'))
         self.subtasks = task.findall('Task')
         self.tables = []   # Select 所屬資料表的堆疊：主資料表、Link…
 
     def user_event(self, ev):
-        """使用者事件名稱：PublicObject obj 是該任務 EVNT 清單的位置，找不到就往上層找。"""
+        """使用者事件名稱：PublicObject obj 是 EVNT 清單的位置。
+
+        Parent 表示事件定義在哪一層：沒有 = 目前任務、n = 往上 n 層、32768 = Main Program。
+        """
         obj = val(ev, 'PublicObject', 'obj')
         if not obj:
             return ''
-        t = self
-        while t is not None:
+        parent = int(val(ev, 'Parent') or 0)
+        if parent == 32768:
+            evnts = self.p.tasks[0].findall('EVNT')
+        else:
+            t = self
+            for _ in range(parent):
+                t = t.parent if t.parent is not None else t
             evnts = t.task.findall('EVNT')
-            if int(obj) <= len(evnts) and evnts[int(obj) - 1].get('DESC'):
-                return evnts[int(obj) - 1].get('DESC')
-            t = t.parent
-        return f'#{obj}'
+        i = int(obj)
+        return evnts[i - 1].get('DESC') if 0 < i <= len(evnts) else f'#{obj}'
 
     def event(self, ev):
         et = val(ev, 'EventType')
@@ -205,6 +232,8 @@ class Task:
                 target = self.subtasks[obj - 1].find('Header').get('Description') \
                     if 0 < obj <= len(self.subtasks) else f'subtask{obj}'
                 target = f'[子任務] {target}'
+            elif val(op, 'TaskID', 'comp') not in (None, '-1'):
+                target = f'[元件] {self.p.program_name(str(obj), val(op, "TaskID", "comp"))}'
             else:
                 target = f'[程式 #{obj}] {self.p.program_name(obj)}'
             return f'{pad}Call {target}({self.args(op)}){self.cond(op)}'
@@ -264,23 +293,42 @@ class Task:
         return out
 
 
+def safe_name(s):
+    return re.sub(r'[\\/:*?"<>|\s]+', '_', (s or '').strip()).strip('_.')[:60] or 'noname'
+
+
 def main():
     args = sys.argv[1:]
-    extra = []
+    extra, out = [], None
     while '--with' in args:
         i = args.index('--with')
         extra.append(args[i + 1])
         del args[i:i + 2]
+    if '--out' in args:
+        i = args.index('--out')
+        out = args[i + 1]
+        del args[i:i + 2]
     project = Project(args[0], extra)
-    if len(args) > 1:
-        i = int(args[1])
-        print('\n'.join(Task(project, project.tasks[i - 1]).dump()))
-        return
+    listing = []
     for i, t in enumerate(project.tasks, 1):
         h = t.find('Header')
-        print(f'{i:3} {TASK_TYPE.get(val(h, "TaskType"), "?"):<11} '
-              f'lines={len(list(t.iter("LogicLine"))):<4} subtasks={len(list(t.iter("Task"))) - 1:<2} '
-              f'{h.get("Description")}')
+        listing.append(f'{i:3} {TASK_TYPE.get(val(h, "TaskType"), "?"):<11} '
+                       f'lines={len(list(t.iter("LogicLine"))):<4} subtasks={len(list(t.iter("Task"))) - 1:<2} '
+                       f'{h.get("Description")}')
+    if out:
+        os.makedirs(out, exist_ok=True)
+        for i, t in enumerate(project.tasks, 1):
+            name = f'{i:03d}_{safe_name(t.find("Header").get("Description"))}.txt'
+            with open(os.path.join(out, name), 'w', encoding='utf-8') as f:
+                f.write('\n'.join(Task(project, t).dump()) + '\n')
+        with open(os.path.join(out, 'index.txt'), 'w', encoding='utf-8') as f:
+            f.write('\n'.join(listing) + '\n')
+        print(f'{len(project.tasks)} 支程式輸出到 {out}')
+    elif len(args) > 1:
+        i = int(args[1])
+        print('\n'.join(Task(project, project.tasks[i - 1]).dump()))
+    else:
+        print('\n'.join(listing))
 
 
 if __name__ == '__main__':
