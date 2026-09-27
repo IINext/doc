@@ -1,0 +1,81 @@
+﻿資料表,欄位,差異,Oracle,Magic
+A01,DUEDATE,型態類別不同,CHAR → char(8),"numeric(10,0)"
+A01,ACCMONTH,型態類別不同,CHAR → char(8),"numeric(10,0)"
+A50,TAXRATE,型態類別不同,"NUMBER → numeric(3,1)",varchar(1)
+CALENDARSN,DATE_,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+DOC_KMTREE,FOLDER,型態類別不同,RAW → bytea,smallint
+FIL0012,登入密碼,Magic 沒有定義這個欄位,VARCHAR2,
+FIL0012,建立日,Oracle 沒有這個欄位,,timestamp(0)
+FIL0013,建立日,Oracle 沒有這個欄位,,timestamp(0)
+FIL0017,最後更新時,型態類別不同（Magic 為推測值）,CHAR → char(6),timestamp(0)
+FIL0018,建立日,Oracle 沒有這個欄位,,timestamp(0)
+FIL0019,建立日,Oracle 沒有這個欄位,,timestamp(0)
+FIL0020,製程代碼,Magic 沒有定義這個欄位,VARCHAR2,
+FIL0020,製程,Oracle 沒有這個欄位,,varchar(100)
+FIL0023,建立日,Oracle 沒有這個欄位,,timestamp(0)
+FIL0037,製程單號,Magic 沒有定義這個欄位,VARCHAR2,
+FIL0037,製程代碼,Oracle 沒有這個欄位,,varchar(10)
+FIL0040,標籤列印日期,Magic 沒有定義這個欄位,CHAR,
+FIL004B,鐵條重量,Magic 沒有定義這個欄位,NUMBER,
+FIL004B,條鐵重量,Oracle 沒有這個欄位,,"numeric(13,3)"
+FIL004J,應入庫日時,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL004J,應入庫日期,Oracle 沒有這個欄位,,char(6)
+FIL004JA,應入庫日時,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL004JA,應入庫日期,Oracle 沒有這個欄位,,char(6)
+FIL004JA,IP位址2,Oracle 沒有這個欄位,,varchar(40)
+FIL004K,應入庫日時,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL004K,應入庫日期,Oracle 沒有這個欄位,,char(6)
+FIL004KA,冷鏈入庫日期,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,冷鏈入庫時間,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,冷鏈入庫時間2,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,冷鏈出庫日期,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,冷鏈出庫時間,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,冷鏈出庫時間2,Magic 沒有定義這個欄位,CHAR,
+FIL004KA,應入庫日時,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL004KA,冷鏈條件,Magic 沒有定義這個欄位,NVARCHAR2,
+FIL004KA,冷鏈狀態,Magic 沒有定義這個欄位,VARCHAR2,
+FIL004KA,熟成入庫日期,Oracle 沒有這個欄位,,char(8)
+FIL004KA,熟成入庫時間,Oracle 沒有這個欄位,,char(6)
+FIL004KA,熟成入庫時間2,Oracle 沒有這個欄位,,char(6)
+FIL004KA,熟成出庫日期,Oracle 沒有這個欄位,,char(8)
+FIL004KA,熟成出庫時間,Oracle 沒有這個欄位,,char(6)
+FIL004KA,熟成出庫時間2,Oracle 沒有這個欄位,,char(6)
+FIL004KA,應入庫日期,Oracle 沒有這個欄位,,char(6)
+FIL004KA,熟成條件,Oracle 沒有這個欄位,,varchar(100)
+FIL004KA,熟成狀態,Oracle 沒有這個欄位,,varchar(1)
+FIL1014,最後更新日期,Oracle 沒有這個欄位,,char(6)
+FIL1014A,最後更新日期,Oracle 沒有這個欄位,,char(6)
+FIL3009H,記錄日期,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL300D,0,Oracle 沒有這個欄位,,smallint
+TMP10002,生產日期,型態類別不同（Magic 為推測值）,DATE → timestamp(0),char(8)
+FIL0040_B,,Oracle 沒有這個資料表,,0.異動單刪除註記
+FIL004M,,Oracle 沒有這個資料表,,0.原物料異動明細(批號)
+HRFIL0011,,Oracle 沒有這個資料表,,員工附檔一
+HRFIL0012,,Oracle 沒有這個資料表,,員工學歷
+HRFIL0013,,Oracle 沒有這個資料表,,員工經歷
+HRFIL0014,,Oracle 沒有這個資料表,,員工獎懲
+HRFIL0015,,Oracle 沒有這個資料表,,員工職務
+HRFIL0016,,Oracle 沒有這個資料表,,員工訓練
+HRFIL0017,,Oracle 沒有這個資料表,,代理人
+HRFIL0018,,Oracle 沒有這個資料表,,最高權限
+HRFIL1003,,Oracle 沒有這個資料表,,加班設定
+HRFIL1004,,Oracle 沒有這個資料表,,工作職稱
+HRFIL1005,,Oracle 沒有這個資料表,,年假設定
+HRFIL1006,,Oracle 沒有這個資料表,,員工每月出勤
+HRFIL1008,,Oracle 沒有這個資料表,,員工每月職務薪資
+HRFIL1020,,Oracle 沒有這個資料表,,離職其他清單
+HRFIL1021,,Oracle 沒有這個資料表,,離職檔案清單
+HRFIL1022,,Oracle 沒有這個資料表,,離職文件清單
+HRFIL1023,,Oracle 沒有這個資料表,,離職工作清單
+HRFIL1024,,Oracle 沒有這個資料表,,離職財產歸還
+HRFIL1025,,Oracle 沒有這個資料表,,離職執行
+HRFIL1026,,Oracle 沒有這個資料表,,離職單
+HRFIL1034,,Oracle 沒有這個資料表,,出勤調整單
+HRFIL1041,,Oracle 沒有這個資料表,,人事異動
+HRFIL1051,,Oracle 沒有這個資料表,,人資申請
+HRFIL1061,,Oracle 沒有這個資料表,,帳號申請
+HRFIL1071,,Oracle 沒有這個資料表,,勞健保對照表
+HRFIL1081,,Oracle 沒有這個資料表,,薪資扣繳稅額表
+INQUERY,,Oracle 沒有這個資料表,,網站詢價
+MOBILE0001,,Oracle 沒有這個資料表,,xxMobile.Server.AP log
+MOBILE0002,,Oracle 沒有這個資料表,,xxMobile.Server.DataSync

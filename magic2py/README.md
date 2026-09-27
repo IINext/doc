@@ -24,15 +24,22 @@ Magic xpa 3.3，共 8 個專案，都連到同一個 **Oracle** 資料庫（原�
 | 檔案 | 說明 |
 |---|---|
 | `magic_dump.py` | 解析 Magic 專案 XML，輸出可讀的程式清單（資料表、欄位、Logic Unit、Operation、Expression、SQL 都會展開） |
-| `magic_schema.py` | 從多個專案 XML 產生合併後的 PostgreSQL 建表 SQL 和欄位字典 |
-| `magic_views.py` | 從專案 XML 抽出 Oracle View 定義，轉成 PostgreSQL 並實際建立驗證 |
+| `export_oracle_dictionary.sql` | 在能連到 Oracle 的電腦上用 SQL*Plus 執行，匯出資料字典（欄位、View、索引、筆數） |
+| `oracle_schema.py` | **以 Oracle 資料字典為準**產生 PostgreSQL 建表 SQL，並和 Magic 定義比對 |
+| `magic_views.py` | 把 Oracle View 轉成 PostgreSQL，並實際建立、查詢驗證 |
 | `oracle_compat.sql` | Oracle 相容函數（`TO_NUMBER`、`SUBSTR`、`DBMS_LOB`、日期加減天數…），建立 View 前先執行 |
+| `magic_schema.py` | 從 Magic 專案 XML 整理資料表與欄位字典（Magic 名稱、Picture 等），供 `oracle_schema.py` 補說明 |
 | `amount_to_chinese.py` | 範例：Utility #14「數值金額轉換中文(含元整)」轉成 Python |
 | `HOME.md`、`EDB.md` | 各專案的盤點與分析 |
-| `schema/postgresql.sql` | 建表 SQL（276 個資料表） |
-| `schema/postgresql_views.sql` | 轉換後的 View（631 個，依相依順序） |
-| `schema/oracle_views.sql` | 原始 Oracle View 定義（663 個） |
-| `schema/tables.csv`、`columns.csv`、`views.csv`、`conflicts.csv` | 資料表清單、欄位字典、View 轉換結果、定義衝突，可直接用 Excel 開 |
+| `schema/postgresql.sql` | 建表 SQL（282 個資料表，以 Oracle 為準） |
+| `schema/postgresql_views.sql` | 轉換後的 View（659 個，依相依順序） |
+| `schema/oracle_views.sql` | Oracle 原始 View 定義（683 個） |
+| `schema/oracle_tables.csv` | Oracle 資料表分類與筆數 |
+| `schema/oracle_vs_magic.csv` | Oracle 和 Magic 定義不同的地方 |
+| `schema/views.csv` | 每個 View 的轉換結果與錯誤 |
+| `schema/tables.csv`、`columns.csv`、`conflicts.csv`、`magic_postgresql.sql` | 依 Magic 定義整理的資料（參考用） |
+
+CSV 檔都可以直接用 Excel 開。
 
 測試：`python -m unittest`（需要 `pip install sqlglot`；驗證 View 另外需要 `psycopg2`）
 
@@ -63,79 +70,91 @@ python magic_dump.py Home.xml --out dump/home --with Files.xml --with EDB.xml --
 Real 依資料表欄位的 **id** 對應；元件的資料表、程式、事件都依元件清單中的**位置**對應，
 元件事件的 `comp` 是「有事件的元件」中的第幾個。
 
-## 資料表結構：magic_schema.py
+## 資料表結構
+
+### 1. 匯出 Oracle 資料字典
+
+在能連到 Oracle 的電腦上執行（只讀取資料字典，不會修改資料）：
+
+```
+set NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+sqlplus apk@app @export_oracle_dictionary.sql
+```
+
+會產生 `oracle_columns.csv`、`oracle_views.csv`、`oracle_indexes.csv`、`oracle_tables.csv`。
+
+### 2. 產生建表 SQL
 
 ```
 python magic_schema.py schema/ Files.xml EDB.xml Doc.xml Home.xml PLC.xml UserFunctionality.xml Chart.xml \
-    --db Default --db Master                  # 保留原本的儲存方式（建議）
-... --native-types                            # 日期/時間/邏輯改用 date/time/boolean
+    --db Default --db Master              # 先整理 Magic 的中文名稱與預設值
+python oracle_schema.py schema/ oracle_columns.csv oracle_indexes.csv oracle_tables.csv
 ```
 
-同一個 Oracle 在各專案裡的資料來源名稱不同（`Default`、`Master`），用 `--db` 全部列出。
-同名資料表合併成一個：欄位取聯集，定義不一致時採用有寫明 Oracle 型態（SqlType）的那一邊，衝突記錄在 `conflicts.csv`：
+欄位型態、NOT NULL、索引、主鍵都**以 Oracle 為準**；欄位的中文說明（Magic 欄位名稱）和預設值取自 Magic 定義。
 
-| 資料表.欄位 | Files | EDB | 採用 |
+Oracle（APK schema）的現況：
+
+| 分類 | 資料表 | 筆數 | 處理 |
 |---|---|---|---|
-| A01.DueDate（簽核期限） | `numeric(10,0)` | `char(8)` | `char(8)`（EDB 有 SqlType） |
-| A01.AccMonth（帳月） | `numeric(10,0)` | `char(8)` | `char(8)`（EDB 有 SqlType） |
-| A50.TaxRate（公司稅率） | `varchar(1)` | `numeric(3,1)` | `varchar(1)`，**請用 Oracle 確認** |
+| 業務資料表 | 282 | 約 1,434 萬 | 產生 DDL |
+| Magic 暫存表 `TEMP_數字` | 3,931 | 約 1.5 萬 | 不產生；Magic 執行時建立後沒有清掉，現行 Oracle 也可以清理 |
 
-合併結果：276 個資料表（Files 195、EDB 58、Doc 14、Home 9），131 個有主鍵，另有 433 個索引。
-已在 PostgreSQL 16 上實際建立，兩種模式都沒有錯誤。
+最大的表：FIL300B（168 萬筆）、FIL0040（130 萬）、FIL0041（119 萬）、FIL004A（95 萬）、FIL1018（87 萬）。
 
-### 型態對應
+型態對應：
 
-| Magic | 預設 | `--native-types` |
+| Oracle | PostgreSQL |
+|---|---|
+| `VARCHAR2`、`NVARCHAR2` | `varchar(n)`（字數） |
+| `CHAR`、`NCHAR` | `char(n)`；Magic 的字串日期 `YYYYMMDD` 是 `char(8)` |
+| `NUMBER(p,0)` | `smallint`（p ≤ 4）、`integer`（p ≤ 9）、`bigint`（p ≤ 18） |
+| `NUMBER(p,s)`、`NUMBER` | `numeric(p,s)`、`numeric` |
+| `DATE` | `timestamp(0)`（Oracle 的 DATE 含時間） |
+| `NCLOB`、`CLOB` | `text` |
+| `BLOB`、`RAW` | `bytea` |
+
+**日期保持 `char(8)` 字串**：Oracle 的 View 大量把日期當字串處理（例如 `SUBSTR(日期, 1, 6)` 取年月），
+改成 `date` 型態的話很多 View 要改寫。
+
+### Oracle 和 Magic 定義的差異（`oracle_vs_magic.csv`）
+
+| 差異 | 數量 | 說明 |
 |---|---|---|
-| Alpha / Unicode | `varchar(n)`（Unicode 的長度是 Size ÷ 2） | 同左 |
-| Numeric 整數 | `smallint` / `integer` | 同左 |
-| Numeric 小數 | `numeric(p,s)`，依 Oracle SqlType 或 Picture | 同左 |
-| Date（字串 YYYYMMDD） | `char(8)` | `date` |
-| Time（字串 HHMMSS） | `char(6)` | `time` |
-| Date＋Time 對應同一個 Oracle DATE 欄位 | `timestamp(0)` | 同左 |
-| Logical | `smallint`（0/1） | `boolean` |
-| BLOB | Unicode → `text`、Binary → `bytea` | 同左 |
+| Oracle 沒有這個資料表 | 31 | 大多是 HR 相關表（學歷、經歷、人事異動、離職單…，`HRFIL00xx`／`HRFIL10xx`），可能在其他 schema 或資料庫，**請確認** |
+| Oracle 沒有這個欄位 | 24 | Magic 定義了但 Oracle 沒有，例如 `FIL004KA` 的熟成相關欄位（Oracle 裡是冷鏈欄位） |
+| Magic 沒有定義這個欄位 | 13 | 例如 `FIL0020.製程代碼`、`FIL004KA` 的冷鏈欄位、`FIL0012.登入密碼` |
+| 型態類別不同 | 12 | 其中 8 個是之前推測的型態，7 個猜錯（實際是 Oracle `DATE`）；`A01.DueDate` 實際是 `CHAR(8)`、`A50.TaxRate` 是 `NUMBER(3,1)` |
 
-**建議用預設模式**：Oracle 的 View 大量把日期當字串處理（例如 `SUBSTR(日期, 1, 6)` 取年月），
-預設模式下 631 個 View 可以建立，`--native-types` 只剩 399 個。
+另外還有這些情況：
 
-### 轉換時發現的情況
-
-- **日期＋時間共用一個欄位**：像「最後更新日／最後更新時」，Magic 用兩個欄位對應 Oracle 的同一個 `DATE` 欄位。
-  PostgreSQL 合併成一個 `timestamp(0)`，欄位註解會寫出兩個 Magic 欄位名稱。
-- **運算欄位 23 個**：Magic 欄位的 DB 名稱其實是 SQL 運算式（例如 `異動日期||異動時間`、子查詢），
-  不建立實體欄位，轉換程式時要改寫成查詢或 Python 計算。`columns.csv` 備註欄有標示。
-- **50 個欄位的型態是推測的**（Files 38、Home 10、EDB 2）：Magic 沒有寫 Oracle 的實際型態，`columns.csv` 備註欄標示「推測」。
-- **Magic 沒定義、但 Oracle 裡有的欄位**：例如 `FIL0020.製程代碼`、`冷鏈狀態`，是從 View 的錯誤發現的。
-- **145 個資料表沒有主鍵**：Python 的 ORM（例如 SQLAlchemy）需要主鍵，轉換到這些表時要決定用哪個唯一索引或補流水號。
-- 所有名稱的英文字母轉成小寫（Oracle 不分大小寫；`FIL0010` → `fil0010`、`Y牢固完整度` → `y牢固完整度`），中文不變。
-
-後兩項都需要 Oracle 的實際欄位清單來確認：
-
-```sql
-SELECT table_name, column_name, data_type, data_length, data_precision, data_scale, nullable
-FROM user_tab_columns
-ORDER BY table_name, column_id;
-```
+- **日期＋時間共用一個欄位**：像「最後更新日／最後更新時」，Magic 用兩個欄位對應 Oracle 的同一個 `DATE` 欄位，
+  PostgreSQL 是一個 `timestamp(0)`，程式要分開取日期和時間。
+- **Magic 的運算欄位**：有些 Magic 欄位的 DB 名稱其實是 SQL 運算式（例如 `異動日期||異動時間`、子查詢），
+  轉換程式時要改寫成查詢或 Python 計算，`columns.csv` 備註欄有標示。
+- **有主鍵的資料表不多**：Python 的 ORM（例如 SQLAlchemy）需要主鍵，轉換到沒有主鍵的表時要決定用哪個唯一索引。
+- **兩個遞減索引略過**：`MESSAGES.MESGKEY7`、`WKFIL2022.WKFIL2022KEY04` 的欄位是運算式，匯出資料看不到，要另外查 `user_ind_expressions`。
+- 所有名稱的英文字母轉成小寫（Oracle 不分大小寫；`FIL0010` → `fil0010`），中文不變。
 
 ### 搬資料要注意
 
-- 預設模式下欄位型態和 Oracle 幾乎一致，可以直接搬。
-- Magic 的 Alpha 欄位在 Oracle 可能帶尾端空白，搬到 `varchar` 時建議 `rtrim`，並確認程式比對時不依賴空白。
+- 欄位型態和 Oracle 一致，可以直接搬；筆數約 1,434 萬，最大的表 168 萬筆。
+- Magic 的字串欄位在 Oracle 可能帶尾端空白，搬到 `varchar` 時建議 `rtrim`，並確認程式比對時不依賴空白。
 
 ## View：magic_views.py
 
-Home 的「View」資料夾裡有用 SQL 建立 View 的程式，這支工具把所有 `CREATE VIEW` 抽出來（每個 View 取最後修改的版本），
-用 [sqlglot](https://github.com/tobymao/sqlglot) 轉成 PostgreSQL，再到資料庫實際建立：
-
 ```
 psql -f schema/postgresql.sql -f oracle_compat.sql      # 先建資料表和相容函數（請用測試資料庫）
-python magic_views.py schema/ Home.xml Doc.xml EDB.xml Files.xml --pg "host=... dbname=... user=..." --smoke
+python magic_views.py schema/ oracle_views.csv --columns oracle_columns.csv \
+    --pg "host=... dbname=... user=..." --smoke
 ```
 
+用 [sqlglot](https://github.com/tobymao/sqlglot) 把 Oracle 語法轉成 PostgreSQL，再到資料庫實際建立。
+Oracle 的 `user_views` 只有查詢本身，View 的欄位名稱從 `oracle_columns.csv` 補上。
 `--smoke` 會在每個資料表放一筆測試資料、實際查詢每個 View，抓出建立時看不出來的執行錯誤，最後 ROLLBACK。
+（沒有 Oracle 匯出時，也可以改給 Magic 專案 XML，從 Home「View」資料夾的程式裡抽出定義。）
 
-**結果：663 個 View，631 個（95%）建立成功並通過實際查詢。**
+**結果：Oracle 的 683 個 View，659 個（96.5%）建立成功並通過實際查詢。**
 
 除了 sqlglot 本身的轉換，工具另外處理了這些 Oracle 和 PostgreSQL 行為不同的地方，確保**結果一致**，而不只是能執行：
 
@@ -149,16 +168,19 @@ python magic_views.py schema/ Home.xml Doc.xml EDB.xml Files.xml --pg "host=... 
 | 同一層 FROM 兩個表用相同別名 | PostgreSQL 不允許 | 依實際欄位判斷歸屬後改名 |
 | `FORCE EDITIONABLE`、`"APK".` 前綴、全形括號、`GROUP BY` 常數 | PostgreSQL 不支援 | 移除或修正，`views.csv` 的「自動修正」欄有記錄 |
 
-**需要人工處理的 21 個**（另有 11 個是依賴它們而連帶失敗），`views.csv` 有每一個的錯誤訊息：
+**未完成的 24 個**：
+
+- 4 個在 **Oracle 裡本身就已失效**（欄位型態是 `UNDEFINED`）：VIEWFIL4049A、VIEWFIL41012、VIEWFIL41013、VIEWFIL4105，不需要轉。
+- 4 個是依賴下面這些 View 而連帶失敗，修好後就會成功。
+- **16 個需要人工改寫**，`views.csv` 有每一個的錯誤訊息：
 
 | 原因 | View |
 |---|---|
-| Oracle 舊式外部連結 `(+)` | ViewOfObjFlow、ViewOfObjFlowSigned（EDB 的簽核流程查詢，重要） |
-| 階層查詢 `CONNECT BY`／`START WITH` | ViewDoc_ObjPath、ViewFILR014（改寫成 `WITH RECURSIVE`） |
-| Magic 沒定義的欄位 | ViewFIL0012、ViewFIL4090（製程代碼）、ViewFIL404C4AB、ViewFIL404C5A_V1（冷鏈狀態） |
-| 文字和數字混用（Oracle 會自動轉型） | ViewFIL2061M、ViewFIL4040、ViewFIL404B1A、ViewFIL404C1A、ViewFIL404ED、ViewFIL404FC、ViewFIL404GC |
-| 重複別名但無法自動判斷 | ViewFIL404DC、ViewFILE033 |
-| 其他 | ViewFIL1024B（`ROWID`）、VIEWFILM018H（`IGNORE NULLS`）、ViewFIL4A4C（FULL JOIN 條件）、ViewLog001（執行時組出的動態 SQL） |
+| Oracle 舊式外部連結 `(+)` | VIEWOFOBJFLOW、VIEWOFOBJFLOWSIGNED（EDB 的簽核流程查詢，重要） |
+| 階層查詢 `CONNECT BY`／`START WITH` | VIEWDOC_OBJPATH、VIEWFILR014（改寫成 `WITH RECURSIVE`） |
+| 文字和數字混用（Oracle 會自動轉型） | VIEWFIL2061M、VIEWFIL4040、VIEWFIL404B1A、VIEWFIL404C1A、VIEWFIL404ED、VIEWFIL404FC、VIEWFIL404GC |
+| 重複別名但無法自動判斷 | VIEWFIL404DC、VIEWFILE033 |
+| 其他 | VIEWFIL1024B（`ROWID`）、VIEWFILM018H（`IGNORE NULLS`）、VIEWFIL4A4C（FULL JOIN 條件） |
 
 ## Utility 盤點
 
@@ -188,7 +210,7 @@ python magic_views.py schema/ Home.xml Doc.xml EDB.xml Files.xml --pg "host=... 
 
 ## 下一步
 
-1. 用 Oracle 的 `user_tab_columns` 查詢結果，確認推測的欄位型態和 Magic 沒定義的欄位。
-2. 處理需要人工改寫的 21 個 View。
-3. 挑一種單據（例如 Home 的 H01 請假申請單）從畫面、資料到送簽完整轉一次，建立共用寫法。
+1. 確認那 31 個 HR 相關資料表在哪個 schema 或資料庫。
+2. 處理需要人工改寫的 16 個 View。
+3. 用 repo 的 Flask 系統，把 Home 的 H01 請假申請單從畫面、資料到送簽完整轉一次，建立共用寫法。
 4. 在 Magic 上跑幾組 #14 的結果，填進 `test_amount_to_chinese.py` 的 `MAGIC_VERIFIED`。

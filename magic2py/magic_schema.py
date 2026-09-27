@@ -1,7 +1,7 @@
 """Magic xpa 資料表定義 → PostgreSQL。
 
 讀取一個或多個 Magic xpa 專案 XML 的 DataSourceRepository，合併後產生：
-    postgresql.sql   CREATE TABLE / 索引 / 註解
+    magic_postgresql.sql  CREATE TABLE / 索引 / 註解（依 Magic 定義；有 Oracle 資料字典時改用 oracle_schema.py）
     tables.csv       資料表清單（含 View、本機資料來源的表）
     columns.csv      欄位字典（Magic 型態、Picture、對應的 PostgreSQL 型態）
     conflicts.csv    同一個資料表在不同專案裡定義不一致的欄位
@@ -326,7 +326,7 @@ def main():
     header += [f'-- 注意：{w}' for w in warnings]
     header += [f'-- 型態衝突：{c["實體名稱"]}.{c["DB 欄位"]} {c["專案 1"]}={c["型態 1"]}、'
                f'{c["專案 2"]}={c["型態 2"]}，採用 {c["採用"]}（{c["原因"]}）' for c in conflicts]
-    with open(os.path.join(out, 'postgresql.sql'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(out, 'magic_postgresql.sql'), 'w', encoding='utf-8') as f:
         f.write('\n'.join(header + [''] + render(merged)))
     write_csv(os.path.join(out, 'tables.csv'), tables)
     write_csv(os.path.join(out, 'columns.csv'), columns)

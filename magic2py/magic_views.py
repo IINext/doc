@@ -4,7 +4,8 @@ Magic 程式裡用 SQL 指令建立 View（例如 Home 專案的「View」資料
 這支工具把所有 CREATE VIEW 抽出來，每個 View 取最後修改的版本，轉成 PostgreSQL 語法。
 
 用法：
-    python magic_views.py schema/ Home.xml [其他專案.xml ...]
+    python magic_views.py schema/ oracle_views.csv --columns oracle_columns.csv   # Oracle 實際的定義（建議）
+    python magic_views.py schema/ Home.xml [其他專案.xml ...]      # 沒有 Oracle 匯出時，從 Magic 程式抽出
     python magic_views.py schema/ Home.xml --pg "host=/tmp port=5432 dbname=t user=postgres"
     python magic_views.py schema/ Home.xml --pg "..." --smoke   # 另外放測試資料實際查詢每個 View
 
@@ -65,6 +66,49 @@ def outside_strings(sql, fn):
     """只對字串常數以外的部分套用 fn。"""
     parts = re.split(r"('(?:[^']|'')*')", sql)
     return ''.join(p if i % 2 else fn(p) for i, p in enumerate(parts))
+
+
+def view_columns(path):
+    """oracle_columns.csv 中每個 View 的欄位（依順序），以及在 Oracle 已失效的 View（欄位型態 UNDEFINED）。"""
+    import csv
+    import io
+    with open(path, encoding='utf-8-sig', newline='') as f:
+        rows = list(csv.DictReader(io.StringIO(f.read().lstrip('\r\n'))))
+    cols, invalid = {}, set()
+    for r in rows:
+        if r['OBJECT_TYPE'] == 'VIEW':
+            cols.setdefault(r['TABLE_NAME'].upper(), []).append((int(r['COLUMN_ID']), r['COLUMN_NAME']))
+            if r['DATA_TYPE'] == 'UNDEFINED':
+                invalid.add(r['TABLE_NAME'].upper())
+    return {k: [c for _, c in sorted(v)] for k, v in cols.items()}, invalid
+
+
+def extract_oracle_csv(path, columns_path=None):
+    """讀 export_oracle_dictionary.sql 匯出的 oracle_views.csv（Oracle 裡實際的 View 定義）。
+
+    View 的 SQL 內含換行與引號，SQL*Plus 的 CSV 用一般 CSV 讀取會出錯，
+    這裡改用「行首的 "名稱","」切開每一筆。
+    user_views 只有查詢本身，View 的欄位名稱另外從 oracle_columns.csv 取得（columns_path）。
+    """
+    cols, invalid = view_columns(columns_path) if columns_path else ({}, set())
+    with open(path, encoding='utf-8-sig', newline='') as f:
+        text = f.read()
+    starts = list(re.finditer(r'(?:^|\r\n|\r|\n)"([^"\r\n]+)","', text))
+    latest = {}
+    for i, m in enumerate(starts):
+        name = m.group(1)
+        if name == 'VIEW_NAME':
+            continue
+        end = starts[i + 1].start() if i + 1 < len(starts) else len(text)
+        body = text[m.end():end].rstrip()
+        body = body[:-1] if body.endswith('"') else body
+        body = body.replace('""', '"').replace('\r\r\n', '\n').replace('\r\n', '\n')
+        names = cols.get(name.upper())
+        collist = ' (' + ', '.join('"' + c.replace('"', '""') + '"' for c in names) + ')' if names else ''
+        latest[name.upper()] = {'view': name, 'sql': f'CREATE VIEW "{name}"{collist} AS {body}',
+                                'project': 'Oracle', 'prg': '', 'stamp': (0, 0, 0),
+                                'desc': 'user_views' + ('（在 Oracle 已失效）' if name.upper() in invalid else '')}
+    return latest
 
 
 def preclean(sql, notes=None):
@@ -281,7 +325,14 @@ def main():
         del argv[i:i + 2]
     out, paths = argv[0], argv[1:]
     os.makedirs(out, exist_ok=True)
-    latest = extract(paths)
+    # oracle_views.csv（Oracle 實際的定義）優先；否則從 Magic 專案 XML 抽出
+    columns_path = None
+    if '--columns' in paths:
+        i = paths.index('--columns')
+        columns_path = paths[i + 1]
+        del paths[i:i + 2]
+    csvs = [p for p in paths if p.lower().endswith('.csv')]
+    latest = extract_oracle_csv(csvs[0], columns_path) if csvs else extract(paths)
     converted, report, notes = {}, {}, {}
     for key, v in sorted(latest.items()):
         notes[key] = []
@@ -306,14 +357,16 @@ def main():
     with open(os.path.join(out, 'oracle_views.sql'), 'w', encoding='utf-8') as f:
         f.write('-- 由 magic_views.py 抽出的 Oracle View 定義（每個 View 最後修改的版本），請勿手動修改\n\n')
         for key, v in sorted(latest.items()):
-            f.write(f'-- {v["project"]} #{v["prg"]} {v["desc"]}\n{v["sql"].rstrip()};\n\n')
+            src = f'{v["project"]} #{v["prg"]} {v["desc"]}' if v['prg'] else f'{v["project"]} {v["desc"]}'
+            f.write(f'-- {src}\n{v["sql"].rstrip()};\n\n')
     with open(os.path.join(out, 'postgresql_views.sql'), 'w', encoding='utf-8') as f:
         f.write('-- 由 magic_views.py 從 Oracle 定義轉換，請勿手動修改\n'
                 '-- 執行前先執行 postgresql.sql 和 oracle_compat.sql\n'
                 + ('-- 只包含已在 PostgreSQL 實際建立成功的 View，依相依順序排列\n' if dsn else '') + '\n')
         for key in order:
             v = latest[key]
-            f.write(f'-- {v["project"]} #{v["prg"]} {v["desc"]}\n{converted[key]};\n\n')
+            src = f'{v["project"]} #{v["prg"]} {v["desc"]}' if v['prg'] else f'{v["project"]} {v["desc"]}'
+            f.write(f'-- {src}\n{converted[key]};\n\n')
     for key, r in report.items():
         r['自動修正'] = '；'.join(notes.get(key, []))
     rows = [report[k] for k in sorted(report)]

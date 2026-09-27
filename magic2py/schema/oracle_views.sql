@@ -1,7 +1,24 @@
 -- 由 magic_views.py 抽出的 Oracle View 定義（每個 View 最後修改的版本），請勿手動修改
 
--- Home #73 ViewA01_19.PDF修改異動比較
-CREATE OR REPLACE VIEW ViewA01_19_01 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "IEWFILF015" ("工站代碼", "製令單號", "填表日") AS (
+SELECT 
+	D.工站代碼,	
+	E.廠客品號 製令單號,
+	min(C.填表日) 填表日
+FROM 
+	FIL0041 A 
+	INNER JOIN FIL0040 E ON A.單別 = E.單據類別 AND A.單號 = E.單據編號 AND A.序號 = E.單據序號
+	INNER JOIN FIL0030 C ON A.單別 = C.單據類別 AND A.單號 = C.單據編號
+	INNER JOIN FIL0031 D ON A.單別 = D.單別 AND A.單號 = D.單號
+WHERE
+	A.單別 = 'F11'
+GROUP BY 
+	D.工站代碼,	
+	E.廠客品號);
+
+-- Oracle user_views
+CREATE VIEW "VIEWA01_19_01" ("SERIAL_NUM", "主檔異動日時", "PDF新增日時") AS (                                                                                                                                                SELECT 
 	A.Serial_Num,
 	trim(A.異動日期)||trim(A.異動時間) 主檔異動日時,
 	nvl(trim(B.PDF新增日期),' ')||nvl(trim(B.PDF新增時間),' ') PDF新增日時
@@ -9,8 +26,8 @@ FROM
 	A01 A
 	Left JOIN A01_19 B ON A.Serial_Num= B.Serial_Num);
 
--- DOC #59 ViewDoc_KMTree
-CREATE VIEW ViewDoc_KMTree AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_KMTREE" ("OBJID", "CATEGORY", "NODEID", "SUBJECT", "USER_", "OPEN2TRAN") AS ( 
 SELECT 	
 	DOC_KMTree.ObjID,  
 	DOC_KMTree.Category, 
@@ -25,8 +42,8 @@ WHERE
 	DOC_KMTree.Category = DOC_KMCategory.Category
 );
 
--- DOC #58 ViewDoc_ObjPath
-CREATE VIEW ViewDoc_ObjPath AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_OBJPATH" ("CATEGORY", "NODEID", "PATH") AS ( 
 SELECT 	Distinct
 	M.Category,
 	M.NodeID,
@@ -40,8 +57,8 @@ From DOC_KMTree M
 
 );
 
--- DOC #60 ViewDoc_OwnerTotalSize
-CREATE VIEW ViewDoc_OwnerTotalSize AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_OWNERTOTALSIZE" ("USERID", "TOTALSIZE", "ALLOWSIZE", "ALLOWCATEGORY", "ALLOWNODE", "ALLOWDOC") AS ( 
 SELECT 	DOC_AllowedSize.UserID, 
 		Round(sum(nvl(DOC_DocByTool.BlobSize,0))/1000000,2) TotalSize,
 		avg(nvl(DOC_AllowedSize.AllowedSize,0)) AllowSize,
@@ -53,8 +70,8 @@ LEFT JOIN DOC_DocByTool ON DOC_DocByTool.CreatedBy= DOC_AllowedSize.UserID AND D
 GROUP BY  DOC_AllowedSize.UserID
 );
 
--- DOC #56 ViewDoc_ShareFolder
-CREATE VIEW ViewDoc_ShareFolder AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_SHAREFOLDER" ("CREATEDBY", "PARENTID", "文件夾", "USERID") AS ( 
 SELECT  Distinct 
 	CAST(' ' as nvarchar2(100)) CreatedBy, 
 	CAST(' ' as nvarchar2(100)) ParentID, 
@@ -140,8 +157,8 @@ WHERE
 	LENGTH(trim(B.NodeID))>8	
 );
 
--- DOC #57 ViewDoc_ShareObj
-CREATE VIEW ViewDoc_ShareObj AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_SHAREOBJ" ("文件夾", "USERID", "OBJID", "讀取", "修改", "刪除") AS ( 
 
 
 SELECT 
@@ -158,8 +175,8 @@ FROM
 	Inner Join DOC_JobStatus D On A.ObjID=D.ObjID and D.Status='U'
 );
 
--- DOC #55 ViewDoc_UserRights
-CREATE VIEW ViewDoc_UserRights AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWDOC_USERRIGHTS" ("USERID", "OBJID", "READ_", "MODIFY_", "DELETE_") AS ( 
 SELECT 	A.UserID,
 	A.ObjID,
 	Decode(sum(A.Read_),0,0,1) Read_, 
@@ -267,8 +284,8 @@ GROUP BY
 	A.ObjID
 );
 
--- Home #1662 ViewFIL0010.功能表選單
-CREATE VIEW ViewFIL0010 AS (                                                                                                                                                              SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0010" ("員工編號", "員工姓名", "序號", "父階", "子階", "NODE", "說明", "CABINET", "PUBLICNAME", "啟用", "隱藏", "不需授權", "權限組合", "單據類別", "流程代碼", "特殊管制", "人事管制", "權限", "最後更新者", "最後更新日", "使用者隱藏", "獨立執行", "密碼執行") AS (                                                                                                                                                              SELECT 
 	A.員工編號, 
 	A.員工姓名, 
 	A.序號, 
@@ -301,8 +318,8 @@ FROM
 	) A
 	LEFT JOIN FIL1007 B ON B.員工編號 = A.員工編號 and B.PublicName = A.PublicName);
 
--- Home #1663 ViewFIL0011.公司代碼檔
-CREATE VIEW ViewFIL0011 AS (                                                                                                                                                              SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0011" ("代碼", "名稱", "廠商編號", "全名", "簡稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                              SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 廠商編號,
@@ -318,8 +335,8 @@ FROM
 WHERE 
 	A.代碼類別 = '公司別');
 
--- Home #1664 ViewFIL0012.部門代碼檔
-CREATE or replace VIEW ViewFIL0012 AS (                                                                                                                                                              SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0012" ("部門編號", "部門名稱", "英文名稱", "出勤津貼", "停止使用", "所屬公司", "所屬公司名稱", "上階部門", "製程代碼", "製程名稱", "上階部門名稱", "權責單位", "流水編號", "公司流水編號", "更新者姓名", "最後更新日") AS (                                                                                                                                                              SELECT 
 	A.部門編號, 
 	nvl(B.名稱,' ')||'.'||A.部門名稱 部門名稱, 
 	A.英文名稱,
@@ -344,8 +361,8 @@ FROM
 	LEFT JOIN A30 D ON D.GROUPID = A.部門編號
 	);
 
--- Home #1665 ViewFIL0012014.部門廠商檔
-CREATE or replace VIEW ViewFIL0012014 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0012014" ("編號", "名稱", "排序", "類別") AS (  
 SELECT 
 	A.部門編號 編號, 
 	nvl(B.名稱,' ')||'.'||A.部門名稱 名稱, 
@@ -367,8 +384,8 @@ FROM
 WHERE
 	A.廠客 = '1');
 
--- Home #1666 ViewFIL0013.通知記錄檔
-CREATE VIEW ViewFIL0013 AS (                                                                                                                                                SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0013" ("寄件者", "收件者", "序號", "主旨", "本文", "提醒日", "寄件日", "寄件者姓名", "收件者姓名", "發送", "已讀", "隱藏", "通知", "簽核系統") AS (                                                                                                                                                SELECT
 	A.寄件者,
 	A.收件者,
 	A.序號,
@@ -388,8 +405,8 @@ FROM
 	LEFT JOIN FIL0010 B ON A.寄件者 = B.員工編號
 	LEFT JOIN FIL0010 C ON A.收件者 = C.員工編號);
 
--- Home #1667 ViewFIL0014.修改記錄檔
-CREATE VIEW ViewFIL0014 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0014" ("單據類別", "單據編號", "序號", "說明", "狀態", "修改人", "修改人姓名", "修改日") AS (                                                                                                                                                SELECT 
 	A.單據類別,
 	A.單據編號,
 	A.序號,
@@ -402,8 +419,8 @@ FROM
 	FIL1018 A
 	LEFT JOIN FIL0010 B ON A.修改人 = B.員工編號);
 
--- Home #1668 ViewFIL0015.使用記錄檔
-CREATE VIEW ViewFIL0015 AS (                                         
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0015" ("對應編號", "員工編號", "西元日期", "時間", "記錄內容", "裝置位址") AS (                                         
 Select
 	對應編號,
 	員工編號,
@@ -420,8 +437,8 @@ GROUP BY
 	員工編號
 );
 
--- Home #1669 ViewFIL0020.單據類別檔
-CREATE VIEW ViewFIL0020 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0020" ("單據類別", "單據名稱", "排序", "產品庫存參數", "材料庫存參數", "採購應付參數", "代工應付參數", "應收參數", "成本參數", "ISO", "單據管理員代號", "單據管理員姓名", "單據管理員代號二", "單據管理員姓名二", "單據管理員代號三", "單據管理員姓名三", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 單據類別, 
 	A.代碼名稱 單據名稱, 
 	A.文字參數 排序,
@@ -450,8 +467,8 @@ FROM
 WHERE 
 	A.代碼類別 = '單據類別');
 
--- Home #1671 ViewFIL0030.簽核狀態檔
-Create view ViewFIL0030 AS (                                                                                                                                                                    SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0030" ("簽核編號", "簽核系統", "單號", "發函人", "發函人姓名", "發函日期", "發函時間", "簽核群組", "最後簽核流程順序", "簽核狀態", "刪除退回人", "刪除退回日", "發函代理人", "代理人姓名") AS (                                                                                                                                                                    SELECT 
 	A.簽核編號, 
 	A.簽核系統, 
 	A.單號, 
@@ -481,8 +498,8 @@ WHERE
 			A1.單號 = A.單號
 	));
 
--- Home #1672 ViewFIL0040.簽核發送檔
-Create view ViewFIL0040 AS (                                                                                                                                                                    SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0040" ("簽核編號", "簽核系統", "單據類別", "單據名稱", "單據編號", "表單狀態", "發函人", "發函人姓名", "發函日期", "發函時間", "簽核群組", "最後簽核流程順序", "簽核狀態", "刪除退回人", "撤回人姓名", "刪除退回日", "發函代理人", "發函代理人姓名", "單據日期", "備註", "填表人", "填表人姓名") AS (                                                                                                                                                                    SELECT 
 	A.簽核編號, 
 	A.簽核系統, 
 	B.單據類別, 
@@ -515,8 +532,8 @@ FROM
 	LEFT JOIN FIL0010 G ON G.員工編號 = A.發函代理人
 	LEFT JOIN FIL0010 H ON H.員工編號 = B.填表人);
 
--- Home #1673 ViewFIL0050.簽核流程檔
-Create view ViewFIL0050 AS (                                                                                                                                                       SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0050" ("簽核編號", "序號", "簽核人", "簽核人姓名", "簽核流程順序", "執行碼", "執行碼說明", "執行日", "執行時", "意見", "移轉簽核人", "移轉簽核人姓名", "代簽人", "代簽人姓名", "GUID") AS (                                                                                                                                                       SELECT 
 	A.簽核編號, 
 	A.序號, 
 	A.簽核人, 
@@ -542,8 +559,8 @@ FROM
 	LEFT JOIN FIL0010 C ON C.員工編號 = A.移轉簽核人
 	LEFT JOIN FIL0010 D ON D.員工編號 = A.代簽人);
 
--- Home #1674 ViewFIL0051.簽核附件檔
-Create view ViewFIL0051 AS (                                                                                                                                                       SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0051" ("簽核系統", "單號", "序號", "附件", "格式", "說明", "大小", "關鍵字", "客供類別", "客供名稱", "附件類別", "附件類別名稱", "最後更新者", "更新者姓名", "最後更新日", "建檔人姓名", "建檔日", "建檔時") AS (                                                                                                                                                       SELECT
 	A.簽核系統,
 	A.單號,
 	A.序號,
@@ -568,8 +585,8 @@ FROM
 	LEFT JOIN FIL0010 C ON A.建檔人 = C.員工編號
 );
 
--- Home #1675 ViewFIL0052.附件查詢檔
-Create view ViewFIL0052 AS (                                                                                                                                                       SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0052" ("簽核系統", "單據類別", "單據編號", "單據名稱", "訂單號碼", "單據日期", "廠客編號", "廠客全名", "序號", "附件", "格式", "說明", "大小", "關鍵字", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                       SELECT
 	A.簽核系統,
 	B.單據類別,
 	A.單號 單據編號,
@@ -594,8 +611,8 @@ FROM
 	LEFT JOIN FIL0010 C ON A.更新者 = C.員工編號
 	LEFT JOIN FIL0011 E ON B.廠客編號 = E.編號);
 
--- Home #1676 ViewFIL0053.附件依年度
-Create view ViewFIL0053 AS (                                                                                                                                                       SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0053" ("父階", "子階", "年度", "廠商", "單號", "附件", "說明") AS (                                                                                                                                                       SELECT
 	A.父階,
 	A.子階,
 	A.年度,
@@ -655,8 +672,8 @@ FROM
 			ViewFIL0052 A
 	) A);
 
--- Home #1677 ViewFIL0054.簽核附件大小
-Create or Replace view ViewFIL0054 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0054" ("簽核系統", "單號", "檔案大小", "筆數") AS (
 SELECT
 	A.簽核系統,
 	A.單號,
@@ -671,8 +688,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1678 ViewFIL0055.備註附檔二筆數
-Create or Replace view ViewFIL0055 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0055" ("單別", "單號", "材料序號", "屬性", "筆數") AS (
 SELECT
 	A.製令單別 單別,
 	A.製令單號 單號,
@@ -690,8 +707,8 @@ GROUP BY
 	A.屬性
 );
 
--- Home #1679 ViewFIL0081.簽核人員檔
-Create view ViewFIL0081 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL0081" ("簽核系統", "組別", "簽核順序", "員工編號", "員工姓名", "開始日期", "結束日期", "類別", "啟用", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.簽核系統,
 	A.組別,
 	A.簽核順序,
@@ -709,9 +726,8 @@ FROM
 	LEFT JOIN FIL0010 B ON B.員工編號 = A.員工編號
 	LEFT JOIN FIL0010 C ON C.員工編號 = A.最後更新者);
 
--- Home #1748 ViewFIL1010.員工資料檔
-Create or Replace view ViewFIL1010 as 
-(SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1010" ("員工編號", "員工姓名", "英文姓名", "公司代碼", "公司別", "出生日期", "就職日期", "離職日期", "聯絡電話", "EMAILADDRESS", "郵遞區號", "通訊地址", "個人密碼", "部門編號", "部門名稱", "身份證號", "停止使用", "主管編號", "主管姓名", "職稱代碼", "職位名稱", "開放時間_起", "開放時間_迄", "內定工站一", "流水編號", "FLOWPOSI", "簽核職位", "SALARYPOSI", "班別代碼", "班別", "國籍", "薪資類別", "指定程式", "生產部門禁", "最後更新者", "更新者姓名", "最後更新日", "最後更新時") AS (SELECT
 	A.員工編號,
 	A.員工姓名,
 	A.英文姓名,
@@ -762,9 +778,8 @@ FROM
 	LEFT JOIN A40 I ON A.FLOWPOSI = I.SERIAL_NUM
 	);
 
--- Home #1749 ViewFIL1010A.員工資料檔
-Create or Replace view ViewFIL1010a as 
-(SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1010A" ("員工編號", "員工姓名", "公司別", "部門編號", "部門名稱", "流水編號", "班別", "國籍", "最後更新者", "更新者姓名", "最後更新日", "最後更新時") AS (SELECT
 	A.員工編號,
 	A.員工姓名,
 	nvl(F.名稱,' ') 公司別,
@@ -785,8 +800,8 @@ FROM
 	LEFT JOIN FIL0025 H ON H.代碼 = A.PARTY
 	);
 
--- Home #1750 ViewFIL1012.品號資料檔
-Create view ViewFIL1012 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1012" ("產品編號", "產品類別", "類別名稱", "物料大類", "大類名稱", "批號管理", "品名", "規格", "貨號", "版次", "單位代碼", "單位名稱", "包裝數量", "包裝單位", "代理人姓名", "新品號核准日期", "修改品名規格", "財務", "主要庫別", "庫別名稱", "採購單位", "採購單位名稱", "銷售單位", "銷售單位名稱", "稅則", "條碼編號", "庫存管理", "進價管制", "單價上限率", "售價管制", "重量", "超交管理", "超交率", "品號屬性", "品號屬性名稱", "低階碼", "備註", "標準途程品號", "次要供應商名稱", "採購人", "採購人姓名", "主供應商", "主供應商名稱", "補貨政策", "補貨政策名稱", "固定前置天數", "變動前置天數", "批量", "承認碼", "最低補量", "補貨倍量", "領用倍量", "轉撥倍量", "檢驗方式", "檢驗方式名稱", "領料代碼", "領料代碼名稱", "超收率", "標準進價", "標準售價", "零售價", "售價定價一", "營業稅率", "重量單位", "重量單位名稱", "熟成溫度1", "熟成時間1", "熟成溫度2", "熟成時間2", "英文品名", "材質結構1", "材質結構2", "材質結構3", "材質結構", "失效日期", "客戶成品尺寸", "客戶最終名稱", "安全存量", "密度", "進貨報價類別", "盤點日期", "盤存數量", "流水編號", "建立員工", "建立姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.產品編號,
 	A.產品類別,
 	decode(A.產品類別, 'F', '成品', 'M', '原料', 'N', '物料', 'O', '其他', '空白') 類別名稱,
@@ -896,8 +911,8 @@ FROM
 	LEFT JOIN ViewFIL3117 N ON N.代碼 = A.進貨報價類別
 	);
 
--- Home #1751 ViewFIL1013.廠別資料檔
-Create view ViewFIL1013 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1013" ("廠別編號", "廠別名稱", "建立員工", "建立姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.廠別編號,
 	A.廠別名稱,
 	A.建立員工,
@@ -911,8 +926,8 @@ FROM
 	LEFT JOIN FIL0010 B ON A.建立員工 = B.員工編號
 	LEFT JOIN FIL0010 C ON A.最後更新者 = C.員工編號);
 
--- Home #1752 ViewFIL1014.廠商資料檔
-Create view ViewFIL1014 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1014" ("編號", "全名", "簡稱", "關係人代號", "憑證列印格式", "統一編號", "核准狀況", "核准狀況名稱", "電話一", "電話二", "傳真", "EMAIL", "負責人", "聯絡人一", "聯絡人二", "聯絡人三", "採購人員", "採購人員姓名", "備註", "總公司", "總公司收款", "會計傳真", "交易項目", "區域代號", "區域名稱", "國別代號", "國別名稱", "廠商分類", "廠商分類名稱", "開業日", "資本額", "員工數", "交易幣別", "交易幣別名稱", "稅額計算方式", "稅額計算方式名稱", "單身多稅率", "採購單發送方式", "採購單發送方式名稱", "訂金比率", "允許分批交貨", "付款方式", "付款方式名稱", "付款條件", "付款條件名稱", "價格條件", "匯款總行", "匯款銀行", "銀行名稱", "匯款帳號", "交易條件", "交易條件名稱", "票據寄領", "票據寄領名稱", "稅別代碼", "稅別名稱", "發票聯數", "發票聯數名稱", "課稅別", "課稅別名稱", "應付帳款科目", "帳款科目名稱", "加工費用科目", "費用科目名稱", "應付票據科目", "票據科目名稱", "ABC等級", "交貨評等", "品質評等", "匯至EBC", "EBC申請代號", "聯絡郵區一", "聯絡地址一", "聯絡郵區二", "聯絡地址二", "帳單郵區一", "帳單地址一", "帳單郵區二", "帳單地址二", "隨貨附發票", "版次", "核准日期", "結帳日", "個月逢", "報價自動回覆", "報價聯絡人", "報價EMAIL", "驗報自動回覆", "驗報聯絡人", "驗報EMAIL", "設計圖自動回覆", "設計圖聯絡人", "設計圖EMAIL", "流水編號", "建立員工", "建立員工姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.編號,
 	A.全名,
 	A.簡稱,
@@ -1032,8 +1047,8 @@ FROM
 WHERE
 	A.廠客 = '1');
 
--- Home #1753 ViewFIL1015.客戶資料檔
-Create view ViewFIL1015 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1015" ("編號", "全名", "英文名稱", "簡稱", "關係人代號", "負責人", "聯絡人一", "聯絡人二", "電話一", "電話二", "分機一", "分機二", "傳真", "EMAIL", "統一編號", "資本額", "年營業額", "員工數", "總店號", "總公司請款", "發票號碼依總公司控管", "合約訂單是否歸屬總公司", "分店數", "交易幣別", "交易幣別名稱", "部門別", "部門名稱", "業務人員", "業務人員姓名", "收款業務", "收款業務姓名", "開業日", "歇業日", "登記郵區一", "登記地址一", "登記郵區二", "登記地址二", "發票郵區一", "發票地址一", "發票郵區二", "發票地址二", "送貨郵區一", "送貨地址一", "送貨郵區二", "送貨地址二", "帳單郵區一", "帳單收件人", "帳單地址一", "帳單郵區二", "帳單地址二", "信用額度依總公司控管", "信用額度管制", "信用額度", "可超出率", "訂單信用查核方式", "訂單信用查核方式名稱", "出貨通知信用查核方式", "出貨通知信用查核方式名稱", "銷貨信用查核方式", "銷貨信用查核方式名稱", "暫出單信用查核方式", "暫出單信用查核方式名稱", "付款條件", "付款條件名稱", "稅額計算方式", "稅額計算方式名稱", "單身多稅率", "隨貨附發票", "訂金比率", "價格條件", "稅別代碼", "稅別名稱", "發票聯數", "發票聯數名稱", "課稅別", "課稅別名稱", "通關方式", "通關方式名稱", "單據發送方式", "單據發送方式名稱", "收款方式", "收款方式名稱", "票據寄領", "票據寄領名稱", "客戶型態", "型態名稱", "區域代號", "區域名稱", "國別代號", "國別名稱", "取價順序", "折扣率", "折扣率預設", "匯至EBC", "EBC申請代號", "結帳日", "付款總行一", "付款銀行一", "銀行名稱一", "銀行帳號一", "付款總行二", "付款銀行二", "銀行名稱二", "銀行帳號二", "付款總行三", "付款銀行三", "銀行名稱三", "銀行帳號三", "帳款科目", "帳款科目名稱", "票據科目", "票據科目名稱", "備註", "運輸方式", "運輸方式名稱", "交易條件", "交易條件名稱", "文件郵區一", "文件地址一", "文件郵區二", "文件地址二", "版次", "核准日期", "報價自動回覆", "報價聯絡人", "報價EMAIL", "驗報自動回覆", "驗報聯絡人", "驗報EMAIL", "設計圖自動回覆", "設計圖聯絡人", "設計圖EMAIL", "流水編號", "建立員工", "建立員工姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.編號,
 	A.全名,
 	A.英文名稱,
@@ -1195,8 +1210,8 @@ FROM
 WHERE
 	A.廠客 = '2');
 
--- Home #1754 ViewFIL1015A.廠客聯絡人
-Create view ViewFIL1015A as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1015A" ("編號", "序號", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話") AS (SELECT
 	A.編號,
 	0 序號,
 	A.聯絡人一 聯絡人,
@@ -1240,8 +1255,8 @@ SELECT
 FROM
 	FIL0014 A);
 
--- Home #1755 ViewFIL1016.請假資料檔
-CREATE VIEW ViewFIL1016 AS (                                                                                                                                                SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1016" ("單據類別", "單據編號", "單據日期", "員工編號", "員工姓名", "請假日期_起", "請假日期_迄", "請假時間_起", "請假時間_迄", "假別代碼", "事由", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT
 	A.單據類別,
 	A.單據編號,
 	A.單據日期,
@@ -1265,8 +1280,8 @@ FROM
 	LEFT JOIN FIL0010 C ON A.最後更新者 = C.員工編號
 	LEFT JOIN FIL0010 D ON A.填表人 = D.員工編號);
 
--- Home #1756 ViewFIL1017.單位換算檔
-CREATE VIEW ViewFIL1017 AS (                                                                                                                                                SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1017" ("從", "從名稱", "到", "到名稱", "換算率", "正反向", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT
 	A.從, 
 	nvl(C.名稱, ' ') 從名稱,
 	A.到, 
@@ -1306,8 +1321,8 @@ FROM
 	LEFT JOIN ViewFIL3103 C ON A.從 = C.代碼
 	LEFT JOIN ViewFIL3103 D ON A.到 = D.代碼);
 
--- Home #1757 ViewFIL1018.科目代碼檔
-Create view ViewFIL1018 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1018" ("科目代碼", "科目名稱", "建立員工", "建立姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.科目代碼,
 	A.科目名稱,
 	A.建立員工,
@@ -1321,8 +1336,8 @@ FROM
 	LEFT JOIN FIL0010 B ON A.建立員工 = B.員工編號
 	LEFT JOIN FIL0010 C ON A.最後更新者 = C.員工編號);
 
--- Home #1758 ViewFIL1019.採購單價檔
-Create view ViewFIL1019 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1019" ("物料編號", "物料品名", "廠商編號", "廠商全名", "廠商料號", "幣別代碼", "幣別名稱", "價格條件", "採購單位", "單位名稱", "單價", "最大供量", "採購人", "採購人姓名", "建立員工", "建立姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.物料編號,
 	nvl(B.品名, ' ') 物料品名,
 	A.廠商編號,
@@ -1353,8 +1368,8 @@ FROM
 	LEFT JOIN FIL0010 Z1 ON A.建立員工 = Z1.員工編號
 	LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號);
 
--- Home #1759 ViewFIL1021.銀行資料檔
-Create view ViewFIL1021 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1021" ("銀行類別", "類別名稱", "總機構代碼", "總機構名稱", "分支機構代碼", "機構名稱", "地址", "電話", "負責人", "網址", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.銀行類別,
 	A.類別名稱,
 	A.總機構代碼,
@@ -1373,8 +1388,8 @@ FROM
 	LEFT JOIN FIL0010 B ON B.員工編號 = A.最後更新者
 	LEFT JOIN FIL0021 C ON C.總機構代碼 = A.總機構代碼 AND C.分支機構代碼 = ' ');
 
--- Home #1760 ViewFIL1022.匯率資料檔
-Create view ViewFIL1022 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1022" ("幣別代碼", "幣別名稱", "匯率日期", "現鈔匯率", "一般匯率", "出口匯率", "進口匯率", "啟用", "即期買入", "即期賣出", "平均匯率", "月平均匯率", "海關買進", "海關賣出", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.幣別代碼,
 	nvl(C.名稱, ' ') 幣別名稱,
 	A.匯率日期,
@@ -1397,8 +1412,8 @@ FROM
 	LEFT JOIN FIL0010 B ON B.員工編號 = A.最後更新者
 	LEFT JOIN ViewFIL3102 C ON C.代碼 = A.幣別代碼);
 
--- Home #1761 ViewFIL1022.月平均匯率a
-Create view ViewFIL1022a as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1022A" ("幣別代碼", "幣別名稱", "匯率月份", "即期買入", "即期賣出", "月平均匯率") AS (SELECT
 	A.幣別代碼,
 	nvl(B.名稱, ' ') 幣別名稱,
 	A.匯率月份,
@@ -1429,8 +1444,8 @@ FROM
 	) A
 	INNER JOIN ViewFIL3102 B ON A.幣別代碼 = B.代碼);
 
--- Home #1762 ViewFIL1023.費用項目檔
-Create view ViewFIL1023 as (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1023" ("費用代碼", "費用名稱", "幣別代碼", "幣別名稱", "金額", "稅額", "付款條件", "付款條件名稱", "建立員工", "建立姓名", "建立日期", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT
 	A.費用代碼,
 	A.費用名稱,
 	A.幣別代碼,
@@ -1452,8 +1467,8 @@ FROM
 	LEFT JOIN FIL0010 Z1 ON A.建立員工 = Z1.員工編號
 	LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號);
 
--- Home #1763 ViewFIL1024.條碼管理檔
-Create view ViewFIL1024 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024" ("條碼", "單別", "單號", "序號", "QRNO", "廠客", "全名", "日期", "料號", "品名", "規格", "幅寬", "接頭數", "數量", "單位", "公司代碼", "公司名稱", "採購單號", "進料單號", "庫別", "庫別名稱", "入料", "驗收倉", "製令單別", "製令單號", "廠商批號", "廠商規格", "庫存異動數", "類別", "製造日期", "批次匯入", "臨時編號", "總批號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.條碼,
 	A.單別,
@@ -1515,8 +1530,8 @@ FROM
 	LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號
 	);
 
--- Home #1764 ViewFIL1024A.條碼原料入出主檔
-Create or Replace view ViewFIL1024a AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024A" ("條碼") AS (
 select distinct 
 	條碼 
 from 
@@ -1526,8 +1541,8 @@ where
 	來源 <> ' '
 );
 
--- Home #1765 ViewFIL1024B.條碼異動履歷
-Create or Replace view ViewFIL1024B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024B" ("條碼", "異動數量", "來源", "唯一值", "單別", "單號", "序號", "最後更新日") AS (
 SELECT 
 	A.條碼,
 	A.異動數量,
@@ -1759,8 +1774,8 @@ FROM
 	INNER JOIN FIL0043 B ON B.條碼 = A.條碼	
 );
 
--- Home #1766 ViewFIL1024C.條碼庫存數量
-Create or Replace view ViewFIL1024C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024C" ("條碼", "庫存數量") AS (
 SELECT 
 	A.條碼,
 	SUM(A.異動數量) 庫存數量
@@ -1770,8 +1785,8 @@ GROUP BY
 	A.條碼
 );
 
--- Home #1767 ViewFIL1024D.條碼簡檔
-Create or Replace view ViewFIL1024D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024D" ("條碼", "廠客", "廠客全名", "日期", "料號", "品名", "規格", "單位", "廠商批號", "廠商規格", "轉換後條碼", "製造日期", "驗收倉", "庫存異動數", "單別", "單號", "序號", "製令單別", "製令單號", "採購單號", "進料單號", "填表人", "填表人姓名", "填表日") AS (
 SELECT 
 	A.條碼,
 	A.廠客,
@@ -1810,8 +1825,8 @@ FROM
 	LEFT JOIN FIL0010 Z1 ON A.填表人 = Z1.員工編號
 	);
 
--- Home #1768 ViewFIL1024E.條碼列印記錄
-Create or Replace view ViewFIL1024E AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024E" ("條碼", "條碼序號", "列印日期", "列印時間", "列印人代號", "廠商規格", "廠商批號", "來源", "細分", "開立", "單別", "單號", "序號", "已收料") AS (
 SELECT
 	A.條碼,
 	A.序號 條碼序號,
@@ -1832,8 +1847,8 @@ FROM
 	LEFT JOIN FIL0043 B ON B.條碼 = A.條碼
   );
 
--- Home #1769 ViewFIL1024F.條碼發料暫存
-Create or Replace view ViewFIL1024F AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024F" ("請領單號", "請領料號", "異動數量") AS (
 SELECT 
 	A.其它單號 請領單號,
 	A.請領料號,
@@ -1848,8 +1863,8 @@ GROUP BY
 	A.請領料號
 );
 
--- Home #1770 ViewFIL1024G.條碼日報回庫
-Create or Replace view ViewFIL1024G AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024G" ("請領單號", "請領料號", "異動數量") AS (
 SELECT 
 	A.其它單號 請領單號,
 	A.請領料號,
@@ -1866,8 +1881,8 @@ GROUP BY
 	A.請領料號
 );
 
--- Home #1771 ViewFIL1024H.條碼原料入出首筆
-Create or Replace view ViewFIL1024h AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024H" ("條碼", "首筆序號") AS (
 select distinct 
 	條碼,
 	min(序號) 首筆序號
@@ -1880,9 +1895,8 @@ Group by
 	條碼
 );
 
--- Home #1772 ViewFIL1024I.料號B控制表
-Create or Replace view ViewFIL1024i AS 
-With 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024I" ("料號", "管制日期", "刷回數量", "刷回桶數", "刷出數量", "刷出桶數", "日報使用量", "日報使用桶數") AS With 
 	/*主檔*/
 	Tmp0 AS
 	(
@@ -2000,9 +2014,8 @@ From
 Where
 	Substr(A.料號,1,1) = 'B';
 
--- Home #1773 ViewFIL1024J.條碼列印批號
-Create or Replace view ViewFIL1024J AS 
-With 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024J" ("列印批號", "單據類別", "單據編號", "單據序號") AS With 
 	/*主檔*/
 	Tmp0 AS
 	(select  distinct
@@ -2021,8 +2034,8 @@ Select distinct
 From
 	Tmp0 A;
 
--- Home #1774 ViewFIL1024K.條碼收料數量
-Create or Replace view ViewFIL1024K AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024K" ("條碼", "單別", "單號", "序號", "料號", "數量", "庫存異動數") AS (
 SELECT 
 	A.條碼,
 	A.單別,
@@ -2039,8 +2052,8 @@ WHERE
   A.條碼<>' '
 	);
 
--- Home #1775 ViewFIL1024L.條碼油墨簡檔
-Create or Replace view ViewFIL1024L AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1024L" ("條碼", "日期", "製令單號", "料號", "油墨配比", "色順", "製造日期", "機台號碼", "庫存數", "單別", "單號", "序號", "QRNO", "產品名稱", "加白墨", "填表人姓名", "調色日時", "狀態") AS (
 SELECT 
 	A.條碼,
 	A.日期,	
@@ -2077,8 +2090,8 @@ WHERE
 	A.批次匯入 = 1 AND A.條碼 LIKE 'C31A%'
 	);
 
--- Home #1776 ViewFIL1025.加熱器名稱
-Create view ViewFIL1025 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1025" ("加熱器序號", "名稱", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "機台序號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.加熱器序號,
 	A.名稱,
@@ -2096,8 +2109,8 @@ FROM
 	LEFT JOIN ViewFIL310P C ON A.機台代碼 = C.代碼
 	LEFT JOIN FIL0010 Z1 ON A.最後更新者 = Z1.員工編號);
 
--- Home #1777 ViewFIL1026.版銅入庫檔
-Create or Replace view ViewFIL1026 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1026" ("版銅代碼", "入庫日期", "入庫時間", "庫別代碼", "庫別名稱", "歸屬流水編號", "送修", "回廠", "回廠日期", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.版銅代碼,
 	A.入庫日期,
@@ -2116,8 +2129,8 @@ FROM
 	LEFT JOIN ViewFIL3106 B ON A.庫別代碼 = B.代碼
 	LEFT JOIN FIL0010 Z1 ON A.最後更新者 = Z1.員工編號);
 
--- Home #1778 ViewFIL1027.版銅履歷檔
-Create or Replace view ViewFIL1027 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1027" ("單據類別", "單據編號", "異動日期", "最後更新日", "版銅編號", "異動類別", "歸屬單別", "歸屬單號", "庫別代碼", "送修", "回廠", "作業人員", "作業人員姓名", "來源", "庫存相關") AS (
 Select 
 	A.單據類別,
 	TO_CHAR(A.單據編號) 單據編號,
@@ -2284,8 +2297,8 @@ Where
 	A.單據類別 = 'C41.C32E'
 	);
 
--- Home #1779 ViewFIL1027A.版銅最近取版日
-Create or Replace view ViewFIL1027A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1027A" ("版銅編號", "最近取版日期") AS (
 Select 
 	A.產品編號 版銅編號,
 	max(A.異動日期) 最近取版日期
@@ -2300,8 +2313,8 @@ Group by
 	A.產品編號
 );
 
--- Home #1780 ViewFIL1027B.版銅庫存資料
-Create or Replace view ViewFIL1027B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1027B" ("版銅編號", "異動日期", "異動類別", "單據編號", "來源", "庫別代碼", "最後更新日") AS (
 Select 
 	TO_CHAR(A.版銅代碼) 版銅編號,
 	nvl(A.入庫日期,' ') 異動日期,	
@@ -2330,8 +2343,8 @@ From
 	ViewFIL3112 A
 	);
 
--- Home #1781 ViewFIL1027C.版銅最後狀態
-Create or Replace view ViewFIL1027C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL1027C" ("單據編號", "異動日期", "最後更新日", "版銅編號", "異動類別", "送修", "回廠", "來源") AS (
 Select 
 	TO_CHAR(A.單據編號) 單據編號,
 	A.異動日期,
@@ -2418,8 +2431,8 @@ WHERE
 	A.歸屬代碼 != ' '
 	);
 
--- Home #1783 ViewFIL2010.異動單主檔
-Create view ViewFIL2010 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2010" ("單據類別", "單據編號", "單據日期", "訂單號碼", "採購單號", "歸屬類別", "歸屬編號", "歸屬序號", "公司代碼", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "折讓", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "稅別", "稅率", "匯率", "匯率日期", "匯率類別", "廠客單號", "廠別編號", "廠別名稱", "部門編號", "部門名稱", "收付方式", "確認碼", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "簽核狀態_結案", "發函代理人_結案", "代理人姓名_結案") AS (                                                                                                                                                      SELECT 
 	A.單據類別, 
 	A.單據編號, 
 	A.單據日期,
@@ -2478,8 +2491,8 @@ FROM
 	LEFT JOIN FIL0020 N ON A.部門編號 = N.部門編號
 	LEFT JOIN ViewOfObjProperties H ON A.流水編號 = H.單據流水號);
 
--- Home #1784 ViewFIL2010.異動單主檔_A
-Create view ViewFIL2010_A AS (    
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2010_A" ("單據類別", "單據編號", "填表人姓名", "更新者姓名", "簽核狀態") AS (    
 SELECT 
 	A.單據類別, 
 	A.單據編號, 
@@ -2492,8 +2505,8 @@ FROM
 	LEFT JOIN FIL0010 G ON A.最後更新者 = G.員工編號
 	LEFT JOIN ViewOfObjProperties H ON A.流水編號 = H.單據流水號);
 
--- Home #1785 ViewFIL2010.異動單主檔_B
-Create view ViewFIL2010_B AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2010_B" ("單據類別", "單據編號", "單據日期", "流水編號", "歸屬編號", "製程代碼", "簽核狀態") AS (                                                                                                                                                      SELECT 
 	A.單據類別, 
 	A.單據編號, 
 	A.單據日期,
@@ -2506,8 +2519,8 @@ FROM
 	LEFT JOIN ViewOfObjProperties H ON A.流水編號 = H.單據流水號
 	);
 
--- Home #1786 ViewFIL2011.異動單最後序號
-Create view ViewFIL2011 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2011" ("單別", "單號", "最後序號") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	max(A.單據序號) 最後序號
@@ -2518,8 +2531,51 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1787 ViewFIL2021.產品異動數
-Create view ViewFIL2021 AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2020" ("單據類別", "單據編號", "單據序號", "異動類別", "異動日期", "異動數量", "贈品數量", "異動單價", "異動金額", "備註說明", "產品編號", "產品品名", "廠客品號", "單位代碼", "單位名稱", "倉庫代碼", "倉庫名稱", "庫存參數", "折扣率", "毛重", "材積", "折讓", "預交日", "前置單別", "前置單號", "結案碼", "製版費", "燙金費", "雷射費", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
+SELECT 
+	A.單據類別, 
+	A.單據編號,
+	A.單據序號,
+	A.異動類別,
+	A.異動日期,
+	A.異動數量,
+	A.贈品數量,
+	A.異動單價,
+	A.異動金額,
+	A.備註說明,
+	A.產品編號,
+	nvl(D.品名, ' ') 產品品名,
+	A.廠客品號,
+	A.單位代碼,
+	nvl(E.名稱, ' ') 單位名稱,
+	A.倉庫代碼,
+	' ' 倉庫名稱,
+	B.產品庫存參數 庫存參數,
+	A.折扣率,
+	A.毛重,
+	A.材積,
+	A.折讓,
+	A.預交日,
+	A.前置單別,
+	A.前置單號,
+	A.結案碼,
+	A.製版費,
+	A.燙金費,
+	A.雷射費,
+	A.流水編號,
+	A.最後更新者,
+	NVL(C.員工姓名,' ') 更新者姓名,
+	A.最後更新日
+FROM 
+	FIL0040 A
+	INNER JOIN ViewFIL0020 B ON A.單據類別 = B.單據類別
+	LEFT JOIN FIL0010 C ON A.最後更新者 = C.員工編號
+	LEFT JOIN FIL0012 D ON A.產品編號 = D.產品編號
+	LEFT JOIN ViewFIL3103 E ON A.單位代碼 = E.代碼);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2021" ("單別", "單號", "序號", "異動日期", "異動數量", "贈品數量", "產品編號", "單位代碼", "庫存單位", "倉庫代碼", "庫存參數", "換算率", "異動數") AS (SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -2540,9 +2596,8 @@ FROM
 	INNER JOIN FIL0030 D ON A.單據類別 = D.單據類別 AND A.單據編號 = D.單據編號
 	LEFT JOIN ViewFIL1017 E ON A.單位代碼 = E.從 AND C.單位代碼 = E.到);
 
--- Home #1788 ViewFIL2022.材料異動數
-Create or Replace view ViewFIL2022 AS 
-with temp1 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2022" ("單別", "單號", "序號", "異動日期", "異動數量", "贈品數量", "材料編號", "單位代碼", "庫存單位", "倉庫代碼", "庫存參數", "換算率", "異動數", "前置單別", "前置單號", "批號", "採購單別", "採購單號", "採購序號", "備註說明", "廠商批號") AS with temp1 as (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -2907,10 +2962,10 @@ FROM
 WHERE
 	A.單據類別 = 'F32' AND
 	A.異動類別 = '2')
-select * from temp1;
+select "單別","單號","序號","異動日期","異動數量","贈品數量","材料編號","單位代碼","庫存單位","倉庫代碼","庫存參數","換算率","異動數","前置單別","前置單號","批號","採購單別","採購單號","採購序號","備註說明","廠商批號" from temp1;
 
--- Home #1789 ViewFIL2022A.材料異動數(填表)
-Create view ViewFIL2022A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2022A" ("單別", "單號", "序號", "異動日期", "異動數量", "材料編號", "更新日時") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -3085,9 +3140,8 @@ WHERE
 	A.單據類別 = 'F32' AND
 	A.異動類別 = '2');
 
--- Home #1790 ViewFIL2022C.紙箱異動數
-Create or Replace view ViewFIL2022C AS 
-with temp1 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2022C" ("單別", "單號", "序號", "異動日期", "異動數量", "贈品數量", "材料編號", "單位代碼", "庫存單位", "倉庫代碼", "庫存參數", "換算率", "異動數", "前置單別", "前置單號", "批號", "採購單別", "採購單號", "採購序號", "備註說明", "廠商批號") AS with temp1 as (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -3452,10 +3506,10 @@ FROM
 WHERE
 	A.單據類別 = 'F32' AND
 	A.異動類別 = '2')
-select * from temp1;
+select "單別","單號","序號","異動日期","異動數量","贈品數量","材料編號","單位代碼","庫存單位","倉庫代碼","庫存參數","換算率","異動數","前置單別","前置單號","批號","採購單別","採購單號","採購序號","備註說明","廠商批號" from temp1;
 
--- Home #1791 ViewFIL2023.類別序號檔(desc)
-CREATE or Replace VIEW ViewFIL2023 AS (                                                                                                                                           SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2023" ("單別", "單號", "序號", "類別", "LOGICAL2", "DESC排序") AS (                                                                                                                                           SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -3465,8 +3519,8 @@ CREATE or Replace VIEW ViewFIL2023 AS (                                         
 FROM
 	FIL0040 A);
 
--- Home #1792 ViewFIL2030.異動單合計
-Create view ViewFIL2030 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2030" ("單據類別", "單據編號", "數量", "贈品量", "金額", "毛重", "材積", "製版費", "燙金費", "雷射費") AS (                                                                                                                                                      SELECT
 	A.單據類別,
 	A.單據編號,
 	sum(A.異動數量) 數量,
@@ -3483,8 +3537,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #1793 ViewFIL2040.異動單內容12
-Create view ViewFIL2040 (單據類別, 單據編號,內容) as SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2040" ("單據類別", "單據編號", "內容") AS SELECT
 	A.單據類別,
 	A.單據編號,
 	listagg
@@ -3500,8 +3554,8 @@ group by
 	A.單據類別, 
 	A.單據編號;
 
--- Home #1794 ViewFIL2050.費用明細檔
-Create view ViewFIL2050 as (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2050" ("單據類別", "單據編號", "單據序號", "代碼", "名稱", "日期", "幣別", "金額", "稅額", "備註", "付款條件", "付款條件名稱", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT 
 	A.單據類別, 
 	A.單據編號,
 	A.單據序號,
@@ -3524,8 +3578,8 @@ FROM
 	LEFT JOIN ViewFIL3107 C ON A.付款條件 = C.代碼
 	LEFT JOIN FIL0010 Z1 ON A.最後更新者 = Z1.員工編號);
 
--- Home #1795 ViewFIL2051.費用合計檔
-Create view ViewFIL2051 as (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2051" ("單據類別", "單據編號", "幣別", "金額", "稅額") AS (SELECT 
 	A.單據類別, 
 	A.單據編號,
 	A.幣別,
@@ -3538,8 +3592,8 @@ GROUP BY
 	A.單據編號,
 	A.幣別);
 
--- Home #1796 ViewFIL2061.裁切異動數
-Create view ViewFIL2061 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2061" ("單別", "單號", "序號", "異動日期", "半成品編號", "入庫米數", "捲數", "有效日期", "製造日期", "作業者", "報廢米數") AS (
 /*入庫*/
 SELECT 
 	A.單別 單別, 
@@ -3626,8 +3680,8 @@ WHERE
 	A.單據類別 = 'E23' 	
 );
 
--- Home #1798 ViewFIL2061M.裁切品名檔
-Create view ViewFIL2061M AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2061M" ("半成品編號", "製令單號", "序號", "序號2", "報廢", "重整") AS (
 SELECT 
 	A.半成品編號,
 	A.製令單號,
@@ -3701,8 +3755,8 @@ GROUP BY
 	A.序號2
 );
 
--- Home #1797 ViewFIL2062.裁切合計數
-Create view ViewFIL2062 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2062" ("半成品編號", "製令單號", "有效日期", "製造日期", "庫存數", "捲數", "報廢米數") AS (
 /*入庫*/
 SELECT 
     A.半成品編號,
@@ -3719,8 +3773,8 @@ GROUP BY
 	REGEXP_SUBSTR(A.半成品編號, '[^_]+', 1, 1)
 );
 
--- Home #1799 ViewFIL2063.包裝異動數
-Create view ViewFIL2063 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2063" ("單別", "單號", "單據序號", "異動日期", "半成品編號", "製令單號", "有效日期", "製造日期") AS (
 /*入庫*/
 SELECT 
 	A.單據類別 單別, 
@@ -3866,8 +3920,8 @@ WHERE
 
 );
 
--- Home #1800 ViewFIL2064.製令裁切數
-Create view ViewFIL2064 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2064" ("製令單號", "捲數") AS (
 /*裁切*/
 SELECT 
 	製令單號,
@@ -3880,8 +3934,8 @@ GROUP BY
 	製令單號
 );
 
--- Home #1801 ViewFIL2065.製令包裝數
-Create view ViewFIL2065 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2065" ("製令單號", "捲數") AS (
 /*包裝*/
 SELECT 
 	REGEXP_SUBSTR(A.文字一, '[^_]+', 1, 1) 製令單號,
@@ -3899,8 +3953,8 @@ GROUP BY
 	REGEXP_SUBSTR(A.文字一, '[^_]+', 1, 1)
 );
 
--- Home #1802 ViewFIL2066.印檢合計數
-Create view ViewFIL2066 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2066" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線內不良剔除數", "線外不良剔除數", "備註", "製令單號", "回庫數量") AS (
 SELECT 
 		A.單別, 
 		A.單號,
@@ -3975,8 +4029,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1803 ViewFIL2067.印檢製令合計數
-Create view ViewFIL2067 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2067" ("單別", "單號", "製令單別", "製令單號", "加工別", "順序", "檢品編號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "線外不良剔除數", "線內不良剔除數", "檢品數量", "接頭數", "回庫數量", "生產條件米數", "備註", "耗時") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -4047,8 +4101,8 @@ GROUP BY
 	decode(C.小單位 ,'A','A材','B','B材','C','底邊','D','A側','E','B側',' ')
 );
 
--- Home #1804 ViewFIL2068.裁檢合計數
-Create view ViewFIL2068 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2068" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線內不良剔除數", "線外不良剔除數", "備註", "製令單號", "回庫數量") AS (
 SELECT 
 		A.單別, 
 		A.單號,
@@ -4123,8 +4177,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1805 ViewFIL2069.裁檢製令合計數
-Create view ViewFIL2069 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2069" ("單別", "單號", "製令單別", "製令單號", "順序", "檢品編號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "線外不良剔除數", "線內不良剔除數", "檢品數量", "接頭數", "回庫數量", "備註", "耗時") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -4178,8 +4232,8 @@ GROUP BY
 	A.前置單號
 );
 
--- Home #1807 ViewFIL2070.前製程庫存合計
-Create view ViewFIL2070 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2070" ("製令單別", "製令單號", "半成品編號", "加工別", "製程代碼", "熟成條件", "接頭數", "庫存數量") AS (
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -4199,8 +4253,8 @@ GROUP BY
 	A.製程代碼
 );
 
--- Home #1808 ViewFIL2070A.前製程庫存含製程
-Create view ViewFIL2070A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2070A" ("製令單別", "製令單號", "半成品編號", "加工別", "製程代碼", "庫存數量") AS (
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -4218,8 +4272,8 @@ GROUP BY
 	A.製程代碼
 );
 
--- Home #1809 ViewFIL2070B.前製程庫存僅加工
-Create view ViewFIL2070B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2070B" ("製令單別", "製令單號", "加工別", "半成品編號", "庫存數量") AS (
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -4235,8 +4289,8 @@ GROUP BY
 	A.半成品編號
 );
 
--- Home #1806 ViewFIL2071.前製程庫存明細
-Create view ViewFIL2071 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2071" ("庫存參數", "單別", "單號", "序號", "製令單別", "製令單號", "製程代碼", "加工次數", "本製程編號", "半成品編號", "加工別", "前製程編號", "熟成條件", "異動數量", "接頭數", "來源") AS (
 /* 印刷*/
 SELECT
 	1 庫存參數,
@@ -4477,8 +4531,8 @@ WHERE
 	A.廠客品號 <> ' '
 );
 
--- Home #1810 ViewFIL2072.前製程條碼明細
-Create view ViewFIL2072 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2072" ("單別", "單號", "序號", "製令單別", "製令單號", "製程代碼", "本製程編號", "加工別", "加工次數", "規格", "圓周") AS (
 /* 印刷*/
 SELECT
 	A.單據類別 單別, 
@@ -4580,8 +4634,8 @@ WHERE
 	A.產品編號 <> ' '	
 );
 
--- Home #1811 ViewFIL2073.前製程條碼合計
-Create view ViewFIL2073 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2073" ("條碼", "接頭數", "庫存數量") AS (
 SELECT
 	A.條碼,
 	MIN(A.接頭數) 接頭數,
@@ -4741,8 +4795,8 @@ GROUP BY
 	A.條碼
 );
 
--- Home #1812 ViewFIL2074.異動主檔備註
-Create or Replace view ViewFIL2074 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL2074" ("單別", "單號", "備註") AS (
 select
 	A.製令單別 單別,
 	A.製令單號 單號,
@@ -4759,8 +4813,8 @@ group by
 	A.材料序號
 );
 
--- Home #1682 ViewFIL3101.貿易條件
-CREATE VIEW ViewFIL3101 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3101" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	trim(A.系統代碼) || '.' || A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4773,8 +4827,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('貿易條件'));
 
--- Home #1683 ViewFIL3102.幣別代碼
-CREATE VIEW ViewFIL3102 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3102" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4787,8 +4841,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('幣別'));
 
--- Home #1684 ViewFIL3103.單位代碼
-CREATE VIEW ViewFIL3103 AS (                                                                                                                                                
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3103" ("代碼", "名稱", "英文名稱", "進貨類別專用", "庫存乘數", "庫存單位", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -4806,8 +4860,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('單位'));
 
--- Home #1685 ViewFIL3104.發票類別
-CREATE VIEW ViewFIL3104 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3104" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4820,8 +4874,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('發票類別'));
 
--- Home #1686 ViewFIL3105.職稱代碼
-CREATE VIEW ViewFIL3105 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3105" ("代碼", "名稱", "說明", "識別", "部門限定", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4837,8 +4891,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('職稱代碼'));
 
--- Home #1687 ViewFIL3106.庫別代碼
-CREATE VIEW ViewFIL3106 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3106" ("代碼", "名稱", "說明", "倉別代碼", "倉別名稱", "廠別編號", "廠別名稱", "全稱", "組別", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4858,8 +4912,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('庫別代碼'));
 
--- Home #1688 ViewFIL3107.付款條件
-CREATE VIEW ViewFIL3107 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3107" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4872,8 +4926,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('付款條件'));
 
--- Home #1689 ViewFIL3108.收款條件
-CREATE VIEW ViewFIL3108 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3108" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4886,8 +4940,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('收款條件'));
 
--- Home #1690 ViewFIL3109.油墨種類
-CREATE VIEW ViewFIL3109 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3109" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4900,8 +4954,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('油墨種類'));
 
--- Home #1691 ViewFIL310A.印刷色順
-CREATE VIEW ViewFIL310A AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310A" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4914,8 +4968,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('印刷色順'));
 
--- Home #1692 ViewFIL310B.物料大類
-CREATE VIEW ViewFIL310B AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310B" ("代碼", "名稱", "說明", "批號管理", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4929,8 +4983,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('物料大類'));
 
--- Home #1693 ViewFIL310C.包裝方式
-CREATE VIEW ViewFIL310C AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310C" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4943,8 +4997,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('包裝方式'));
 
--- Home #1694 ViewFIL310D.製袋型態
-CREATE VIEW ViewFIL310D AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310D" ("代碼", "名稱", "說明", "大類", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4959,8 +5013,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('製袋型態'));
 
--- Home #1695 ViewFIL310E.稅別代碼
-CREATE VIEW ViewFIL310E AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310E" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4973,8 +5027,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('稅別代碼'));
 
--- Home #1696 ViewFIL310F.區域代;號
-CREATE VIEW ViewFIL310F AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310F" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -4987,8 +5041,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('區域代號'));
 
--- Home #1697 ViewFIL310G.國別代號
-CREATE VIEW ViewFIL310G AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310G" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5001,8 +5055,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('國別代號'));
 
--- Home #1698 ViewFIL310H.廠商分類
-CREATE VIEW ViewFIL310H AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310H" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5015,8 +5069,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('廠商分類'));
 
--- Home #1699 ViewFIL310I.客戶型態
-CREATE VIEW ViewFIL310I AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310I" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5029,8 +5083,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('客戶型態'));
 
--- Home #1700 ViewFIL310J.廠牌代碼
-CREATE VIEW ViewFIL310J AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310J" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5043,8 +5097,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('廠牌代碼'));
 
--- Home #1701 ViewFIL310K.溫度區間
-CREATE VIEW ViewFIL310K AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310K" ("代碼", "名稱", "說明", "淋膜冷鏈", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5058,8 +5112,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('溫度區間'));
 
--- Home #1702 ViewFIL310L.時間區間
-CREATE VIEW ViewFIL310L AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310L" ("代碼", "名稱", "說明", "淋膜冷鏈", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5073,8 +5127,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('時間區間'));
 
--- Home #1703 ViewFIL310M.壓紋類別
-CREATE VIEW ViewFIL310M AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310M" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5087,8 +5141,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('壓紋類別'));
 
--- Home #1704 ViewFIL310N.製程代碼
-CREATE VIEW ViewFIL310N AS (                                                                                                                                                
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310N" ("代碼類別", "代碼", "名稱", "說明", "加簽通知人", "加簽通知人代碼", "排程", "前製程開放輸入", "本製程開放輸入", "生產條件投入製程", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                
 SELECT
 	A.代碼類別,
 	A.系統代碼 代碼, 
@@ -5109,8 +5163,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('製程代碼') or A.代碼類別 = '單據類別');
 
--- Home #1705 ViewFIL310O.工站代碼
-CREATE VIEW ViewFIL310O AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310O" ("代碼", "名稱", "說明", "製程代碼", "製程名稱", "製程工站", "庫存起算日", "預估起算日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5129,8 +5183,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('工站代碼'));
 
--- Home #1706 ViewFIL310P.機台代碼
-CREATE or Replace VIEW ViewFIL310P AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310P" ("代碼", "名稱", "名稱無代碼", "說明", "工站", "工站名稱", "製程代碼", "製程名稱", "委外", "部門編號", "部門名稱", "庫位代碼", "庫位名稱", "印刷上蠟版銅", "單位主管流水編號", "檢品主管流水編號", "停用", "生管排程", "排程順序", "抓取PLC資料", "不需要CCP", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	trim(A.代碼名稱) || '(' || trim(A.系統代碼) || ')' 名稱, 
@@ -5166,8 +5220,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('機台代碼'));
 
--- Home #1707 ViewFIL310Q.工站機台
-CREATE VIEW ViewFIL310Q AS (                                                                                                                                                SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310Q" ("工站代碼", "工站名稱", "機台代碼", "機台名稱") AS (                                                                                                                                                SELECT
 	A.工站 工站代碼,
 	A.工站名稱,
 	listagg( to_char( '□' || trim(A.代碼)), ' ') within group (order by A.代碼) as 機台代碼,
@@ -5178,8 +5232,8 @@ GROUP BY
 	A.工站,
 	A.工站名稱);
 
--- Home #1708 ViewFIL310R.倉別代碼
-CREATE VIEW ViewFIL310R AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310R" ("代碼", "名稱", "說明", "廠別編號", "廠別名稱", "全稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5196,8 +5250,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('倉別代碼'));
 
--- Home #1709 ViewFIL310S.製袋大類
-CREATE VIEW ViewFIL310S AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310S" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5210,8 +5264,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('製袋大類'));
 
--- Home #1710 ViewFIL310T.工作代碼
-CREATE VIEW ViewFIL310T AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310T" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5224,8 +5278,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('工作代碼'));
 
--- Home #1711 ViewFIL310U.常用語句
-CREATE VIEW ViewFIL310U AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310U" ("代碼", "常用語句", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.文字參數 常用語句, 
 	A.最後更新者, 
@@ -5237,8 +5291,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('常用語句'));
 
--- Home #1712 ViewFIL310UA.報價語句
-CREATE VIEW ViewFIL310Ua AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310UA" ("代碼", "常用語句", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.文字參數 常用語句, 
 	A.最後更新者, 
@@ -5250,8 +5304,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('報價語句'));
 
--- Home #1713 ViewFIL310UB.報價條文
-CREATE VIEW ViewFIL310Ub AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310UB" ("代碼", "必選", "報價必選", "條文", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼,
 	A.邏輯值	 必選,
 	A.邏輯值一 報價必選,
@@ -5265,8 +5319,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('報價條文'));
 
--- Home #1714 ViewFIL310UC.採購條文
-CREATE VIEW ViewFIL310UC AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310UC" ("代碼", "採購必選", "必選", "條文", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼,
 	A.邏輯值	 採購必選,
 	A.邏輯值一 必選,
@@ -5280,8 +5334,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('採購條文'));
 
--- Home #1715 ViewFIL310V.外箱標示
-CREATE VIEW ViewFIL310V AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310V" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.最後更新者, 
@@ -5293,8 +5347,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('外箱標示'));
 
--- Home #1716 ViewFIL310W.不良原因
-CREATE VIEW ViewFIL310W AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310W" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.最後更新者, 
@@ -5306,8 +5360,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('不良原因'));
 
--- Home #1720 ViewFIL310WA.客戶要求
-CREATE or Replace VIEW ViewFIL310WA AS (                                                                                                                                          SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310WA" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                          SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.最後更新者, 
@@ -5319,8 +5373,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('客戶要求'));
 
--- Home #1717 ViewFIL310X.裁切方向
-CREATE or Replace VIEW ViewFIL310X AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310X" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5333,8 +5387,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('裁切方向'));
 
--- Home #1718 ViewFIL310Y.標籤機
-CREATE VIEW ViewFIL310Y AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310Y" ("代碼", "IP", "說明", "裁切標籤目錄", "限定製程代碼", "限定製程", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 IP, 
 	A.文字參數 說明,
@@ -5352,8 +5406,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('標籤機'));
 
--- Home #1719 ViewFIL310Z.材質溫度
-CREATE VIEW ViewFIL310Z AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL310Z" ("材質", "溫度", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 材質, 
 	A.代碼名稱 溫度, 
 	A.文字參數 說明,
@@ -5366,8 +5420,22 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('材質溫度'));
 
--- Home #1721 ViewFIL3111.運送方式
-CREATE or Replace VIEW ViewFIL3111 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3110" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS ( 
+SELECT 
+	A.系統代碼 代碼, 
+	A.代碼名稱 名稱, 
+	A.最後更新者, 
+	nvl(B.員工姓名, ' ') 更新者姓名, 
+	A.最後更新日 
+FROM 
+	FIL1014 A
+	LEFT JOIN FIL0010 B ON B.員工編號 = A.最後更新者
+WHERE 
+	A.代碼類別 = to_char('氣閥種類'));
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3111" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5381,8 +5449,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('運送方式'));
 
--- Home #1722 ViewFIL3112.版銅代碼
-CREATE or Replace VIEW ViewFIL3112 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3112" ("代碼類別", "產品編號", "品名", "規格", "加工別", "系統生成", "庫存異動日期", "加工別名稱", "色順", "代碼", "滿版", "圓周", "版長", "庫位代碼", "色順說明", "共版", "共版代碼", "製造日期", "停用日期", "說明", "停用原因", "停用", "倉管確認", "QRCODE手動確認", "最後更新者", "更新者姓名", "尾碼", "有子版", "最後更新日") AS (
 SELECT 
 	A.代碼類別, 
 	A.代碼名稱 產品編號,
@@ -5429,8 +5497,8 @@ WHERE
 	A.代碼類別 = to_char('版銅代碼')
 );
 
--- Home #1723 ViewFIL3113.IOT設備
-CREATE VIEW ViewFIL3113 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3113" ("代碼", "IP", "類別", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 IP, 
 	A.文字參數一 類別,
@@ -5444,8 +5512,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('IOT設備'));
 
--- Home #1724 ViewFIL3114.品質異常大類
-CREATE or Replace VIEW ViewFIL3114 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3114" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5458,8 +5526,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('品質異常大類'));
 
--- Home #1725 ViewFIL3115.品質異常原因
-CREATE or Replace VIEW ViewFIL3115 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3115" ("代碼", "名稱", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5472,9 +5540,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('品質異常原因'));
 
--- Home #1726 ViewFIL3116.袋型
-CREATE OR REPLACE VIEW VIEWFIL3116 AS 
-  (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3116" ("代碼", "名稱", "尺寸說明", "展開尺寸", "價格", "一般夾鏈", "口袋式夾鏈", "樣式", "魔鬼氈夾鏈", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5494,8 +5561,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('袋型'));
 
--- Home #1727 ViewFIL3117.材枓進貨類別
-CREATE or Replace VIEW ViewFIL3117 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3117" ("代碼", "名稱", "說明", "密度", "單位", "停用", "最近成本單價", "最近單位報價", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5516,8 +5583,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('材枓進貨類別'));
 
--- Home #1728 ViewFIL3118.估價單參數
-CREATE or Replace VIEW ViewFIL3118 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3118" ("系統代碼", "進貨價格倍率", "貼合每層價格", "貼合工資", "塑膠粒每層加價", "每色價格", "印刷工資", "氣閥工資", "鐵條工資", "滿版價格") AS (
 SELECT 
 	A.系統代碼 系統代碼,
 	A.數字參數 進貨價格倍率,
@@ -5534,9 +5601,8 @@ FROM
 WHERE 
 	A.代碼類別 = 'MC' AND A.系統代碼='估價單參數');
 
--- Home #1729 ViewFIL3119.燙金顏色
-CREATE OR REPLACE VIEW VIEWFIL3119 AS 
-  (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3119" ("代碼", "名稱", "特殊系列", "全稱", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5551,8 +5617,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('燙金顏色'));
 
--- Home #1730 ViewFIL3120.排程語句
-CREATE VIEW ViewFIL3120 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3120" ("代碼", "常用語句", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.文字參數 常用語句, 
 	A.最後更新者, 
@@ -5564,8 +5630,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('排程語句'));
 
--- Home #1731 ViewFIL3121.裁切標籤類別
-CREATE VIEW ViewFIL3121 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3121" ("代碼", "名稱", "說明", "顯示名稱", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5579,8 +5645,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('裁切標籤'));
 
--- Home #1732 ViewFIL3122.製程語句
-CREATE OR Replace VIEW ViewFIL3122 AS (                                                                                                                                                
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3122" ("類別", "代碼", "常用語句", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                
 SELECT 
 	A.代碼類別 類別,
 	A.系統代碼 代碼, 
@@ -5595,8 +5661,8 @@ WHERE
 	A.代碼類別 LIKE to_char('製程_%')	
 );
 
--- Home #1733 ViewFIL3123.檢驗原料
-CREATE VIEW ViewFIL3123 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3123" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5609,8 +5675,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('檢驗原料'));
 
--- Home #1734 ViewFIL3124.檢驗廠商
-CREATE VIEW ViewFIL3124 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3124" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5623,8 +5689,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('檢驗廠商'));
 
--- Home #1735 ViewFIL3125.調整類別
-CREATE VIEW ViewFIL3125 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3125" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5637,8 +5703,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('調整類別'));
 
--- Home #1736 ViewFIL3126.盤差原因
-CREATE VIEW ViewFIL3126 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3126" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5651,8 +5717,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('盤差原因'));
 
--- Home #1737 ViewFIL3127.材料入庫原因
-CREATE VIEW ViewFIL3127 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3127" ("代碼", "名稱", "說明", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5665,8 +5731,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('材料入庫原因'));
 
--- Home #1738 ViewFIL3128.印製後裁修
-CREATE VIEW ViewFIL3128 AS (                                                                                                                                                SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3128" ("代碼", "名稱", "說明", "材料幅寬", "套筒寬度", "印刷幅寬", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
 	A.文字參數 說明,
@@ -5682,8 +5748,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('印製後裁修'));
 
--- Home #1740 ViewFIL3801.假別代碼
-CREATE or Replace VIEW ViewFIL3801 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3801" ("代碼", "名稱", "說明", "至少小時", "年度限請天數", "扣薪", "扣點", "性別", "天數含假日", "事由必打", "男性限定", "女性限定", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5706,8 +5772,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('假別代碼'));
 
--- Home #1741 ViewFIL3802.工作內容
-CREATE or Replace VIEW ViewFIL3802 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3802" ("代碼", "工作內容", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.文字參數 工作內容,
@@ -5720,8 +5786,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('工作內容'));
 
--- Home #1742 ViewFIL3803.假日設定
-CREATE or Replace VIEW ViewFIL3803 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3803" ("代碼", "名稱", "假日", "說明", "最後更新者", "放假否", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.系統代碼 代碼, 
 	A.代碼名稱 名稱, 
@@ -5737,8 +5803,8 @@ FROM
 WHERE 
 	A.代碼類別 = to_char('假日設定'));
 
--- Home #1743 ViewFIL3804.行事曆清單
-CREATE or Replace VIEW ViewFIL3804 AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3804" ("日期", "主旨", "附檔大小") AS ( 
 SELECT
 	A.製令單號 日期,
 	(listagg
@@ -5754,8 +5820,8 @@ WHERE
 GROUP BY
 	A.製令單號);
 
--- Home #1744 ViewFIL3805.日期清單
-CREATE or Replace VIEW ViewFIL3805 AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3805" ("日期", "陰曆", "休假", "說明", "星期") AS ( 
 SELECT 
 	日 日期,  
 	陰曆日 陰曆,  
@@ -5842,8 +5908,8 @@ WHERE
 	日 > '00000000'
 );
 
--- Home #1745 ViewFIL3806.照片大小合計
-CREATE or REPLACE VIEW ViewFIL3806 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3806" ("流水編號", "檔案大小合計") AS (
 SELECT  
 	A.GroupID 流水編號,
 	sum(length(A.Photo)) 檔案大小合計 
@@ -5853,8 +5919,8 @@ GROUP BY
 	A.GroupID
 	);
 
--- Home #1746 ViewFIL3806A.產品照片大小合計
-CREATE or REPLACE VIEW ViewFIL3806A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL3806A" ("產品編號", "檔案大小合計") AS (
 SELECT  
 	B.產品編號 產品編號,
 	sum(length(A.Photo)) 檔案大小合計 
@@ -5866,8 +5932,8 @@ GROUP BY
 	B.產品編號
 	);
 
--- Home #1815 ViewFIL4001.估價單主檔.B01
-Create or Replace view ViewFIL4001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4001" ("單別", "單號", "單據日期", "公司代碼", "公司名稱", "部門編號", "簽核系統", "簽核狀態", "簽核系統_結案", "客戶編號", "客戶簡稱", "客戶全名", "產品編號", "產品名稱", "高", "寬", "長", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "聯絡人序號", "地址", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話", "單價", "購買數量", "製版費", "燙金費", "未稅價格", "成捲製袋", "流水編號", "填表人", "填表人姓名", "員工流水編號", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -5929,8 +5995,8 @@ FROM
 WHERE
 	A.單據類別 = 'B01');
 
--- Home #1816 ViewFIL4002.估價袋型合計
-Create or Replace view ViewFIL4002 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4002" ("單別", "單號", "流水編號", "價格") AS (
 SELECT
 	B.單別,
 	B.單號,
@@ -5949,8 +6015,8 @@ FROM
 	) A
 	INNER JOIN FIL003I B ON A.流水編號 = B.流水編號);
 
--- Home #1817 ViewFIL4003.估價燙金費
-Create or Replace view ViewFIL4003 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4003" ("流水編號", "單據序號", "購買數量", "共幾色", "版費", "材料費") AS (
 select
 	A.流水編號,
 	A.單據序號,
@@ -5966,8 +6032,8 @@ Group by
 	A.單據序號
 );
 
--- Home #1818 ViewFIL4004.估價單明細
-Create view ViewFIL4004 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4004" ("單別", "單號", "序號", "類別", "價格倍率", "合計價格", "單價", "購買數量", "總價", "色數", "每色製版費", "製版費", "燙金費", "雷射開窗", "夾鏈費", "氣閥費", "鐵條費", "未稅金額", "說明", "應稅金額", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6000,8 +6066,8 @@ FROM
 WHERE
 	A.單據類別 = 'B01');
 
--- Home #1819 ViewFIL4010.報價單主檔.B11
-Create view ViewFIL4010 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4010" ("單別", "單號", "單據日期", "公司代碼", "公司名稱", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "稅別", "稅率", "類別", "交貨日期_天", "交貨日期", "交貨日期_次批", "交貨數量正負", "交貨數量差", "訂金率", "訂金", "票期", "有效期限", "聯絡人序號", "產品編號", "品名", "規格", "材質1", "材質2", "材質3", "材質4", "材質5", "材質6", "厚度1", "厚度2", "厚度3", "厚度4", "厚度5", "厚度6", "色別1", "色別2", "色別3", "色別4", "色別5", "色別6", "色別7", "色別8", "色別9", "色別10", "聯絡人", "電話", "傳真", "分機", "職務", "EMAIL", "行動電話", "送貨地址序號", "收貨人", "收貨地址", "工廠地址", "收貨電話", "客戶回簽", "客戶佐證", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "不用回簽報價單") AS (                                                                                                                                                      
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -6121,8 +6187,8 @@ FROM
 WHERE
 	A.單據類別 = 'B11');
 
--- Home #1820 ViewFIL4011.報價單明細
-Create view ViewFIL4011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4011" ("單別", "單號", "序號", "類別", "類別名稱", "前置單別", "前置單號", "產品編號", "品名", "規格", "材質", "印刷", "數量", "單位代碼", "單位名稱", "單價", "總體單價", "總價", "製版費", "色數", "每色製版費", "燙金費", "雷射費", "未稅金額", "含稅金額", "含稅訂金", "備註", "估價單號", "估價流水編號", "估價單序號", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6168,8 +6234,8 @@ FROM
 WHERE
 	A.單據類別 = 'B11');
 
--- Home #1821 ViewFIL4012.報價單平均
-Create or Replace view ViewFIL4012 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4012" ("單別", "單號", "總體單價") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6184,8 +6250,8 @@ GROUP BY
 	A.單據編號
 	);
 
--- Home #1822 ViewFIL401A.報價單合計
-Create view ViewFIL401A AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL401A" ("單別", "單號", "數量", "總價", "製版費", "燙金費", "雷射費", "合計總價", "稅率", "訂金率", "訂金", "稅額", "含稅價") AS (SELECT
 	A.單別,
 	A.單號,
 	A.數量,
@@ -6220,8 +6286,8 @@ FROM
 	INNER JOIN FIL0031 D ON A.單別 = D.單別 AND A.單號 = D.單號
 	);
 
--- Home #1823 ViewFIL401B.報價明細選擇表
-Create or Replace view ViewFIL401B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL401B" ("單別", "單號", "序號", "類別名稱", "備註", "產品編號", "總價", "製版費", "流水編號", "單據日期", "廠客編號", "廠客全名", "品名", "簽核狀態", "客戶回簽", "客戶佐證", "稅別", "幣別代碼") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6277,8 +6343,8 @@ WHERE
 	(nvl(I.回簽,0)>0 OR nvl(L.佐證,0)>0)
 	);
 
--- Home #1827 ViewFIL4020.客戶訂單主檔.B31
-Create view ViewFIL4020 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4020" ("單別", "單號", "報價單別", "報價單號", "公司代碼", "公司名稱", "訂單類別", "客戶單號", "出貨廠別", "廠別名稱", "部門編號", "部門名稱", "價格條件", "付款條件", "付款條件名稱", "材積單位", "材積單位名稱", "確認碼", "單據日期", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "匯率", "稅別", "稅別說明", "稅率", "聯絡人序號", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話", "送貨地址序號", "收貨人", "收貨地址", "收貨電話", "未稅金額", "稅額", "應稅金額", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 報價單別,
@@ -6356,8 +6422,8 @@ FROM
 WHERE
 	A.單據類別 = 'B31');
 
--- Home #1828 ViewFIL4021.客戶訂單明細
-Create OR Replace view ViewFIL4021 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4021" ("單別", "單號", "序號", "產品編號", "品名", "規格", "材質", "異動日期", "客戶品號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "單位代碼", "單位名稱", "小單位", "小單位名稱", "折扣率", "包裝數量", "包裝單位", "包裝單位名稱", "單價", "金額", "毛重", "材積", "製版費", "預交日", "交貨庫別", "庫別名稱", "前置單別", "前置單號", "報價單別", "報價單號", "報價單序號", "專案代號", "備註", "結案碼", "參考尺寸", "米平方單價", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6459,8 +6525,8 @@ FROM
 WHERE
 	A.單據類別 = 'B31');
 
--- Home #1829 ViewFIL402A.客戶訂單合計
-Create view ViewFIL402A AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402A" ("單別", "單號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "金額", "毛重", "材積", "稅率", "稅額", "含稅金額") AS (SELECT 
 	A.單別, 
 	A.單號,
 	A.訂單數量,
@@ -6494,8 +6560,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #1830 ViewFIL402B.報價訂單合計
-Create view ViewFIL402B AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402B" ("單別", "單號", "產品編號", "報價數量", "訂單數量", "未訂購數", "報價金額", "訂單金額") AS (SELECT
 	nvl(A.單據類別, B.歸屬類別) 單別,
 	nvl(A.單據編號, B.歸屬編號) 單號,
 	nvl(A.產品編號, B.產品編號) 產品編號,
@@ -6540,8 +6606,8 @@ FROM
 			A.產品編號
 	) B ON A.單據類別 = B.歸屬類別 AND A.單據編號 = B.歸屬編號 AND A.產品編號 = B.產品編號);
 
--- Home #1831 ViewFIL402C.客戶訂單履歷
-Create view ViewFIL402C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402C" ("歸屬類別編號", "單據類別編號", "製程代碼", "加工別", "單據類別", "單據編號", "單據名稱", "製程名稱", "流水編號") AS (
 Select 
 	A.歸屬類別編號,
 	A.單據類別編號,
@@ -6702,8 +6768,8 @@ LEFT JOIN ViewFIL310N B ON A.製程代碼=B.代碼
 LEFT JOIN ViewFIL0020 C ON substr(A.單據類別編號,1,3)=C.單據類別
 );
 
--- Home #1832 ViewFIL402D.客戶訂單回簽及佐證
-Create or Replace view ViewFIL402D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402D" ("單別", "報價單號", "製令單號", "建檔日時", "客戶回簽日時", "佐證上傳日時", "最早上傳日時", "報價日期", "客戶編號", "客戶簡稱", "客戶全名", "業務員", "業務員姓名", "客戶回簽", "客戶佐證", "產品編號", "品名", "規格", "不用回簽報價單") AS (
 SELECT 
 	M.單別,
 	M.單號 報價單號,
@@ -6754,8 +6820,8 @@ FROM
 	) C ON C.單號 = A.說明一
 );
 
--- Home #1833 ViewFIL402DA.回簽及佐證不簽回
-Create or Replace view ViewFIL402DA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402DA" ("單別", "報價單號", "製令單號", "建檔日時", "客戶回簽日時", "佐證上傳日時", "最早上傳日時", "報價日期", "客戶編號", "客戶簡稱", "客戶全名", "業務員", "業務員姓名", "客戶回簽", "客戶佐證", "產品編號", "品名", "規格", "不用回簽報價單") AS (
 SELECT 
 	M.單別,
 	M.單號 報價單號,
@@ -6820,8 +6886,8 @@ Where
 	
 );
 
--- Home #1834 ViewFIL402E.訂單明細選擇表
-Create or Replace view ViewFIL402E AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402E" ("單別", "單號", "序號", "備註", "產品編號", "品名", "規格", "手動品名", "手動規格", "總價", "製版費", "流水編號", "單據日期", "廠客編號", "廠客全名", "簽核狀態", "訂單數量", "已交數量", "贈品量", "贈品已交量", "待交數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -6897,8 +6963,8 @@ WHERE
 	A.單據類別 = 'B31' 
 	);
 
--- Home #1835 ViewFIL402F.送貨單主檔.B42
-Create or Replace view ViewFIL402F AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402F" ("單別", "單號", "訂單單別", "訂單單號", "公司代碼", "公司名稱", "訂單類別", "客戶單號", "出貨廠別", "廠別名稱", "部門編號", "部門名稱", "價格條件", "付款條件", "付款條件名稱", "材積單位", "材積單位名稱", "確認碼", "單據日期", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "匯率", "稅別", "稅別說明", "稅率", "聯絡人序號", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話", "送貨地址序號", "收貨人", "收貨地址", "收貨電話", "未稅金額", "稅額", "應稅金額", "寄庫品", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "寄庫發貨允許") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 訂單單別,
@@ -6978,8 +7044,8 @@ FROM
 WHERE
 	A.單據類別 = 'B42');
 
--- Home #1836 ViewFIL402G.送貨單明細
-Create or Replace view ViewFIL402G AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402G" ("單別", "單號", "序號", "產品編號", "品名", "規格", "材質", "異動日期", "客戶品號", "訂單數量", "出庫數量", "贈品量", "寄庫數量", "寄庫出貨", "單位代碼", "單位名稱", "小單位", "小單位名稱", "折扣率", "包裝數量", "包裝單位", "包裝單位名稱", "單價", "金額", "毛重", "材積", "製版費", "預交日", "交貨庫別", "庫別名稱", "前置單別", "前置單號", "訂單單別", "訂單單號", "訂單序號", "專案代號", "備註", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -7053,8 +7119,8 @@ FROM
 WHERE
 	A.單據類別 = 'B42');
 
--- Home #1837 ViewFIL402G1.送貨單發貨數
-Create or Replace view ViewFIL402G1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402G1" ("單據類別", "單據號碼", "單據序號", "出庫數量") AS (
 SELECT 
 	A.單據類別, 
 	A.單據編號 單據號碼,
@@ -7087,8 +7153,8 @@ GROUP BY
 	A.單據序號
 	);
 
--- Home #1838 ViewFIL402H.送貨單合計
-Create or Replace view ViewFIL402H AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402H" ("單別", "單號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "金額", "毛重", "材積", "稅率", "稅額", "含稅金額") AS (SELECT 
 	A.單別, 
 	A.單號,
 	A.訂單數量,
@@ -7123,8 +7189,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #1839 ViewFIL402I.退貨單主檔.B51
-Create or Replace view ViewFIL402I AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402I" ("單別", "單號", "訂單單別", "訂單單號", "公司代碼", "公司名稱", "訂單類別", "客戶單號", "出貨廠別", "廠別名稱", "部門編號", "部門名稱", "價格條件", "付款條件", "付款條件名稱", "材積單位", "材積單位名稱", "確認碼", "單據日期", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "匯率", "稅別", "稅別說明", "稅率", "聯絡人序號", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話", "送貨地址序號", "收貨人", "收貨地址", "收貨電話", "未稅金額", "稅額", "應稅金額", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 訂單單別,
@@ -7202,8 +7268,8 @@ FROM
 WHERE
 	A.單據類別 = 'B51');
 
--- Home #1840 ViewFIL402J.退貨單明細
-Create or Replace view ViewFIL402J AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402J" ("單別", "單號", "序號", "產品編號", "品名", "規格", "材質", "異動日期", "客戶品號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "單位代碼", "單位名稱", "小單位", "小單位名稱", "折扣率", "包裝數量", "包裝單位", "包裝單位名稱", "單價", "金額", "毛重", "材積", "製版費", "預交日", "交貨庫別", "庫別名稱", "前置單別", "前置單號", "訂單單別", "訂單單號", "訂單序號", "專案代號", "備註", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -7260,8 +7326,8 @@ FROM
 WHERE
 	A.單據類別 = 'B51');
 
--- Home #1841 ViewFIL402K.退貨單合計
-Create or Replace view ViewFIL402K AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402K" ("單別", "單號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "金額", "毛重", "材積", "稅率", "稅額", "含稅金額") AS (SELECT 
 	A.單別, 
 	A.單號,
 	A.訂單數量,
@@ -7296,8 +7362,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #1842 ViewFIL402L.送貨寄庫主檔.B43
-Create or Replace view ViewFIL402L AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402L" ("單別", "單號", "訂單單別", "訂單單號", "公司代碼", "公司名稱", "訂單類別", "客戶單號", "出貨廠別", "廠別名稱", "部門編號", "部門名稱", "價格條件", "付款條件", "付款條件名稱", "材積單位", "材積單位名稱", "確認碼", "單據日期", "簽核系統", "簽核系統_結案", "廠客編號", "廠客簡稱", "廠客全名", "備註", "業務員", "業務員姓名", "幣別代碼", "幣別名稱", "匯率", "稅別", "稅別說明", "稅率", "聯絡人序號", "聯絡人", "電話", "分機", "職務", "EMAIL", "行動電話", "送貨地址序號", "收貨人", "收貨地址", "收貨電話", "未稅金額", "稅額", "應稅金額", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "寄庫發貨允許") AS (                                                                                                                                                      
 SELECT
 	to_char('B43') 單別,
 	A.單據編號 單號,
@@ -7377,8 +7443,8 @@ FROM
 WHERE
 	A.單據類別 = 'B42' AND A.邏輯值一= 1);
 
--- Home #1843 ViewFIL402M.送貨寄庫明細
-Create or Replace view ViewFIL402M AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL402M" ("單別", "單號", "序號", "產品編號", "品名", "規格", "材質", "異動日期", "客戶品號", "訂單數量", "出庫數量", "贈品量", "單位代碼", "單位名稱", "小單位", "小單位名稱", "折扣率", "包裝數量", "包裝單位", "包裝單位名稱", "單價", "金額", "毛重", "材積", "製版費", "預交日", "交貨庫別", "庫別名稱", "前置單別", "前置單號", "訂單單別", "訂單單號", "訂單序號", "專案代號", "備註", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	TO_CHAR('B43') 單別, 
 	A.單據編號 單號,
@@ -7452,8 +7518,8 @@ FROM
 WHERE
 	A.單據類別 = 'B42');
 
--- Home #1846 ViewFIL4030.製令主檔.C11
-Create or Replace view ViewFIL4030 AS (                                                                                                                                                  SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4030" ("製令單別", "製令單號", "前置單別", "前置單號", "前置產品編號", "填單日期", "簽核系統", "簽核系統_結案", "產品編號", "產品名稱", "產品規格", "材質結構", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "客戶地址", "客戶電話", "業務流水編號", "公司代碼", "公司名稱", "明細序號", "訂購數量", "色數", "預交日", "印刷單位", "印刷單位名稱", "包裝方式", "包裝方式說明", "油墨種類", "油墨種類名稱", "送貨地址", "流水編號", "主旨", "員工流水編號", "類別", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "改版", "改色", "結案", "產品3D網址", "包裝對應客戶標籤") AS (                                                                                                                                                  SELECT
 	A.製令單別,
 	A.製令單號,
 	A.前置單別,
@@ -7532,8 +7598,8 @@ FROM
 	LEFT JOIN FIL0033 N3 ON A.製令單別 = N3.製令單別 AND A.製令單號 = N3.製令單號 AND N3.加工別 = 'C'
 	LEFT JOIN FIL0033 N4 ON A.製令單別 = N4.製令單別 AND A.製令單號 = N4.製令單號 AND N4.加工別 = 'D');
 
--- Home #1850 ViewFIL4030A.製令主檔.C11舊單
-Create or Replace view ViewFIL4030A AS (                                                                                                                                                  SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4030A" ("製令單別", "製令單號", "前置單別", "前置單號", "填單日期", "簽核系統", "簽核系統_結案", "產品編號", "產品名稱", "產品規格", "材質結構", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "業務流水編號", "公司代碼", "公司名稱", "明細序號", "訂購數量", "預交日", "印刷單位", "印刷單位名稱", "包裝方式", "包裝方式說明", "油墨種類", "油墨種類名稱", "送貨地址", "流水編號", "主旨", "員工流水編號", "類別", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "改版") AS (                                                                                                                                                  SELECT
 	A.製令單別,
 	A.製令單號,
 	A.前置單別,
@@ -7606,8 +7672,8 @@ WHERE
 	B.稅別='A'
 	);
 
--- Home #1847 ViewFIL4030.製令主檔.C11_A
-Create or Replace view ViewFIL4030_A AS (                                                                                                                                                  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4030_A" ("製令單別", "製令單號", "訂單單別", "訂單單號", "產品編號", "產品名稱", "產品規格", "客戶編號", "預交日", "客戶名稱", "公司代碼", "公司名稱", "類別", "成袋數", "成捲數", "製袋型態", "報價單號", "透氣孔", "流水編號") AS (                                                                                                                                                  
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -7642,8 +7708,8 @@ FROM
 	LEFT JOIN FIL0038 I4 ON A.製令單別 = I4.單別 AND A.製令單號 = I4.單號 
 );
 
--- Home #1848 ViewFIL4030.製令主檔.C11_B
-Create or Replace view ViewFIL4030_B AS (                                                                                                                                                  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4030_B" ("製令單別", "製令單號", "訂單單別", "訂單單號", "產品編號", "產品名稱", "產品規格", "客戶編號", "預交日", "客戶名稱", "公司代碼", "公司名稱", "類別", "訂單成袋數", "訂單成捲數", "裁切捲數", "包裝捲數", "製袋數量", "製袋完成率", "裁切完成率", "包裝完成率", "達成率", "總入庫數", "作業日期", "流水編號") AS (                                                                                                                                                  
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -7690,8 +7756,8 @@ FROM
 	LEFT JOIN ViewFIL404E74 I6 ON A.製令單號 = I6.製令單號
 );
 
--- Home #1849 ViewFIL4030.製令主檔.C11_C報價
-Create or Replace view ViewFIL4030_C AS (                                                                                                                                                  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4030_C" ("製令單別", "製令單號", "訂單單別", "訂單單號", "產品編號", "產品名稱", "產品規格", "客戶編號", "單據日期", "客戶名稱", "類別", "成袋數", "成捲數", "報價單號", "總體單價", "總價", "流水編號") AS (                                                                                                                                                  
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -7723,8 +7789,8 @@ FROM
     INNER JOIN ViewFIL4012 I5 ON I5.單號 = NVL(I4.說明一,' ')
 );
 
--- Home #1851 ViewFIL4031.製令色順
-Create view ViewFIL4031 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4031" ("製令單別", "製令單號", "加工別", "序號", "色順") AS (                                                                                                                                                      
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -7880,8 +7946,8 @@ where
 	A.印刷色順十二 <> ' '	
 );
 
--- Home #1852 ViewFIL4032.製令加工別
-Create or Replace view ViewFIL4032 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4032" ("製令單別", "製令單號", "加工別", "成捲數", "色順數") AS (
 SELECT 
 	F.製令單別, 
 	F.製令單號, 
@@ -7907,8 +7973,8 @@ WHERE
 	F.印刷基材<>' ' 
 );
 
--- Home #1853 ViewFIL4033.製令膠水
-Create view ViewFIL4033 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4033" ("製令單別", "製令單號", "材料序號", "膠水") AS (                                                                                                                                                      SELECT
 	A.製令單別,
 	A.製令單號,
 	A.材料序號,
@@ -7926,8 +7992,8 @@ GROUP BY
 	A.製令單號,
 	A.材料序號);
 
--- Home #1854 ViewFIL4034.製令變更.C21
-Create view ViewFIL4034 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4034" ("單別", "單號", "變更日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "材質結構", "交貨數量", "交貨日期", "變更別_材料變更", "變更別_廠商", "變更別_廠商名稱", "變更別_規格變更", "變更別_其他變更", "變更別_製程變更", "變更別_單位_製程", "變更別_單位名稱_製程", "變更別_交期變更", "變更別_單位_交期", "變更別_單位名稱_交期", "變更事項", "變更原因", "主管意見", "主管批示", "知會單位_營業課", "知會單位_印刷課", "知會單位_加工課", "知會單位_會計課", "知會單位_總務課", "知會單位_積層課", "知會單位_製袋課", "知會單位_廠務課", "知會單位_其他單位", "知會單位_營業課_承辦人", "知會單位_印刷課_承辦人", "知會單位_加工課_承辦人", "知會單位_會計課_承辦人", "知會單位_總務課_承辦人", "知會單位_積層課_承辦人", "知會單位_製袋課_承辦人", "知會單位_廠務課_承辦人", "知會單位_其他單位_承辦人", "知會單位_營業課_承辦人姓名", "知會單位_印刷課_承辦人姓名", "知會單位_加工課_承辦人姓名", "知會單位_會計課_承辦人姓名", "知會單位_總務課_承辦人姓名", "知會單位_積層課_承辦人姓名", "知會單位_製袋課_承辦人姓名", "知會單位_廠務課_承辦人姓名", "知會單位_其他單位_承辦人姓名", "確認_營業課", "確認_印刷課", "確認_加工課", "確認_會計課", "確認_總務課", "確認_積層課", "確認_製袋課", "確認_廠務課", "確認_其他單位", "確認_營業課_承辦人", "確認_印刷課_承辦人", "確認_加工課_承辦人", "確認_會計課_承辦人", "確認_總務課_承辦人", "確認_積層課_承辦人", "確認_製袋課_承辦人", "確認_廠務課_承辦人", "確認_其他單位_承辦人", "確認_營業課_承辦人姓名", "確認_印刷課_承辦人姓名", "確認_加工課_承辦人姓名", "確認_會計課_承辦人姓名", "確認_總務課_承辦人姓名", "確認_積層課_承辦人姓名", "確認_製袋課_承辦人姓名", "確認_廠務課_承辦人姓名", "確認_其他單位_承辦人姓名", "簽核系統", "簽核系統_結案", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (                                                                                                                                                      SELECT
 	A.單別,
 	A.單號,
 	B.單據日期 變更日期,
@@ -8054,8 +8120,8 @@ FROM
 	LEFT JOIN FIL0010 W ON A.確認_廠務課_承辦人 = W.員工編號
 	LEFT JOIN FIL0010 X ON A.確認_其他單位_承辦人 = X.員工編號);
 
--- Home #1855 ViewFIL4035.變更序號
-Create view ViewFIL4035 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4035" ("變更單別", "變更單號", "製令單別", "製令單號", "序號") AS (                                                                                                                                                      SELECT
 	A.單據類別 變更單別,
 	A.單據編號 變更單號,
 	A.歸屬類別 製令單別,
@@ -8067,8 +8133,8 @@ WHERE
 	A.單據類別 = 'C21' AND
 	A.歸屬類別 = 'C11');
 
--- Home #1856 ViewFIL4036.製造日期
-CREATE or Replace VIEW ViewFIL4036 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4036" ("製令單別", "製令單號", "製造日期") AS (
 SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
@@ -8083,8 +8149,8 @@ GROUP BY
 	A.歸屬類別,
 	A.歸屬編號);
 
--- Home #1824 ViewFIL403A.工作指示.B21
-Create view ViewFIL403A AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL403A" ("單別", "單號", "單據日期", "公司代碼", "公司名稱", "客戶名稱", "產品名稱", "指示單別", "接稿日期", "發版日期", "營業人員", "營業人員姓名", "設計製稿", "設計製稿姓名", "簽核系統", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (                                                                                                                                                      SELECT
 	A.單別,
 	A.單號,
 	B.單據日期,
@@ -8118,8 +8184,8 @@ FROM
 	LEFT JOIN FIL0010 Z2 ON B.最後更新者 = Z2.員工編號
 	LEFT JOIN ViewFIL0030 Z3 ON B.簽核系統 = Z3.簽核系統 AND B.單據編號 = Z3.單號);
 
--- Home #1825 ViewFIL403A1.工作指示用料明細
-Create OR Replace view ViewFIL403A1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL403A1" ("製令單別", "製令單號", "加工類別", "材料序號", "用料", "排在基材前面塑膠料", "塑料排在用料前面") AS (
 select 
 		A.製令單別, 
 		A.製令單號, 
@@ -8145,8 +8211,8 @@ from
 		LEFT JOIN FIL0012 C ON A.塑膠粒材料代碼 = C.產品編號
 );
 
--- Home #1826 ViewFIL403B.工作指示用料
-Create OR Replace view ViewFIL403B(製令單別,製令單號,加工類別,基材,用料, 排在基材前面塑膠料,塑料排在用料前面) AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL403B" ("製令單別", "製令單號", "加工類別", "基材", "用料", "排在基材前面塑膠料", "塑料排在用料前面") AS (
 select 
 	A.製令單別, 
 	A.製令單號, 
@@ -8191,8 +8257,8 @@ from
 	) B ON  A.製令單別=B.製令單別 AND A.製令單號=B.製令單號 AND A.加工別=B.加工類別	
 );
 
--- Home #1857 ViewFIL4040.生產排程檔.C31
-Create OR Replace view ViewFIL4040 AS (                                                                                                                                               SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4040" ("單別", "單號", "排程日期", "註記代碼", "註記", "回收", "訂單單別", "訂單單號", "製令單別", "製令單號", "加工別", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "序號", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "機台代碼", "機台名稱", "數量", "單位", "產品編號", "產品名稱", "產品規格", "客戶編號", "預計交期", "客戶名稱", "作業人員", "作業員姓名", "材料品名規格", "膠水品名規格", "塑膠粒品名規格", "校色人", "作業順序", "作業順序2", "作業順序3", "色數", "光霧面", "積層模式", "成捲製袋", "待確認人", "看色人員", "成捲數", "成捲數正負差", "成捲差異比", "裁切方向", "作業者1", "作業者2", "作業者3", "送貨地址", "電話", "前置單號", "版銅已處理", "製袋型態", "備註", "材料編號一", "材料編號二", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                               SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 排程日期,
@@ -8286,8 +8352,8 @@ FROM
 WHERE
 	A.單據類別= 'C31');
 
--- Home #1858 ViewFIL4040M.生產排程彙總.C31
-Create OR Replace view ViewFIL4040M AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4040M" ("單別", "單號", "製程代碼", "機台代碼", "機台名稱", "排程日期", "作業順序", "序號") AS (
 SELECT DISTINCT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -8320,8 +8386,8 @@ FROM
 	INNER JOIN ViewFIL310P B ON A.製令單別 = B.代碼 
 );
 
--- Home #1859 ViewFIL4040S.生產排程比較C31
-Create OR Replace view ViewFIL4040S AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4040S" ("製令單別", "製令單號", "加工別", "加工別名稱", "排程日期", "製程代碼", "機台代碼", "製程名稱", "機台名稱", "排程數量", "生產數量", "色順數") AS ( 
 SELECT
 	A.製令單別,
 	A.製令單號,
@@ -8352,8 +8418,8 @@ FROM
 	LEFT JOIN FIL0033 F ON A.製令單別 = F.製令單別 AND A.製令單號 = F.製令單號 AND A.加工別 = F.加工別
 	);
 
--- Home #1860 ViewFIL4041.製令每日機台排程數
-Create OR Replace view ViewFIL4041 AS (                                                                                                                                               SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4041" ("製令單別", "製令單號", "排程日期", "製程代碼", "機台代碼", "數量") AS (                                                                                                                                               SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
 	A.單據日期 排程日期,
@@ -8372,8 +8438,8 @@ GROUP BY
 	B.製程代碼,
 	B.機台代碼);
 
--- Home #1861 ViewFIL4041A.製令製程排程數
-Create OR Replace view ViewFIL4041A AS (                                                                                                                                               SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4041A" ("製令單別", "製令單號", "製程代碼", "數量") AS (                                                                                                                                               SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
 	B.製程代碼,
@@ -8388,8 +8454,8 @@ GROUP BY
 	A.歸屬編號,
 	B.製程代碼);
 
--- Home #1862 ViewFIL4041B.製令日機台加工排
-Create OR Replace view ViewFIL4041B AS (                                                                                                                                               SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4041B" ("製令單別", "製令單號", "加工別", "排程日期", "製程代碼", "機台代碼", "數量") AS (                                                                                                                                               SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
 	A.稅別 加工別,
@@ -8410,8 +8476,8 @@ GROUP BY
 	B.製程代碼,
 	B.機台代碼);
 
--- Home #1863 ViewFIL4041C.製令製程加工排
-Create OR Replace view ViewFIL4041C AS (                                                                                                                                               SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4041C" ("製令單別", "製令單號", "加工別", "製程代碼", "數量") AS (                                                                                                                                               SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
 	A.稅別 加工別,
@@ -8428,8 +8494,8 @@ GROUP BY
 	A.稅別,
 	B.製程代碼);
 
--- Home #1864 ViewFIL4042.製令製程結構
-CREATE VIEW ViewFIL4042 AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4042" ("製令單號", "節點", "製程代碼", "AB底側", "AB底側二", "AB底側三", "AB底側四", "使用半成品", "使用半成品二", "使用半成品三", "使用半成品四", "物料編號", "物料編號二", "物料編號三", "物料編號四", "工作代碼", "預計投產日", "實際投產日", "名稱", "父節點", "說明", "半成品名稱") AS ( 
 SELECT 	M.製令單號,
 	M.節點,
 	M.製程代碼,
@@ -8462,9 +8528,8 @@ From
 	LEFT JOIN ViewFil310T B ON M.工作代碼 = B.代碼
 	LEFT JOIN ViewFil310P C ON M.機台代碼 = C.代碼);
 
--- Home #1865 ViewFIL4043.製令淋膜積層用料
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "VIEWFIL4043" ("製令單別", "製令單號", "加工類別", "材料代碼") AS 
-SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4043" ("製令單別", "製令單號", "加工類別", "材料代碼") AS SELECT
 	A.製令單別,
 	A.製令單號,
 	A.加工類別,
@@ -8478,8 +8543,8 @@ GROUP BY
 	A.製令單號,
 	A.加工類別;
 
--- Home #1866 ViewFIL4044.製令製程選項
-CREATE OR REPLACE VIEW ViewFIL4044 AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4044" ("製令單號", "名稱", "名稱二", "節點") AS ( 
 SELECT 	M.製令單號,
 	TO_NCHAR('A材') as 名稱,
 	TO_NCHAR('A材') as 名稱二,
@@ -8524,8 +8589,8 @@ From
 	ViewFil4030 M	
 );
 
--- Home #1867 ViewFIL4045.製令製程預排
-CREATE OR REPLACE VIEW ViewFIL4045(製程代碼,預計投產日,製令單號) AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4045" ("製程代碼", "預計投產日", "製令單號") AS ( 
 select 
 	FIL0039.製程代碼, 
 	FIL0039.預計投產日,
@@ -8537,8 +8602,8 @@ group by
 	FIL0039.製程代碼, FIL0039.預計投產日
 );
 
--- Home #1868 ViewFIL4046.製令用料明細
-CREATE OR REPLACE VIEW ViewFIL4046(用途,製令單別,製令單號,加工類別,材料序號,材料代碼,材料名稱) AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4046" ("用途", "製令單別", "製令單號", "加工類別", "材料序號", "材料代碼", "材料名稱") AS ( 
 SELECT 	'印刷基材',
 	A.製令單別,
 	A.製令單號,
@@ -8670,9 +8735,8 @@ FROM FIL0032 A,FIL0012 B
 WHERE	A.紙箱代碼_氣閥<>' ' AND A.紙箱代碼=B.產品編號
 );
 
--- Home #1869 ViewFIL4047.製令用料彙總
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "VIEWFIL4047" ("製令單別", "製令單號", "節點","半成品名稱", "材料") AS 
-SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4047" ("製令單別", "製令單號", "節點", "半成品名稱", "材料") AS SELECT 
 	'C11' 單據類別,
 	A.製令單號 單據編號,
 	A.節點,
@@ -8693,9 +8757,8 @@ FROM
 	LEFT JOIN ViewFIL4046 D ON A.物料編號三=D.材料代碼 AND A.製令單號=D.製令單號
 	LEFT JOIN ViewFIL4046 E ON A.物料編號四=E.材料代碼 AND A.製令單號=E.製令單號;
 
--- Home #1870 ViewFIL4048.製令共版彙總
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "VIEWFIL4048" ("製令單別", "製令單號", "加工別", "色順產品編號") AS 
-SELECT  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048" ("製令單別", "製令單號", "加工別", "色順產品編號") AS SELECT  
 	A.單據類別,
 	A.單據編號,
 	A.加工別,
@@ -8707,9 +8770,8 @@ Where
 GROUP BY A.單據類別, A.單據編號, A.加工別
 ORDER BY A.單據類別, A.單據編號, A.加工別;
 
--- Home #1871 ViewFIL4048A.製令標籤
-Create or Replace view ViewFIL4048A AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A" ("單據類別", "單據編號", "類別", "序號", "類別名稱") AS Select 
 	單據類別,
 	單據編號,
 	類別,
@@ -8719,9 +8781,8 @@ Select
 from 
 	FIL003F;
 
--- Home #1872 ViewFIL4048A1.製令標籤無閥無鐵
-Create or Replace view ViewFIL4048A1 AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A1" ("製令單別", "製令單號", "序號", "類別", "類別名稱", "無氣閥無鐵條編號", "品名規格", "產品編號品名規格") AS Select 
 	A.單據類別 製令單別,
 	A.單據編號 製令單號,
 	A.單據序號 序號,
@@ -8737,9 +8798,8 @@ from
 WHERE
 	A.無氣閥產品編號<>' ';
 
--- Home #1873 ViewFIL4048A2.製令標籤有氣閥
-Create or Replace view ViewFIL4048A2 AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A2" ("製令單別", "製令單號", "產品序號", "類別", "類別名稱", "有氣閥編號", "品名規格", "產品編號品名規格") AS Select 
 	A.單據類別 製令單別,
 	A.單據編號 製令單號,
 	to_char(A.單據序號)||to_char('-1') 產品序號,
@@ -8755,9 +8815,8 @@ from
 where
 	A.有氣閥產品編號<>' ';
 
--- Home #1874 ViewFIL4048A3.製令標籤有鐵條
-Create or Replace view ViewFIL4048A3 AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A3" ("製令單別", "製令單號", "產品序號", "類別", "類別名稱", "有鐵條編號", "品名規格", "產品編號品名規格") AS Select 
 	A.單據類別 製令單別,
 	A.單據編號 製令單號,
 	to_char(A.單據序號)||to_char('-1') 產品序號,
@@ -8791,9 +8850,8 @@ from
 where
 	A.有氣閥有鐵條編號<>' ';
 
--- Home #1875 ViewFIL4048A4.製令標籤全部
-Create or Replace view ViewFIL4048A4 AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A4" ("製令單別", "製令單號", "單據序號", "產品序號", "類別", "類別名稱", "產品編號", "品名規格", "產品編號品名規格", "PO", "產品名稱", "客戶料號", "客戶品號", "客戶名稱", "保存期限", "儲存溫度", "儲存濕度", "製造廠商", "材質") AS Select 
 	A.單據類別 製令單別,
 	A.單據編號 製令單號,
 	A.單據序號,
@@ -8901,9 +8959,8 @@ from
 	FIL003F A
 	LEFT JOIN ViewFIL1012 B ON A.有氣閥有鐵條編號=B.產品編號;
 
--- Home #1876 ViewFIL4048A5.製令單別標籤
-Create or Replace view ViewFIL4048A5 AS 
-SELECT  distinct A.製令類別,A.製令單號,	A.單據類別,A.製程代碼,
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A5" ("製令類別", "製令單號", "單據類別", "製程代碼", "產品編號") AS SELECT  distinct A.製令類別,A.製令單號,	A.單據類別,A.製程代碼,
 		first_value(A.產品編號) over (partition by A.製令類別,A.製令單號,A.單據類別 order by A.作業日期 desc) 產品編號
 FROM 
 (SELECT 
@@ -8941,9 +8998,8 @@ WHERE
 	(A.單據類別 = 'E32' or A.單據類別 = 'E33'  or A.單據類別 = 'E35' or A.單據類別='E37') AND A.產品編號<>' '
 ) A;
 
--- Home #1877 ViewFIL4048A6.製令單別最後標籤
-Create or Replace view ViewFIL4048A6 AS 
-SELECT  distinct A.製令類別,A.製令單號,
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048A6" ("製令類別", "製令單號", "產品編號") AS SELECT  distinct A.製令類別,A.製令單號,
 		first_value(A.產品編號) over (partition by A.製令類別,A.製令單號 order by A.作業日期 desc) 產品編號
 FROM 
 (SELECT 
@@ -8977,8 +9033,8 @@ WHERE
 	(A.單據類別 = 'E32' or A.單據類別 = 'E33'  or A.單據類別 = 'E35' or A.單據類別='E37') AND A.產品編號<>' '
 ) A;
 
--- Home #1878 ViewFIL4048AA.製令用料需求明細
-Create or Replace view ViewFIL4048AA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048AA" ("製令單別", "製令單號", "料號", "需求量", "類別") AS (
 	/* 夾鍊一 */
 SELECT
 	A.製令單別,
@@ -9074,8 +9130,8 @@ WHERE
 	B.邏輯值一 = 0 AND C.簽核狀態 = 'E' AND A.紙箱代碼_氣閥 != ' '			
 );
 
--- Home #1879 ViewFIL4048AB.製令有共版
-Create or Replace view ViewFIL4048AB AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048AB" ("製令單號") AS (
 SELECT distinct
 	A.製令單號
 FROM
@@ -9089,8 +9145,8 @@ GROUP BY
 	A.製令單號
 );
 
--- Home #1880 ViewFIL4048AC.製令相關產編
-Create or Replace view ViewFIL4048AC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048AC" ("主產品編號", "產品編號") AS (
 SELECT DISTINCT
 	A.主產品編號,
 	A.產品編號
@@ -9149,8 +9205,8 @@ WHERE
 INNER JOIN A01_18 C ON A.產品編號 = C.產品編號 AND (LENGTH(C.留言)>0 OR LENGTH(C.手繪)>0)
 );
 
--- Home #1881 ViewFIL4048AD.製令用料清單
-Create or Replace view ViewFIL4048AD AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048AD" ("製令單別", "製令單號", "加工別", "用途", "印刷基材", "用量") AS (
 SELECT 
 	A.製令單別,
 	A.製令單號,
@@ -9276,9 +9332,8 @@ WHERE
 	A.加工項目_鐵條代碼<>' '		
 );
 
--- Home #1882 ViewFIL4048B.裁切標籤(簡版)
-Create or Replace view ViewFIL4048B AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048B" ("單據類別", "單據編號", "類別", "類別名稱") AS Select 
 	A.單據類別,
 	A.單據編號,
 	A.類別,
@@ -9287,9 +9342,8 @@ from
 	FIL003F1 A
 	INNER JOIN ViewFIL3121 B ON A.類別 = B.代碼;
 
--- Home #1883 ViewFIL4048B1.裁切標籤全部
-Create or Replace view ViewFIL4048B1 AS 
-Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4048B1" ("製令單別", "製令單號", "單據序號", "產品序號", "類別", "類別名稱", "產品編號", "品名規格", "產品編號品名規格", "PO", "產品名稱", "客戶料號", "客戶品號", "客戶名稱", "保存期限", "儲存溫度", "儲存濕度", "製造廠商", "材質") AS Select 
 	A.單據類別 製令單別,
 	A.單據編號 製令單號,
 	A.單據序號,
@@ -9313,9 +9367,8 @@ Select
 from 
 	FIL003F1 A;
 
--- Home #1884 ViewFIL4049.生產排程用料明細
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "VIEWFIL4049" ("單據類別", "單據編號", "節點","用途","材料代碼","品名","備註","單位","規格","厚度",序號) as 
-(SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4049" ("單據類別", "單據編號", "節點", "用途", "材料代碼", "品名", "備註", "單位", "規格", "厚度", "序號") AS (SELECT 
 	'C11' 單據類別,
 	A.製令單號 單據編號,
 	A.節點,
@@ -9466,8 +9519,81 @@ FROM
 WHERE 	A.物料編號四<>' '	
 );
 
--- Home #1885 ViewFIL404A1.印刷日報主檔.C41
-Create or Replace view ViewFIL404A1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views（在 Oracle 已失效）
+CREATE VIEW "VIEWFIL4049A" ("單別", "單號", "用途", "加工類別", "序號", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "機台代碼", "機台名稱", "排程日期", "排程序號", "製令單別", "製令單號", "節點", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "產品編號", "產品名稱", "產品規格", "材質結構", "材料代碼", "用量", "單位", "備註", "材料品名", "材料規格", "厚度") AS (SELECT
+	A.單別,
+	A.單號,
+	to_char(B.用途) 用途,
+	to_char(' ') 加工類別,
+	B.序號,
+	A.製程代碼,
+	A.製程名稱,
+	A.工站代碼,
+	A.工站名稱,
+	A.機台代碼,
+	A.機台名稱,
+	A.排程日期,
+	A.序號 排程序號,
+	A.製令單別,
+	A.製令單號,
+	A.節點,
+	A.公司代碼,
+	A.公司名稱,
+	A.訂單單別,
+	A.訂單單號,
+	A.產品編號,
+	A.產品名稱,
+	A.產品規格,
+	A.材質結構,
+	B.材料代碼,
+	0 用量,
+	to_char(B.單位) 單位,
+	B.備註,
+	nvl(B.品名, ' ') 材料品名,
+	to_char(nvl(B.規格, ' ')) 材料規格,
+	to_char(nvl(B.厚度,' ')) 厚度
+FROM
+	ViewFIL4040 A
+	INNER JOIN VIEWFIL4049 B ON A.製令單別 = B.單據類別 AND A.製令單號 = B.單據編號 AND A.節點 = B.節點
+);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A" ("單別", "單號", "訂單數量", "已交數量", "贈品量", "贈品已交量", "金額", "毛重", "材積", "稅率", "稅額", "含稅金額") AS (SELECT 
+	A.單別, 
+	A.單號,
+	A.訂單數量,
+	A.已交數量,
+	A.贈品量,
+	A.贈品已交量,
+	A.金額,
+	A.毛重,
+	A.材積,
+	B.稅率,
+	round(A.金額 * B.稅率 / 100) 稅額,
+	round(A.金額 * (1 + B.稅率 / 100)) 含稅金額
+FROM
+	(	SELECT 
+			A.單據類別 單別, 
+			A.單據編號 單號,
+			sum(A.異動數量) 訂單數量,
+			0 已交數量,
+			sum(A.贈品數量) 贈品量,
+			0 贈品已交量,
+			sum(A.異動金額) 金額,
+			sum(A.毛重) 毛重,
+			sum(A.材積) 材積
+		FROM 
+			FIL0040 A
+		WHERE
+			A.單據類別 = 'B42'
+		GROUP BY
+			A.單據類別,
+			A.單據編號
+	) A
+	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "加工別", "本日件數順序", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "試刷料號", "試刷料名稱", "試刷料規格", "正式料號", "正式料名稱", "正式料規格", "打樣", "結束", "待補", "改件調機", "試刷料米數", "使用廢料試刷", "看色人員", "看色人員說明", "其他看色人員", "印刷色數", "頭出尾出", "頭出尾出說明", "印刷面", "印刷面說明", "開始時間", "收拾時間", "結束時間", "印刷時間", "看色耗時", "總耗時", "看色日時起", "看色日時迄", "開始日時", "結束日時", "停機日時", "印刷日時", "版銅圓周", "加工速度", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "餘料回庫", "餘料回庫預設庫別", "代客戶看色", "開始看色", "結束看色", "重印刷", "看色時間起", "看色時間迄", "簽核狀態", "生產數量", "色順數", "流水編號", "填表人", "單位主管流水編號", "填表人姓名", "員工流水編號", "填表日", "CCP筆數", "生產條件捲數", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -9578,8 +9704,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31A');
 
--- Home #1886 ViewFIL404A1A.印刷日報看色.C41
-Create view ViewFIL404A1A AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A1A" ("單別", "單號", "開始看色", "結束看色", "看色時間起", "看色時間迄") AS (                                                                                                                                                      SELECT
 	B.單別 單別,
 	B.單號 單號,
 	B.Logical9 開始看色,
@@ -9592,8 +9718,8 @@ WHERE
 	B.單別 = 'C41' AND
 	B.製程代碼 = 'C31A');
 
--- Home #1887 ViewFIL404A1B.印刷日報成本.C41
-Create OR Replace view ViewFIL404A1B AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A1B" ("單別", "單號", "作業日期", "製令單號", "訂單單號", "產品編號", "結束", "待補", "改件調機", "加工人數", "總耗時", "簽核狀態", "製程代碼") AS (                                                                                                                                                      
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -9618,8 +9744,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	(B.製程代碼 BETWEEN 'C31A' AND 'C31C' OR B.製程代碼 = 'C32D'));
 
--- Home #1888 ViewFIL404A1C.印刷日報簡檔.C41
-Create or Replace view ViewFIL404A1C AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A1C" ("單別", "單號", "作業日期", "製令單號", "機台代碼", "機台名稱", "客戶編號", "客戶名稱") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -9637,8 +9763,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31A');
 
--- Home #1889 ViewFIL404A2.印刷日報明細
-CREATE or Replace VIEW ViewFIL404A2 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A2" ("單別", "單號", "序號", "日期", "前製程編號", "領料米數", "材料編號", "印刷米數", "印刷處理面", "紙粗細面", "圓周數值", "引入張力", "版銅完整度", "不良標記數量", "半成品編號", "備註說明", "批號", "本製程編號", "品名", "規格", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "前製程條碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -9686,8 +9812,8 @@ WHERE
 	B.製程代碼 = 'C31A' AND
 	D.印刷上蠟版銅 = 0);
 
--- Home #1890 ViewFIL404A2A.印刷日報明細結餘
-CREATE or Replace VIEW ViewFIL404A2A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A2A" ("單別", "單號", "序號", "異動類別", "本製程編號", "序號1", "前製程編號", "結餘數", "PLC抓取米數", "PLC抓取日", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -9712,8 +9838,8 @@ WHERE
 	C.檢驗外觀 < 'B' AND
 	D.印刷上蠟版銅 = 0);
 
--- Home #1891 ViewFIL404A3.印刷油墨色順
-Create view ViewFIL404A3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A3" ("單別", "單號", "序號", "色順", "色順名稱", "調色日期", "批號", "材料編號", "品名", "規格", "油墨配比", "製令單別", "製令單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -9751,8 +9877,8 @@ WHERE
 	D.製程代碼 = 'C31A' AND 
 	A.異動類別 = 'B');
 
--- Home #1892 ViewFIL404A3A.印刷油墨領料
-CREATE or Replace VIEW ViewFIL404A3A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A3A" ("單別", "單號", "序號", "批號", "來源") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -9787,8 +9913,8 @@ WHERE
 	A.庫位 = '報廢'
 );
 
--- Home #1893 ViewFIL404A4.上蠟日報主檔.C32D
-Create view ViewFIL404A4 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A4" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "加工別", "本日件數順序", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "頭出尾出", "頭出尾出說明", "蠟名稱", "蠟進貨日期", "開始時間", "結束時間", "溶蠟時間", "前置耗時", "總耗時", "加工速度", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "結束", "待補", "改件調機", "生產條件捲數", "流水編號", "填表人", "單位主管流水編號", "填表人姓名", "員工流水編號", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -9853,8 +9979,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C32D' );
 
--- Home #1894 ViewFIL404A5.上蠟日報明細
-Create view ViewFIL404A5 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A5" ("單別", "單號", "序號", "日期", "前製程編號顯示", "前製程編號", "領料米數", "本製程編號", "上蠟米數", "接頭數量", "合理剔除數", "線內不良數", "線外不良數", "不良剔除數", "本筆結餘", "上蠟前厚度", "上蠟前重量", "上蠟後厚度", "上蠟後重量", "塗佈量", "前製程接頭數", "蠟槽溫度", "前冷卻輪溫度", "後冷卻輪溫度", "壓胴壓力KG", "反頂", "反頂說明", "網點清晰度", "半成品編號", "前製程條碼", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "備註說明", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -9909,8 +10035,8 @@ WHERE
 	B.製程代碼 = 'C32D' AND
 	C.印刷上蠟版銅 = 1);
 
--- Home #1895 ViewFIL404A5A.上蠟日報合計_32D
-Create or Replace view ViewFIL404A5A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A5A" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "回庫數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -9954,8 +10080,8 @@ SELECT
 		A.單據編號
 );
 
--- Home #1896 ViewFIL404A6.版銅日報主檔.C41
-Create or Replace view ViewFIL404A6 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A6" ("單別", "單號", "作業日期", "主旨", "公司代碼", "公司名稱", "製程代碼", "機台代碼", "機台名稱", "備註", "作業人員", "作業人員姓名", "確認碼", "製令單號", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -10016,8 +10142,8 @@ WHERE
 	B.製程代碼 = 'C32E' AND
 	D.印刷上蠟版銅 = 2);
 
--- Home #1897 ViewFIL404A7.版銅日報明細
-Create or Replace view ViewFIL404A7 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A7" ("單別", "單號", "序號", "日期", "製令單別", "製令單號", "對應製令單號", "共版", "版長", "圓周", "版銅代碼", "產品編號", "產品名稱", "產品規格", "說明", "取版回收", "取版或回收", "印刷色數", "內容校對", "清潔度", "不良原因", "不良版序", "處置", "處置說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -10062,8 +10188,8 @@ WHERE
 	B.製程代碼 = 'C32E' AND
 	C.印刷上蠟版銅 = 2);
 
--- Home #1898 ViewFIL404A8.製令版銅日報
-Create view ViewFIL404A8 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A8" ("單別", "單號", "序號", "作業日期", "機台代碼", "機台名稱", "製令單別", "製令單號", "對應製令單號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	D.單據序號 序號,
@@ -10086,8 +10212,8 @@ WHERE
 	B.製程代碼 = 'C32E' AND
 	C.印刷上蠟版銅 = 2);
 
--- Home #1899 ViewFIL404A9.版銅製令簽收
-Create or Replace view ViewFIL404A9 AS (                                                                                                                                               SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404A9" ("單別", "單號", "製令", "簽收", "簽收人", "簽收人姓名") AS (                                                                                                                                               SELECT 
 	A.單別, 
 	A.單號,
 	A.製令,
@@ -10116,8 +10242,8 @@ FROM
 	LEFT JOIN FIL0037 B ON A.單別 = B.製令單別 AND A.單號 = B.製令單號 AND B.材料序號=0 AND A.製令 = B.屬性
 	LEFT JOIN FIL0010 C ON B.代碼 = C.員工編號);
 
--- Home #1900 ViewFIL404AA.印刷日報合計_C31A
-Create or replace view ViewFIL404AA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AA" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -10164,8 +10290,8 @@ SELECT
 		A.單據編號
 );
 
--- Home #1901 ViewFIL404AB.印刷日報筆數
-Create or Replace view ViewFIL404AB AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AB" ("單別", "單號", "主檔序號", "筆數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -10184,8 +10310,8 @@ GROUP BY
 	A.QRNo
 	);
 
--- Home #1902 ViewFIL404AC.印刷前製耗用_C31A
-Create or Replace view ViewFIL404AC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AC" ("單別", "單號", "群組序號", "前一筆結餘", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -10210,8 +10336,8 @@ SELECT
 		A.鐵條費
 );
 
--- Home #1903 ViewFIL404AD.印刷製令合計_C31A
-Create or replace view ViewFIL404AD AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AD" ("製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A1.歸屬類別 製令單別, 
 		A1.歸屬編號 製令單號,
@@ -10270,8 +10396,8 @@ SELECT
 		A1.歸屬編號
 );
 
--- Home #1904 ViewFIL404AD1.印刷單據合計
-Create or replace view ViewFIL404AD1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AD1" ("單據類別", "單據編號", "改件調機", "製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A.單據類別, 
 		A.單據編號,
@@ -10335,8 +10461,8 @@ SELECT
 		B.Logical6
 );
 
--- Home #1905 ViewFIL404AD2.印刷主檔併合計
-Create OR REPLACE view ViewFIL404AD2 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AD2" ("單別", "單號", "改件調機", "製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	B.Logical6 改件調機,
@@ -10361,8 +10487,8 @@ WHERE
 	B.製程代碼 = 'C31A' AND
 	(nvl(Y.前製程米數,0)<>0 OR nvl(Y.PLC抓取米數,0)<>0) );
 
--- Home #1906 ViewFIL404AE.上蠟製令合計_C31A
-Create or replace view ViewFIL404AE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404AE" ("製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A1.歸屬類別 製令單別, 
 		A1.歸屬編號 製令單號,
@@ -10421,8 +10547,8 @@ SELECT
 		A1.歸屬編號
 );
 
--- Home #1907 ViewFIL404B1.淋膜日報主檔.C41
-Create view ViewFIL404B1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404B1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "加工別", "主旨", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "本日件數順序", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "待補", "結束", "改件調機", "側", "基材", "打樣", "生產條件捲數", "基材名稱", "基材規格", "中間材", "中間材名稱", "中間材規格", "副材", "副材名稱", "副材規格", "貼合日期", "開始時間", "接班時間", "損耗時間", "貼合時間", "結束時間", "收拾時間", "前置耗時", "總耗時", "損耗人員", "貼合人員", "結束人員", "收拾人員", "貼合速度", "冷卻輪溫度", "版目前", "版目後", "配比1", "配比2", "配比3", "配比4", "配比5", "配比6", "前槽接著劑", "前槽硬化劑", "前槽溶劑", "後槽接著劑", "後槽硬化劑", "後槽溶劑", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "流水編號", "填表人", "單位主管流水編號", "員工流水編號", "填表人姓名", "填表日", "CCP筆數", "最後更新者", "更新者姓名", "最後更新日", "沿用單號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -10525,8 +10651,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31B');
 
--- Home #1908 ViewFIL404B1A.淋膜日報沿用
-Create or Replace view ViewFIL404B1A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404B1A" ("單別", "單號", "序號", "作業日期", "沿用編號", "已被沿用") AS (
 /*沿用打勾的日報領料*/
 SELECT
 	A.單據類別 單別,
@@ -10561,8 +10687,8 @@ WHERE
 	A.Logical1 = 1
 	);
 
--- Home #1909 ViewFIL404B2.淋膜日報明細.
-Create view ViewFIL404B2 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404B2" ("單別", "單號", "序號", "日期", "前製程編號顯示", "前製程編號", "群組序號", "前製程接頭數", "前製程米數", "前一筆結餘數", "本製程編號顯示", "PLC抓取米數", "合理剔除數", "線外剔除數", "線內剔除數", "加工前測量", "檢品米數", "製品厚度", "接頭數量", "加工後測量", "不良剔除米數", "PLC抓取日期", "PLC抓取時間", "合併編號", "檢品編號", "印刷色數", "不良原因", "編號項目", "字圖清晰度", "是否符合", "清除", "材料分派數", "貼合面", "CCP", "AL", "VM", "紙", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "結案碼", "熟成條件", "前製程條碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (  
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -10644,8 +10770,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	B.製程代碼 = 'C31B');
 
--- Home #1910 ViewFIL404B3.淋膜日報筆數
-Create or Replace view ViewFIL404B3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404B3" ("單別", "單號", "主檔序號", "筆數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -10664,8 +10790,8 @@ GROUP BY
 	A.QRNo
 	);
 
--- Home #1911 ViewFIL404BA.淋膜日報合計_C31B
-Create view ViewFIL404BA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404BA" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -10710,8 +10836,8 @@ SELECT
 		A.單據編號
 );
 
--- Home #1912 ViewFIL404BB.淋膜前製耗用_C31B
-Create or Replace view ViewFIL404BB AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404BB" ("單別", "單號", "群組序號", "前一筆結餘", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -10736,8 +10862,8 @@ SELECT
 		A.鐵條費
 );
 
--- Home #1913 ViewFIL404BD.淋膜製令合計_C31B
-Create or replace view ViewFIL404BD AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404BD" ("製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A1.歸屬類別 製令單別, 
 		A1.歸屬編號 製令單號,
@@ -10796,8 +10922,8 @@ SELECT
 		A1.歸屬編號
 );
 
--- Home #1914 ViewFIL404BD1.淋膜單據合計
-Create or replace view ViewFIL404BD1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404BD1" ("單據類別", "單據編號", "改件調機", "製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A.單據類別, 
 		A.單據編號,
@@ -10861,8 +10987,8 @@ SELECT
 		B.Logical6
 );
 
--- Home #1915 ViewFIL404C1.積層日報主檔.C41
-Create view ViewFIL404C1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "加工別", "主旨", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "本日件數順序", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "待補", "結束", "改件調機", "側", "基材", "基材名稱", "基材規格", "中間材", "中間材名稱", "中間材規格", "副材", "副材名稱", "副材規格", "打樣", "生產條件捲數", "貼合日期", "開始時間", "接班時間", "損耗時間", "貼合時間", "結束時間", "收拾時間", "前置耗時", "總耗時", "損耗人員", "貼合人員", "結束人員", "收拾人員", "貼合速度", "冷卻輪溫度", "版目前", "版目後", "配比1", "配比2", "配比3", "配比4", "配比5", "配比6", "前槽接著劑", "前槽硬化劑", "前槽溶劑", "後槽接著劑", "後槽硬化劑", "後槽溶劑", "電暈", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "流水編號", "填表人", "單位主管流水編號", "員工流水編號", "填表人姓名", "填表日", "CCP筆數", "最後更新者", "更新者姓名", "最後更新日", "沿用單號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -10966,8 +11092,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31C');
 
--- Home #1916 ViewFIL404C1A.積層日報沿用
-Create or Replace view ViewFIL404C1A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C1A" ("單別", "單號", "序號", "作業日期", "沿用編號", "已被沿用") AS (
 /*沿用打勾的日報領料*/
 SELECT
 	A.單據類別 單別,
@@ -11002,8 +11128,8 @@ WHERE
 	A.Logical1 = 1
 	);
 
--- Home #1917 ViewFIL404C2.積層日報明細
-Create view ViewFIL404C2 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C2" ("單別", "單號", "序號", "日期", "前製程編號顯示", "前製程編號", "群組序號", "前製程接頭數", "前製程米數", "前一筆結餘數", "本製程編號顯示", "PLC抓取米數", "合理剔除數", "線外剔除數", "線內剔除數", "加工前測量", "檢品米數", "製品厚度", "接頭數量", "加工後測量", "不良剔除米數", "PLC抓取日期", "PLC抓取時間", "合併編號", "檢品編號", "印刷色數", "不良原因", "編號項目", "字圖清晰度", "是否符合", "清除", "材料分派數", "貼合面", "CCP", "AL", "VM", "紙", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "結案碼", "熟成條件", "前製程條碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (  
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -11085,8 +11211,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	B.製程代碼 = 'C31C');
 
--- Home #1918 ViewFIL404C3.積層日報筆數
-Create or Replace view ViewFIL404C3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C3" ("單別", "單號", "主檔序號", "筆數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -11105,8 +11231,166 @@ GROUP BY
 	A.QRNo
 	);
 
--- Home #1921 ViewFIL404C4AA.已熟成
-Create or Replace view ViewFIL404C4AA AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4" ("單別", "單號", "序號", "製令類別", "製令單號", "產品編號", "產品名稱", "熟成入庫日期", "熟成入庫時間", "熟成出庫日期", "熟成出庫時間", "不限出庫時間", "熟成狀態", "入庫狀態", "出庫狀態", "應出庫日時起", "應出庫日時迄", "應入庫日時", "本製程編號", "PLC抓取米數", "庫存數", "製品厚度", "熟成條件", "可提早出庫", "入庫人員姓名", "出庫人員姓名", "放行人員姓名", "不限出庫設定姓名", "製程", "IP位址", "熟成室位置", "加工別", "超時未入庫", "異常", "重覆入庫", "單頭流水編號", "來源") AS (  
+SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	A.單據序號 序號,
+	C.歸屬類別 製令類別,
+	C.歸屬編號 製令單號,
+	D.產品編號 產品編號,
+	D.產品名稱 產品名稱,
+	A.異動日期 熟成入庫日期,
+	B.Time3 熟成入庫時間,
+	A.預交日 熟成出庫日期,
+	B.Time4 熟成出庫時間,
+	DECODE(E.Logical2 + B.Logical2,0,0,1) 不限出庫時間,
+	nvl(case
+		 when A.Logical5 = 1 and A.預交日 > '00000000' then '4' 
+		 when A.Logical5 = 1 and A.異動日期 > '00000000' and A.預交日 <= '00000000' then '2' 
+		 when A.異動日期 <= '00000000' and sysdate > to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS') + 1/24 then '1' 
+	     when A.異動日期 > '00000000' and A.預交日 <= '00000000' then '2'
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') < to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 then '3' 		 
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') between to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 then '4' 		 
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') > to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 then '5' 
+		 else ' ' 
+	end,' ') 熟成狀態,
+	nvl(case 
+		 when A.Logical5 = 1 and A.異動日期 > '00000000' then '2'
+		 when A.Logical5 = 1 and A.異動日期 <= '00000000' then ' '
+		 when A.異動日期 <= '00000000' and  sysdate > (to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute) then '1' 
+		 when A.異動日期 > '00000000' and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') <= to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute then '2'
+		 when A.異動日期 > '00000000' and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') > to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute  then '3'
+		else ' '
+		end,' ') 入庫狀態,
+	nvl(case 
+		 when A.Logical5 = 1 and A.預交日 > '00000000' then '3'
+		 when A.Logical5 = 1 and A.預交日 <= '00000000' then '1'
+		 when (A.預交日 <= '00000000' and (E.Logical2 + B.Logical2) = 0) then '1' 
+		 when (A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') < to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24  and (E.Logical2 + B.Logical2) = 0) then '2' 
+		 when (A.預交日 > '00000000' and ((E.Logical2 + B.Logical2) > 0 or (to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') between to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24))) then '3' 		 		 
+		 when (A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') > to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24  and (E.Logical2 + B.Logical2) = 0) then '4' 
+		else ' ' 
+		end,' ') 出庫狀態,		
+	case when A.異動日期 > '00000000' then to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 else add_months(sysdate,12) end 應出庫日時起,
+	case when A.異動日期 > '00000000' then to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 else add_months(sysdate,12) end 應出庫日時迄,
+	to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS') 應入庫日時,
+	A.產品編號 本製程編號,
+	A.異動單價 PLC抓取米數,
+	A.異動單價-A.夾鏈費 庫存數,
+	A.數值3 製品厚度,
+	decode(A.Logical5,1,to_char('無限制'),to_char(E.文字4)) 熟成條件,
+	A.Logical4 可提早出庫,
+	NVL(G.員工姓名,' ') 入庫人員姓名,
+	NVL(H.員工姓名,' ') 出庫人員姓名,
+	NVL(I.員工姓名,' ') 放行人員姓名,
+	NVL(K.員工姓名,' ') 不限出庫設定姓名,
+	J.名稱 製程,
+	B.文數字4 IP位址,
+	NVL(L.部門名稱,B.文數字4) 熟成室位置,
+	E.交貨日期_次批 加工別,
+	case when A.Logical5 = 1 then 0
+		 when 
+			nvl(case when A.異動日期 <= '00000000' and  sysdate > (to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute) then '1' 
+				 when A.異動日期 > '00000000' and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') <= to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute then '2'
+				 when A.異動日期 > '00000000' and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') > to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS')  + interval '30' minute  then '3'
+			else ' '
+			end,' ') = '1' 
+		 then 1
+		 else 0
+	end 超時未入庫,
+	case when A.Logical5 = 1 then 0 
+		 when
+			sysdate > (case when A.異動日期 > '00000000' then to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 else add_months(sysdate,12) end) and 
+			nvl(case when A.異動日期 <= '00000000' and sysdate > to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS') + 1/24 then '1' 
+			 when A.異動日期 > '00000000' and A.預交日 <= '00000000' then '2'
+			 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') < to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 then '3' 		 
+			 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') between to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 then '4' 		 
+			 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') > to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 then '5' 
+			 else ' ' 
+			end,' ') ='2'
+		 then 1
+		 else 0
+	end 異常,
+	A.Logical5 重覆入庫,
+	C.流水編號 單頭流水編號,
+	0 來源
+FROM 
+	FIL0040 A
+	INNER JOIN FIL0041 B ON A.單據類別 = B.單別 AND A.單據編號 = B.單號 AND A.單據序號 = B.序號
+	INNER JOIN FIL0030 C ON A.單據類別 = C.單據類別 AND A.單據編號 = C.單據編號
+	INNER JOIN FIL0032 D ON C.歸屬類別 = D.製令單別 AND C.歸屬編號 = D.製令單號
+	INNER JOIN FIL0031 E ON A.單據類別 = E.單別 AND A.單據編號 = E.單號
+	LEFT JOIN FIL0010 G ON A.相關代碼1 = G.員工編號
+	LEFT JOIN FIL0010 H ON A.相關代碼2 = H.員工編號
+	LEFT JOIN FIL0010 I ON A.相關代碼3 = I.員工編號
+	LEFT JOIN ViewFil310N J ON J.代碼 = E.製程代碼
+	LEFT JOIN FIL0010 K ON decode(E.Logical2,1,E.文數字13,B.文數字5) = K.員工編號
+	LEFT JOIN ViewFIL0012 L ON B.文數字4 = L.部門編號
+WHERE
+	A.單據類別 = 'C41' AND
+	A.異動類別 = 'A' AND
+	(E.製程代碼 = 'C31B' or E.製程代碼 = 'C31C') AND
+	E.文字4<>'不用熟成' AND
+	A.產品編號<>' '  AND
+	B.標籤列印日期一>'20240101'
+	
+UNION ALL 
+
+SELECT 
+	A.單別, 
+	A.單號,
+	A.序號,
+	A.製令類別,
+	A.製令單號,
+	D.產品編號 產品編號,
+	D.產品名稱 產品名稱,
+	A.熟成入庫日期,
+	A.熟成入庫時間,
+	A.熟成出庫日期,
+	A.熟成出庫時間,
+	0 不限出庫時間,
+	A.熟成狀態,
+	A.入庫狀態,
+	A.出庫狀態,		
+	A.應出庫日時起,
+	A.應出庫日時迄,
+	A.應入庫日時,
+	A.本製程編號,
+	A.PLC抓取米數,
+	A.庫存數,
+	A.製品厚度,
+	to_char(A.熟成條件) 熟成條件,
+	A.可提早出庫,
+	NVL(G.員工姓名,' ') 入庫人員姓名,
+	NVL(H.員工姓名,' ') 出庫人員姓名,
+	NVL(I.員工姓名,' ') 放行人員姓名,
+	NVL(K.員工姓名,' ') 不限出庫設定姓名,
+	J.名稱 製程,
+	A.IP位址,
+	NVL(L.部門名稱,' ') 熟成室位置,
+	A.加工別,
+	0 超時未入庫,
+	0 異常,
+	1 重覆入庫,
+	C.流水編號 單頭流水編號,
+	1 來源
+FROM 
+	FIL004K A
+	INNER JOIN FIL0030 C ON A.單別 = C.單據類別 AND A.單號 = C.單據編號
+	INNER JOIN FIL0032 D ON D.製令單別 = A.製令類別 AND D.製令單號 = A.製令單號
+	LEFT JOIN FIL0010 G ON A.入庫人員 = G.員工編號
+	LEFT JOIN FIL0010 H ON A.出庫人員 = H.員工編號
+	LEFT JOIN FIL0010 I ON A.放行人員 = I.員工編號
+	LEFT JOIN ViewFil310N J ON J.代碼 = A.製程代碼
+	LEFT JOIN FIL0010 K ON A.不限出庫設定人員 = K.員工編號
+	LEFT JOIN ViewFIL0012 L ON A.IP位址 = L.部門編號
+	
+	);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4AA" ("單別", "單號", "序號", "已熟成") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11145,8 +11429,8 @@ FROM
 	FIL004K A	
 	);
 
--- Home #1922 ViewFIL404C4AB.已冷鏈
-Create or Replace view ViewFIL404C4AB AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4AB" ("單別", "單號", "序號", "已冷鏈") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11185,8 +11469,8 @@ FROM
 	FIL004KA A	
 	);
 
--- Home #1920 ViewFIL404C4A_1.積層冷鏈室管制
-Create or Replace view ViewFIL404C4A_V1 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4A_V1" ("單別", "單號", "序號", "製令類別", "製令單號", "產品編號", "產品名稱", "冷鏈入庫日期", "冷鏈入庫時間", "冷鏈出庫日期", "冷鏈出庫時間", "不限出庫時間", "冷鏈狀態", "入庫狀態", "出庫狀態", "應出庫日時起", "應出庫日時迄", "應入庫日時", "本製程編號", "PLC抓取米數", "庫存數", "製品厚度", "冷鏈條件", "可提早出庫", "入庫人員", "入庫人員姓名", "出庫人員姓名", "放行人員姓名", "不限出庫設定姓名", "製程", "IP位址", "IP位址2", "冷鏈室位置", "加工別", "超時未入庫", "異常", "重覆入庫", "最後入出日時", "單頭流水編號", "來源", "優先冷鏈") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11352,8 +11636,8 @@ FROM
 	
 	);
 
--- Home #1924 ViewFIL404C4A_2.積層冷鏈室(BI)
-Create or Replace view ViewFIL404C4A_V2 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4A_V2" ("單別", "單號", "序號", "製令類別", "製令單號", "產品編號", "產品名稱", "冷鏈入庫日期", "冷鏈入庫時間", "冷鏈出庫日期", "冷鏈出庫時間", "不限出庫時間", "冷鏈狀態", "入庫狀態", "出庫狀態", "本製程編號", "PLC抓取米數", "庫存數", "製品厚度", "冷鏈條件", "可提早出庫", "入庫人員姓名", "出庫人員姓名", "放行人員姓名", "不限出庫設定姓名", "製程", "IP位址", "冷鏈室位置", "加工別", "超時未入庫", "異常", "重覆入庫", "單頭流水編號", "來源") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11505,8 +11789,8 @@ FROM
 	
 	);
 
--- Home #1919 ViewFIL404C4_V1.積層熟成室管制
-Create or Replace view ViewFIL404C4_V1 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4_V1" ("單別", "單號", "序號", "製令類別", "製令單號", "產品編號", "產品名稱", "熟成入庫日期", "熟成入庫時間", "熟成出庫日期", "熟成出庫時間", "不限出庫時間", "熟成狀態", "入庫狀態", "出庫狀態", "應出庫日時起", "應出庫日時迄", "應入庫日時", "本製程編號", "PLC抓取米數", "庫存數", "製品厚度", "熟成條件", "可提早出庫", "入庫人員", "入庫人員姓名", "出庫人員姓名", "放行人員姓名", "不限出庫設定姓名", "製程", "IP位址", "IP位址2", "熟成室位置", "加工別", "超時未入庫", "異常", "重覆入庫", "最後入出日時", "單頭流水編號", "來源", "優先冷鏈") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11672,8 +11956,8 @@ FROM
 	
 	);
 
--- Home #1923 ViewFIL404C4_V2.積層熟成室(BI)
-Create or Replace view ViewFIL404C4_V2 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C4_V2" ("單別", "單號", "序號", "製令類別", "製令單號", "產品編號", "產品名稱", "熟成入庫日期", "熟成入庫時間", "熟成出庫日期", "熟成出庫時間", "不限出庫時間", "熟成狀態", "入庫狀態", "出庫狀態", "本製程編號", "PLC抓取米數", "庫存數", "製品厚度", "熟成條件", "可提早出庫", "入庫人員姓名", "出庫人員姓名", "放行人員姓名", "不限出庫設定姓名", "製程", "IP位址", "熟成室位置", "加工別", "超時未入庫", "異常", "重覆入庫", "單頭流水編號", "來源") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11825,8 +12109,73 @@ FROM
 	
 	);
 
--- Home #1926 ViewFIL404C5A_1.積層冷鏈室簡表
-Create or Replace view ViewFIL404C5A_V1 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C5" ("單別", "單號", "序號", "製令單號", "本製程編號", "加工別", "可提早出庫", "重覆入庫", "熟成狀態", "應出庫日時起", "應出庫日時迄", "熟成入庫日期", "熟成入庫時間", "熟成出庫日期", "熟成出庫時間", "製程代碼") AS (  
+SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	A.單據序號 序號,
+	C.歸屬編號 製令單號,
+	A.產品編號 本製程編號,
+	E.交貨日期_次批 加工別,	
+	A.Logical4 可提早出庫,
+	A.Logical5 重覆入庫,
+	nvl(case 
+		 when A.Logical5 = 1 and A.預交日 > '00000000' then '4' 
+		 when A.Logical5 = 1 and A.異動日期 > '00000000' and A.預交日 <= '00000000' then '2' 
+		 when A.異動日期 <= '00000000' and sysdate > to_date(trim(B.標籤列印日期一)||trim(B.標籤列印時間一), 'YYYYMMDDHH24:MI:SS') + 1/24 then '1' 
+	     when A.異動日期 > '00000000' and A.預交日 <= '00000000' then '2'
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') < to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 then '3' 		 
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') between to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 and to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 then '4' 		 
+		 when A.預交日 > '00000000' and to_date(trim(A.預交日)||trim(B.Time4), 'YYYYMMDDHH24:MI:SS') > to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 then '5' 
+		 else ' ' 
+	end,' ') 熟成狀態,	
+	case when A.異動日期 > '00000000' then to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值10 / 24 else add_months(sysdate,12) end 應出庫日時起,
+	case when A.異動日期 > '00000000' then to_date(trim(A.異動日期)||trim(B.Time3), 'YYYYMMDDHH24:MI:SS') + E.數值11 / 24 else add_months(sysdate,12) end 應出庫日時迄	,
+	A.異動日期 熟成入庫日期,
+	B.Time3 熟成入庫時間,
+	A.預交日 熟成出庫日期,
+	B.Time4 熟成出庫時間,
+	E.製程代碼
+FROM 
+	FIL0040 A
+	INNER JOIN FIL0041 B ON A.單據類別 = B.單別 AND A.單據編號 = B.單號 AND A.單據序號 = B.序號	
+	INNER JOIN FIL0030 C ON A.單據類別 = C.單據類別 AND A.單據編號 = C.單據編號
+	INNER JOIN FIL0031 E ON A.單據類別 = E.單別 AND A.單據編號 = E.單號
+WHERE
+	A.單據類別 = 'C41' AND
+	A.異動類別 = 'A' AND
+	(E.製程代碼 = 'C31B' or E.製程代碼 = 'C31C') AND
+	E.文字4<>'不用熟成' AND
+	A.產品編號<>' ' AND
+	B.標籤列印日期一>'20240101'
+	
+UNION ALL 
+
+SELECT 
+	A.單別, 
+	A.單號,
+	A.序號,
+	A.製令單號,
+	A.本製程編號,
+	A.加工別,	
+	A.可提早出庫,
+	A.重覆入庫,	
+	A.熟成狀態,
+	A.應出庫日時起,
+	A.應出庫日時迄,
+	A.熟成入庫日期,
+	A.熟成入庫時間,
+	A.熟成出庫日期,
+	A.熟成出庫時間,
+	E.製程代碼
+FROM	
+	FIL004K A	
+	INNER JOIN FIL0031 E ON A.單別 = E.單別 AND A.單號 = E.單號
+	);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C5A_V1" ("單別", "單號", "序號", "製令單號", "本製程編號", "加工別", "可提早出庫", "重覆入庫", "冷鏈狀態", "應出庫日時起", "應出庫日時迄", "冷鏈入庫日期", "冷鏈入庫時間", "冷鏈出庫日期", "冷鏈出庫時間", "製程代碼", "最後入出日時") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11893,8 +12242,8 @@ FROM
 	INNER JOIN FIL0031 E ON A.單別 = E.單別 AND A.單號 = E.單號
 	);
 
--- Home #1925 ViewFIL404C5_V1.積層熟成室簡表
-Create or Replace view ViewFIL404C5_V1 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404C5_V1" ("單別", "單號", "序號", "製令單號", "本製程編號", "加工別", "可提早出庫", "重覆入庫", "熟成狀態", "應出庫日時起", "應出庫日時迄", "熟成入庫日期", "熟成入庫時間", "熟成出庫日期", "熟成出庫時間", "製程代碼", "最後入出日時") AS (  
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -11961,8 +12310,8 @@ FROM
 	INNER JOIN FIL0031 E ON A.單別 = E.單別 AND A.單號 = E.單號
 	);
 
--- Home #1927 ViewFIL404CA.積層日報合計_C31C
-Create view ViewFIL404CA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CA" ("單別", "單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -12007,8 +12356,8 @@ SELECT
 		A.單據編號
 );
 
--- Home #1928 ViewFIL404CB.積層前製耗用_C31C
-Create or Replace view ViewFIL404CB AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CB" ("單別", "單號", "群組序號", "前一筆結餘", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量") AS (
 SELECT 
 		A.單據類別 單別, 
 		A.單據編號 單號,
@@ -12033,8 +12382,8 @@ SELECT
 		A.鐵條費
 );
 
--- Home #1929 ViewFIL404CC.前製製令機台每日
-Create Or Replace view ViewFIL404CC AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CC" ("製令單別", "製令單號", "加工別", "製程代碼", "作業日期", "機台代碼", "數量") AS (  
 SELECT 
 	C.歸屬類別 製令單別,
 	C.歸屬編號 製令單號,
@@ -12060,8 +12409,8 @@ GROUP BY
 	B.製程代碼,
 	B.機台代碼);
 
--- Home #1930 ViewFIL404CD.前製製令生產彙總
-Create Or Replace view ViewFIL404CD AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CD" ("製令單別", "製令單號", "加工別", "製程代碼", "數量") AS (  
 SELECT 
 	C.歸屬類別 製令單別,
 	C.歸屬編號 製令單號,
@@ -12082,8 +12431,8 @@ GROUP BY
 	B.交貨日期_次批,
 	B.製程代碼);
 
--- Home #1931 ViewFIL404CD0.積層製令合計_31B
-Create or replace view ViewFIL404CD0 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CD0" ("製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A1.歸屬類別 製令單別, 
 		A1.歸屬編號 製令單號,
@@ -12142,8 +12491,8 @@ SELECT
 		A1.歸屬編號
 );
 
--- Home #1932 ViewFIL404CD1.淋膜單據合計
-Create or replace view ViewFIL404CD1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CD1" ("單據類別", "單據編號", "改件調機", "製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
 SELECT 
 		A.單據類別, 
 		A.單據編號,
@@ -12207,8 +12556,80 @@ SELECT
 		B.Logical6
 );
 
--- Home #1933 ViewFIL404D1.裁切日報主檔.C41
-Create view ViewFIL404D1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404CD2" ("製令單別", "製令單號", "前製程米數", "PLC抓取米數", "合理剔除數", "不良剔除數", "檢品數量", "線外不良剔除數", "線內不良剔除數", "試刷米數", "回庫數量", "生產條件米數") AS (
+SELECT 
+		A.歸屬類別 製令單別, 
+		A.歸屬編號 製令單號,
+		SUM(M.異動數量) 前製程米數,
+		SUM(M.異動單價) PLC抓取米數,
+		SUM(M.燙金費) 合理剔除數,
+		SUM(M.毛重) 不良剔除數,
+		SUM(M.贈品數量) 檢品數量,
+		SUM(M.雷射費) 線外不良剔除數,
+		SUM(M.夾鏈費) 線內不良剔除數,
+		SUM(M.氣閥費) 試刷米數,
+		max(nvl(ME.回庫數量,0)) 回庫數量,
+		max(nvl(MD.印刷米數,0)*1000) 生產條件米數
+	FROM 
+		FIL0040 M
+		INNER JOIN FIL0030 A ON M.單據類別 = A.單據類別 AND M.單據編號 = A.單據編號
+		INNER JOIN FIL0031 B ON M.單據類別 = B.單別 AND M.單據編號 = B.單號
+		INNER JOIN ViewFIL4030 C ON A.歸屬類別 = C.製令單別 AND A.歸屬編號 = C.製令單號
+		LEFT JOIN ViewFIL310P D ON B.機台代碼 = D.代碼
+		LEFT JOIN FIL0010 E ON A.業務員 = E.員工編號
+		LEFT JOIN FIL0012 F ON B.材料編號一 = F.產品編號
+		LEFT JOIN FIL0012 G ON B.材料編號二 = G.產品編號
+		LEFT JOIN FIL0012 H ON B.材料編號三 = H.產品編號
+		LEFT JOIN FIL0010 Z1 ON A.填表人 = Z1.員工編號
+		LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號
+		LEFT JOIN ViewOfObjProperties Z3 ON A.流水編號 = Z3.單據流水號
+		LEFT JOIN FIL0033 Z5 ON A.歸屬類別 = Z5.製令單別 AND A.歸屬編號 = Z5.製令單號 AND Z5.加工別='A'
+		LEFT JOIN 
+		(SELECT A.單別,A.單號,COUNT(序號) CCP筆數 FROM FIL004I A GROUP BY A.單別,A.單號) J ON J.單別=A.單據類別 AND J.單號=A.單據編號
+		LEFT JOIN FIL0041 MC ON M.單據類別 = MC.單別 AND M.單據編號 = MC.單號 AND M.單據序號 = MC.序號
+		LEFT JOIN
+		(SELECT 
+			F.製令單別, 
+			F.製令單號, 
+			sum(F.印刷米數) 印刷米數
+		FROM 
+			FIL0033 F 
+		WHERE 
+			F.印刷基材<>' ' 
+		GROUP BY
+			F.製令單別, 
+			F.製令單號) MD ON MD.製令單別 = A.歸屬類別 AND MD.製令單號 = A.歸屬編號 
+		LEFT JOIN 
+		(
+			SELECT 
+				M.單據類別,
+				M.單據編號,
+				SUM(M.贈品數量) 回庫數量
+			FROM
+				FIL0040 M
+				INNER JOIN FIL0031 B ON M.單據類別 = B.單別 AND M.單據編號 = B.單號
+				INNER JOIN FIL0041 MC ON M.單據類別 = MC.單別 AND M.單據編號 = MC.單號 AND M.單據序號 = MC.序號
+			WHERE
+				M.單據類別 = 'C41' AND
+				M.異動類別= 'G' AND
+				B.製程代碼 = 'C31C'	AND
+				MC.標籤列印次數 > 0
+			GROUP BY
+				M.單據類別, 
+				M.單據編號
+		) ME ON ME.單據類別 = M.單據類別 AND ME.單據編號 = M.單據編號
+	WHERE
+		M.單據類別 = 'C41' AND
+		M.異動類別 = 'A' AND
+		B.製程代碼 = 'C31C' 
+	GROUP BY
+		A.歸屬類別, 
+		A.歸屬編號
+);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404D1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "主旨", "機台代碼", "機台名稱", "加工別", "本日件數順序", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "側邊料", "共版", "尾數需待重整", "待補", "結束", "改件調機", "頭出尾出", "頭出尾出說明", "開始時間", "結束時間", "條數", "撒粉量", "前置耗時", "總耗時", "成捲寬度", "成捲長度", "加工速度RPM", "加工速度M", "報廢數", "重整數", "每箱捲數", "待補日報", "簽核系統", "備註", "流水編號", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "填表人", "單位主管流水編號", "員工流水編號", "填表人姓名", "填表日", "OPRP次數", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -12291,8 +12712,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31D');
 
--- Home #1934 ViewFIL404D2.裁切日報明細
-Create view ViewFIL404D2 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404D2" ("單別", "單號", "序號", "日期", "前製程米數", "裁切米數", "入庫數量", "合併編號", "分條號", "故障及尾數", "待補", "印刷", "淋膜", "積層", "裁切尺寸", "製品厚度", "接頭數量", "平整度", "半成品編號", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "備註說明", "結案碼", "標籤列印次數", "標籤類別", "首次列印日期", "前製程條碼1", "前製程條碼2", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -12340,8 +12761,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	B.製程代碼 = 'C31D');
 
--- Home #1935 ViewFIL404D3.裁切日報明細結餘
-Create view ViewFIL404D3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404D3" ("單據類別", "單據編號", "單據序號", "前製程條碼", "結餘米數") AS (
 SELECT 
 	A.單據類別,
 	A.單據編號,
@@ -12366,8 +12787,8 @@ WHERE
 	B.製程代碼 = 'C31D'
 );
 
--- Home #1936 ViewFIL404DA.裁切日報合計_C31D
-Create view ViewFIL404DA AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DA" ("單別", "單號", "最後更新日時", "入庫捲數", "前製程米數", "裁切米數", "故障米數", "客戶要求數", "線外剔除數", "合理剔除數", "使用米數", "結餘米數", "PLC抓取米數", "上次尾數", "回庫數量", "資料筆數") AS (                                                                                                                                                      
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -12419,8 +12840,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1937 ViewFIL404DA1.裁切製令合計
-Create or Replace view ViewFIL404DA1 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DA1" ("單別", "單號", "改件調機", "製令單別", "製令單號", "入庫捲數", "前製程米數", "裁切米數", "不良剔除數", "客戶要求數", "線外不良剔除數", "合理不良剔除數", "使用米數", "結餘米數", "PLC抓取米數", "上次尾數", "回庫數量", "資料筆數") AS (                                                                                                                                                      
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -12475,8 +12896,8 @@ GROUP BY
 	A.單據編號,
 	B.Logical6);
 
--- Home #1938 ViewFIL404DB.裁切日報捲數_C31D
-Create view ViewFIL404DB AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DB" ("單別", "單號", "每捲數量", "幾捲") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	(A.贈品數量+nvl(C.包裝數量,0)) 每捲數量, 
@@ -12499,8 +12920,8 @@ GROUP BY
 	(A.贈品數量+nvl(C.包裝數量,0))
 	);
 
--- Home #1939 ViewFIL404DC.裁切日報彙總_C31D
-Create view ViewFIL404DC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DC" ("單別", "單號", "彙總") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -12536,8 +12957,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1940 ViewFIL404DD.裁切日報報廢_C31D
-Create view ViewFIL404DD AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DD" ("單別", "單號", "報廢筆數", "重整筆數") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -12550,8 +12971,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1941 ViewFIL404DE.裁切製令彙總_C31D
-Create or Replace view ViewFIL404DE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404DE" ("製令單號", "捲數") AS (
 SELECT 
 	A.製令單號,
 	sum(A.幾捲) 捲數
@@ -12578,8 +12999,8 @@ GROUP BY
 	A.製令單號
 );
 
--- Home #1942 ViewFIL404E1.製袋日報主檔.C41
-Create view ViewFIL404E1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "單位主管流水編號", "本日件數順序", "製造日期", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "共版", "改件調機", "結束", "待補", "產品條件確認", "溫度條牛設定確認", "壓力條件設定確認", "電眼設定確認", "銅條與規板規格確認", "開始時間", "結束時間", "製袋速度", "成品尺寸", "成品尺寸_高", "成品尺寸_底", "成品尺寸_寬", "展開尺寸_高", "展開尺寸_寬", "報廢數", "重整數", "簽核系統", "備註", "作業人員", "作業人員姓名", "作業員二", "作業員二姓名", "作業員三", "作業員三姓名", "紙箱_無氣閥_每束幾袋", "紙箱_無氣閥_每箱幾袋", "紙箱代碼1", "紙箱品名_無氣閥", "紙箱_氣閥_每束幾袋", "紙箱_氣閥_每箱幾袋", "紙箱代碼2", "紙箱品名_氣閥", "抬頭1", "抬頭2", "抬頭3", "確認碼", "自主檢查_封邊上下", "自主檢查_封邊背側邊", "自主檢查_圓孔", "自主檢查_封邊上下MM", "自主檢查_封邊上下MM2", "自主檢查_封邊背邊側MM", "自主檢查_封邊背邊側MM2", "自主檢查_打角MM", "自主檢查_夾鏈MM", "待補日報號碼", "簽核狀態", "CCP提醒HR", "自主檢查提醒HR", "氣閥代碼", "鐵條代碼", "尾數紙箱", "雙膜", "流水編號", "填表人", "填表人姓名", "員工流水編號", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -12684,8 +13105,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31E');
 
--- Home #1944 ViewFIL404E1A.製袋目前製令.C41
-Create view ViewFIL404E1A AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E1A" ("機台代碼", "製令單號") AS (
 select distinct B.機台代碼,
         first_value(A.歸屬編號) over (partition by B.機台代碼 order by A.最後更新日 desc RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 製令單號
 FROM
@@ -12697,8 +13118,8 @@ WHERE
 	B.時間二 = '000000'
 );
 
--- Home #1943 ViewFIL404E1.製袋日報主檔.C41B
-Create or Replace view ViewFIL404E1_B AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E1_B" ("單別", "單號", "作業日期", "製造日期", "製令單別", "製令單號", "機台代碼", "結束", "待補", "紙箱_無氣閥_每束幾袋", "紙箱_無氣閥_每箱幾袋", "紙箱代碼1", "紙箱_氣閥_每束幾袋", "紙箱_氣閥_每箱幾袋", "紙箱代碼2", "尾數紙箱", "抬頭1", "抬頭2", "抬頭3", "待補日報號碼", "氣閥代碼", "鐵條代碼", "作業人員", "作業員二", "作業員三") AS ( 
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -12734,8 +13155,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31E');
 
--- Home #1945 ViewFIL404E1C.製袋製令箱數.C41
-Create or Replace view ViewFIL404E1_C AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E1_C" ("單據類別", "單據編號", "箱號", "幾箱") AS ( 
 SELECT
 	A.單據類別,
 	A.單據編號,
@@ -12753,8 +13174,8 @@ GROUP BY
 	A.單據編號,
 	A.異動數量);
 
--- Home #1946 ViewFIL404E1D.製袋日報主檔.C41
-Create or Replace view ViewFIL404E1_D AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E1_D" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "本日件數順序", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "改件調機", "結束", "待補", "開始時間", "結束時間", "簽核系統", "備註", "作業人員", "作業人員姓名", "作業員二", "作業員二姓名", "作業員三", "作業員三姓名", "確認碼", "簽核狀態", "雙膜", "流水編號", "填表人", "填表人姓名", "單位主管流水編號", "員工流水編號", "填表日") AS (                                                                                                                                                      
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -12811,8 +13232,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31E');
 
--- Home #1947 ViewFIL404E2.製袋日報明細
-Create view ViewFIL404E2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E2" ("單別", "單號", "序號", "日期", "夾鏈批號", "夾鏈料號", "夾鏈品名", "夾鏈規格", "夾鏈米數", "Ａ材編號", "Ａ材領料米數", "Ａ接頭數", "Ａ切刀次數", "Ａ結案", "Ｂ材編號", "Ｂ材領料米數", "Ｂ接頭數", "Ｂ切刀次數", "Ｂ結案", "側邊編號", "側邊領料米數", "側接頭數", "側切刀次數", "側結案", "底邊編號", "底邊領料米數", "底接頭數", "底切刀次數", "底結案", "箱號", "氣閥", "數量", "補尾數", "重量", "不良原因", "外箱標示", "不良原因說明", "外箱標示說明", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "半成品編號", "結案碼", "備註說明", "製令單別", "製令單號", "氣閥代碼", "鐵條代碼", "氣閥重量", "鐵條重量", "總重量", "待補", "雙膜", "待重工", "結束時間", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -12891,8 +13312,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	C.製程代碼 = 'C31E');
 
--- Home #1948 ViewFIL404E2A.製袋日報明細_A
-Create OR Replace view ViewFIL404E2_A AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E2_A" ("單別", "單號", "序號", "Ａ材編號", "Ａ材領料米數", "Ａ接頭數", "Ａ切刀次數", "Ａ結案", "Ｂ材編號", "Ｂ材領料米數", "Ｂ接頭數", "Ｂ切刀次數", "Ｂ結案", "側邊編號", "側邊領料米數", "側接頭數", "側切刀次數", "側結案", "底邊編號", "底邊領料米數", "底接頭數", "底切刀次數", "底結案", "箱號", "氣閥", "數量", "補尾數", "重量", "不良原因", "外箱標示", "不良原因說明", "外箱標示說明", "單位代碼", "庫別代碼", "成品檢驗單號", "製令單別", "製令單號", "作業日期", "製造日期", "待重工") AS (  
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -12944,8 +13365,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	C.製程代碼 = 'C31E' );
 
--- Home #1949 ViewFIL404E2B.製袋日報明細_B
-Create OR Replace view ViewFIL404E2_B AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E2_B" ("單別", "單號", "箱號") AS (  
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -12962,8 +13383,8 @@ GROUP BY
 	A.單據編號
 	);
 
--- Home #2044 ViewFIL404E3.成品異動明細
-Create OR Replace view ViewFIL404E3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3" ("單別", "單號", "序號", "箱號", "數量", "報廢數量", "重量", "批號", "製令類別", "製令單號", "作業日期", "作業員一", "作業員二", "作業員三", "作業員一姓名", "作業員二姓名", "作業員三姓名", "單據數量", "單據重量", "來源", "標籤類別", "製袋", "氣閥", "鐵條", "異動", "重工", "品檢", "流水編號", "最後更新日時") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -13047,8 +13468,8 @@ WHERE
 	A.單據類別 = 'E32' or A.單據類別 = 'E33'  or A.單據類別 = 'E35' or A.單據類別='E37'
 );
 
--- Home #2045 ViewFIL404E3_S.成品異動明細
-Create OR Replace view ViewFIL404E3_S AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S" ("製令單號", "箱號", "數量", "報廢數量", "重量", "批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "來源", "單別", "單號", "序號") AS (
 SELECT
  	D.歸屬編號 製令單號,
 	A.異動數量 箱號,
@@ -13108,8 +13529,8 @@ WHERE
 	A.單據類別 between 'E32' and 'E37'
 );
 
--- Home #2046 ViewFIL404E3_S1.成品異動品檢前
-Create OR Replace view ViewFIL404E3_S1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S1" ("製令單號", "箱號", "數量", "報廢數量", "重量", "批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "來源", "單別", "單號", "序號") AS (
 SELECT 	D.歸屬編號 製令單號,
 	A.異動數量 箱號,
 	NVL(decode(C.製程代碼,'C31E',decode(B.數值14,0,A.贈品數量,B.數值14),B.數值5*-1),0) 數量,
@@ -13166,8 +13587,8 @@ WHERE
 	A.單據類別 = 'E32' or A.單據類別 = 'E33'  or A.單據類別 = 'E35'
 );
 
--- Home #2047 ViewFIL404E3_S2.成品異動狀態
-Create OR Replace view ViewFIL404E3_S2 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S2" ("批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "來源") AS (
 SELECT 	
 	D.歸屬編號 ||'-'||trim(to_char(A.異動數量, '0000')) 批號,		
 	1 製袋,
@@ -13207,8 +13628,8 @@ WHERE
 	A.單據類別 = 'E32' or A.單據類別 = 'E33'  or A.單據類別 = 'E35' or A.單據類別='E37'
 );
 
--- Home #2048 ViewFIL404E3_S3.成品箱號對照
-Create OR Replace view ViewFIL404E3_S3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S3" ("單別", "單號", "序號", "箱號", "作業日期", "批號", "製令類別", "製令單號", "流水編號") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -13247,8 +13668,8 @@ WHERE
 	A.單據類別 = 'E32' or A.單據類別 = 'E37' 
 );
 
--- Home #2049 ViewFIL404E3_S4.異動檔(含調整)
-Create OR Replace view ViewFIL404E3_S4 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S4" ("單別", "單號", "序號", "異動日期", "製令單號", "箱號", "數量", "報廢數量", "批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "來源") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -13332,8 +13753,8 @@ WHERE
 	A.異動類別 = '1' AND /*半成品*/
 	B.稅別 = 'B' /*廠內*/);
 
--- Home #2050 ViewFIL404E3_S5.異動檔(來源)
-Create OR Replace view ViewFIL404E3_S5 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S5" ("批號", "來源", "單別", "單號", "序號", "單據日期") AS (
 SELECT 	
 	D.歸屬編號 ||'-'||trim(to_char(A.異動數量, '0000')) 批號,		
 	TO_NCHAR('製袋') 來源,
@@ -13365,8 +13786,8 @@ WHERE
 	A.單據類別 between 'E32' AND 'E33' 
 );
 
--- Home #2051 ViewFIL404E3_S6.製令箱號
-Create OR Replace view ViewFIL404E3_S6 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E3_S6" ("製令單號", "箱號") AS (
 SELECT DISTINCT
 	A.製令單號,
 	MAX(A.箱號) 箱號
@@ -13396,8 +13817,8 @@ GROUP BY
 A.製令單號
 );
 
--- Home #2065 ViewFIL404E4.成品異動合計
-Create OR Replace view ViewFIL404E4 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4" ("批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "箱號", "數量", "報廢數量", "重量", "平均重量") AS (
 SELECT 
 	A.批號 批號,
 	decode(SUM(製袋),0,0,1) 製袋,
@@ -13421,8 +13842,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2053 ViewFIL404E4_S.成品製程狀態
-Create OR Replace view ViewFIL404E4_S AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_S" ("批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢") AS (
 SELECT 
 	A.批號 批號,
 	decode(SUM(製袋),0,0,1) 製袋,
@@ -13438,8 +13859,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2054 ViewFIL404E4_S1.成品品檢前合計
-Create OR Replace view ViewFIL404E4_S1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_S1" ("批號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "箱號", "數量", "報廢數量", "重量", "平均重量") AS (
 SELECT 
 	A.批號 批號,
 	decode(SUM(製袋),0,0,1) 製袋,
@@ -13463,8 +13884,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2061 ViewFIL404E4_T.成品數量合計
-Create OR Replace view ViewFIL404E4_T AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T" ("批號", "數量", "製袋重量", "平均袋重") AS (  
 SELECT 
 	A.批號,
 	sum(A.數量)	數量,
@@ -13578,8 +13999,8 @@ Group by
 
 );
 
--- Home #2062 ViewFIL404E4_T1.成品結存數
-Create OR Replace view ViewFIL404E4_T1 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T1" ("批號", "數量") AS (  
 SELECT 
 	A.批號,
 	sum(A.數量)	數量
@@ -13620,8 +14041,8 @@ Group by
 
 );
 
--- Home #2056 ViewFIL404E4_T2.成品氣閥重量
-Create OR Replace view ViewFIL404E4_T2 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T2" ("批號", "數量") AS (
 SELECT 	D.歸屬編號||'-'||trim(to_char(A.異動數量,'0009')) 批號,
 		sum(NVL(B.數值5*-1,0)) 數量
 FROM 
@@ -13635,8 +14056,8 @@ GROUP BY
 	D.歸屬編號||'-'||trim(to_char(A.異動數量,'0009'))
 );
 
--- Home #2057 ViewFIL404E4_T3.成品鐵條重量
-Create OR Replace view ViewFIL404E4_T3 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T3" ("批號", "數量") AS (
 SELECT 	D.歸屬編號||'-'||trim(to_char(A.異動數量,'0009')) 批號,
 		sum(NVL(B.數值5*-1,0)) 數量
 FROM 
@@ -13650,8 +14071,8 @@ GROUP BY
 	D.歸屬編號||'-'||trim(to_char(A.異動數量,'0009'))
 );
 
--- Home #2058 ViewFIL404E4_T4.成品異動重量
-Create OR Replace view ViewFIL404E4_T4 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T4" ("批號", "數量", "重量") AS (
 SELECT 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009')) 批號,
 	sum(NVL(A.贈品數量,0)) 數量,
 	sum(NVL(A.毛重,0)) 重量
@@ -13665,8 +14086,8 @@ GROUP BY
 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009'))
 );
 
--- Home #2059 ViewFIL404E4_T5.成品重工重量
-Create OR Replace view ViewFIL404E4_T5 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T5" ("批號", "數量", "重量", "報廢數量") AS (
 SELECT 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009')) 批號,
 	sum(NVL(A.贈品數量,0)) 數量,
 	sum(NVL(A.毛重,0)) 重量,
@@ -13681,8 +14102,8 @@ GROUP BY
 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009'))
 );
 
--- Home #2060 ViewFIL404E4_T6.成品品檢重量
-Create OR Replace view ViewFIL404E4_T6 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T6" ("批號", "數量") AS (
 SELECT 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009')) 批號,
 	sum(NVL(B.數值5*-1,0)) 數量
 FROM 
@@ -13695,8 +14116,8 @@ GROUP BY
 	A.廠客品號||'-'||trim(to_char(A.異動數量,'0009'))
 );
 
--- Home #2063 ViewFIL404E4_T7.成品庫存合計
-Create OR Replace view ViewFIL404E4_T7 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T7" ("製令號碼", "結存數量", "結存重量") AS (  
 SELECT 
 	regexp_substr(A.批號,'[^-]+', 1, 1) 製令號碼,
 	sum(A.結存數量) 結存數量,
@@ -13707,16 +14128,16 @@ GROUP BY
 	regexp_substr(A.批號,'[^-]+', 1, 1)
 );
 
--- Home #2064 ViewFIL404E4_T8.成品批號
-Create OR Replace view ViewFIL404E4_T8 AS (  
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E4_T8" ("批號") AS (  
 SELECT 
 	DISTINCT A.批號
 FROM	
 	FIL004L A
 );
 
--- Home #2066 ViewFIL404E5.成品製令合計
-Create OR Replace view ViewFIL404E5 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E5" ("製令類別", "製令單號", "箱號", "數量", "報廢數量", "重量", "平均重量") AS (
 SELECT 
 	TO_CHAR('C11') 製令類別,
 	A.製令單號,
@@ -13734,8 +14155,8 @@ GROUP BY
 	A.製令單號
 );
 
--- Home #2067 ViewFIL404E6.成品製令分項
-Create OR Replace view ViewFIL404E6 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E6" ("製令類別", "製令單號", "製袋", "氣閥", "鐵條", "異動", "重工", "出貨", "品檢", "箱號", "數量", "報廢數量", "重量", "平均重量") AS (
 SELECT 
 	TO_CHAR('C11') 製令類別,
 	A.製令單號,
@@ -13760,8 +14181,8 @@ GROUP BY
 	A.製令單號
 );
 
--- Home #2068 ViewFIL404E7.製袋平均重量
-Create or replace view ViewFIL404E7 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E7" ("製令單別", "製令單號", "箱號", "平均袋重", "紙箱重量", "作業人員", "作業員二", "作業員三", "作業人員姓名", "作業員二姓名", "作業員三姓名") AS (
 SELECT 	DISTINCT A.製令單別,A.製令單號,A.箱號,
 	first_value(A.平均袋重) over (partition by 製令單別,製令單號,箱號  order by 單號 asc) 平均袋重,
 	first_value(A.紙箱重量) over (partition by 製令單別,製令單號,箱號  order by 單號 asc) 紙箱重量,
@@ -13807,8 +14228,8 @@ FROM
 	) A
 );
 
--- Home #2069 ViewFIL404E71.製袋批號首筆重
-Create or replace view ViewFIL404E71 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E71" ("批號", "平均袋重") AS (
 SELECT 	DISTINCT A.批號,
 	nvl(first_value(A.平均袋重) over (partition by A.批號  order by 單號 asc),0) 平均袋重
 		
@@ -13828,8 +14249,30 @@ FROM
 	) A
 );
 
--- Home #2070 ViewFIL404E72A.製袋每日產量
-Create or replace view ViewFIL404E72A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E72" ("製令單別", "製令單號", "作業日期", "每日產量") AS (
+SELECT
+		C1.歸屬類別 製令單別,
+		C1.歸屬編號 製令單號,
+		C1.單據日期 作業日期,
+		sum(decode(B.數值14,0,A.贈品數量,B.數值14)) 每日產量
+	FROM 
+		FIL0040 A
+		INNER JOIN FIL0041 B ON A.單據類別 = B.單別 AND A.單據編號 = B.單號 AND A.單據序號 = B.序號
+		INNER JOIN FIL0031 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號
+		INNER JOIN FIL0030 C1 ON A.單據類別 = C1.單據類別 AND A.單據編號 = C1.單據編號
+	WHERE
+		A.單據類別 = 'C41' AND
+		A.異動類別 = 'A' AND
+		C.製程代碼 = 'C31E'
+	Group by	
+		C1.歸屬類別,
+		C1.歸屬編號,
+		C1.單據日期
+);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E72A" ("成品檢驗單號", "每日產量") AS (
 SELECT
 		B.專案代號 成品檢驗單號,
 		sum(decode(B.數值14,0,A.贈品數量,B.數值14)) 每日產量
@@ -13846,8 +14289,8 @@ SELECT
 		B.專案代號
 );
 
--- Home #2071 ViewFIL404E73.製袋平均磅重
-Create or replace view ViewFIL404E73 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E73" ("製令單別", "製令單號", "箱號", "平均袋重") AS (
 SELECT 	DISTINCT 
 		A.製令單別,
 		A.製令單號,
@@ -13878,8 +14321,8 @@ FROM
 	) A 
 );
 
--- Home #2072 ViewFIL404E74.製袋製令合計
-Create OR Replace view ViewFIL404E74 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E74" ("製令單號", "最後箱號", "數量", "重量") AS (
 SELECT
  	D.歸屬編號 製令單號,
 	max(A.異動數量) 最後箱號,
@@ -13897,8 +14340,8 @@ GROUP BY
 	D.歸屬編號
 );
 
--- Home #2073 ViewFIL404E75.成品批號平均重量
-Create OR Replace view ViewFIL404E75 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E75" ("批號", "平均製袋重量", "平均氣閥重量", "平均鐵條重量", "紙箱重量") AS (
 select distinct A.批號,
 	(select b.製袋重量/b.數量
 	from fil004l B  
@@ -13923,8 +14366,8 @@ select distinct A.批號,
 from fil004l A
 );
 
--- Home #2074 ViewFIL404E8.品檢平均重量
-Create or replace view ViewFIL404E8 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E8" ("製令單別", "製令單號", "箱號", "平均袋重") AS (
 SELECT	
 	TO_CHAR('C11') 製令單別,
 	A.廠客品號 製令單號,
@@ -13940,8 +14383,8 @@ Group by
 	A.異動數量
 );
 
--- Home #2075 ViewFIL404E81.箱號異動首筆重
-Create or replace view ViewFIL404E81 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404E81" ("批號", "平均袋重") AS (
 SELECT 	DISTINCT A.批號,
 	nvl(first_value(A.平均袋重) over (partition by A.批號  order by A.單號 asc),0) 平均袋重
 		
@@ -13957,8 +14400,8 @@ WHERE
 ) A
 );
 
--- Home #1951 ViewFIL404EA.製袋日報合計_C31E
-Create view ViewFIL404EA AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EA" ("單別", "單號", "Ａ材領料米數", "Ｂ材領料米數", "側邊領料米數", "底邊領料米數", "Ａ切刀次數", "Ｂ切刀次數", "側切刀次數", "底切刀次數", "總切刀次數", "補足上次尾數", "補足上次尾數_箱數", "繳庫袋數", "繳庫袋數_箱數", "尾數成品", "尾數成品_箱數", "繳庫總袋數", "繳庫總袋數_箱數", "尾數成品二", "尾數成品二_箱數", "待重工總袋數", "待重工總箱數", "報廢數", "重整數", "結束", "待補", "不良剔除後成品率", "展開尺寸_寬", "生產條件成袋數", "A材退庫", "B材退庫", "側邊退庫", "底邊退庫") AS (                                                                                                                                                      SELECT 
 	A.單別, 
 	A.單號,
 	A.Ａ材領料米數,
@@ -14055,9 +14498,8 @@ FROM
 	INNER JOIN FIL0032 E ON E.製令單別 = B.歸屬類別 AND E.製令單號 = B.歸屬編號
 	);
 
--- Home #1952 ViewFIL404EB.製袋日報業務員
-Create view ViewFIL404EB AS 
-(Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EB" ("單別", "單號", "單據日期", "機台代碼", "機台名稱", "製令單別", "製令單號", "作業人員", "作業人員姓名", "作業人數", "繳庫總袋數", "繳庫總箱數", "報廢數", "不良剔除後成品率", "製袋速度", "產品編號", "產品名稱", "產品規格") AS (Select 
 	A.單別,
 	A.單號,
 	C.單據日期,
@@ -14134,8 +14576,8 @@ INNER JOIN ViewFIL4030 E ON C.歸屬類別 = E.製令單別 AND C.歸屬編號 =
 LEFT JOIN ViewFIL310P F ON B.機台代碼 = F.代碼
 );
 
--- Home #1953 ViewFIL404EC.製袋日報分析主檔
-Create view ViewFIL404EC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EC" ("單別", "單號", "作業日期", "製令單別", "製令單號", "機台代碼", "機台名稱", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "開始時間", "結束時間", "委外", "作業人員", "作業人員姓名", "繳庫總袋數", "繳庫總袋數_箱數", "報廢數", "重整數", "報廢率", "不良剔除後成品率", "生產或調機") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -14172,8 +14614,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31E');
 
--- Home #1954 ViewFIL404ED.製袋日報分析明細
-Create view ViewFIL404ED AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ED" ("單別", "單號", "序號", "數量", "開始時間", "結束時間", "開始秒數", "結束秒數", "上一筆秒數", "差異秒數") AS (
 SELECT 
 	A.單別,
 	A.單號,
@@ -14194,8 +14636,8 @@ FROM
 	INNER JOIN ViewFIL404E1 B ON A.單別=B.單別 AND A.單號=B.單號
 );
 
--- Home #1955 ViewFIL404EE.製袋日報分析工時
-Create view ViewFIL404EE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EE" ("單號", "作業日期", "工作時數", "類別") AS (
 SELECT
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14240,9 +14682,8 @@ WHERE
 	B.時間一 < B.時間二		
 );
 
--- Home #1956 ViewFIL404EF.製袋日報分析人員
-Create view ViewFIL404EF AS 
-(Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EF" ("單別", "單號", "作業人員", "作業人員姓名", "作業人數") AS (Select 
 	A.單別,
 	A.單號,
 	A.作業人員,
@@ -14301,8 +14742,8 @@ WHERE
 	) A
 );
 
--- Home #1957 ViewFIL404EG.製袋日報檢查次數
-Create view ViewFIL404EG AS (                                                                                                                                                   
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EG" ("單別", "單號", "筆數") AS (                                                                                                                                                   
 SELECT
 	A.單別 單別,
 	A.單號 單號,
@@ -14316,8 +14757,8 @@ GROUP BY
 	A.單號
 );
 
--- Home #1958 ViewFIL404EH.製袋每日員工工時
-Create view ViewFIL404EH AS (                                                                                                                                                   
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404EH" ("作業日期", "實際工作時數", "作業人數") AS (                                                                                                                                                   
 SELECT 
 	A.作業日期,
 	sum(B.差異秒數/3600) 實際工作時數,
@@ -14329,8 +14770,8 @@ Group by
 	A.作業日期
 );
 
--- Home #1959 ViewFIL404F1.氣閥日報主檔.C41
-Create view ViewFIL404F1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404F1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "委外", "單位主管流水編號", "本日件數順序", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "作業面", "開始時間", "生產時間", "吃飯時間", "支援時間", "結束時間", "收拾時間", "每束幾袋", "每箱幾袋", "下壓秒數", "左距邊", "右距邊", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "流水編號", "填表人", "填表人姓名", "員工流水編號", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14390,8 +14831,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31F');
 
--- Home #1960 ViewFIL404F2.氣閥日報明細
-Create view ViewFIL404F2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404F2" ("單別", "單號", "序號", "批號1", "批號2", "數量1", "數量2", "日期", "箱號", "繳庫袋數", "位置是否正確", "下壓間隙", "溫度", "壓力", "牢固完整度", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "半成品編號", "每箱結束時間", "紙袋報廢數", "成品庫存數", "庫存數1", "庫存數2", "建檔時的庫存1", "建檔時的庫存2", "備註說明", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -14437,8 +14878,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	C.製程代碼 = 'C31F');
 
--- Home #1961 ViewFIL404F3.氣閥袋重明細
-Create view ViewFIL404F3 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404F3" ("製令單別", "製令單號", "箱號", "繳庫袋數", "重量", "每袋重量") AS (                                                                                                                                                      
 SELECT 
 	C.歸屬類別 製令單別,
 	C.歸屬編號 製令單號,
@@ -14460,8 +14901,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	C1.製程代碼 = 'C31F');
 
--- Home #1962 ViewFIL404F4.氣閥袋重報廢
-Create view ViewFIL404F4 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404F4" ("單別", "單號", "報廢數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.異動數量) 報廢數量
@@ -14476,8 +14917,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1963 ViewFIL404FA.氣閥日報合計_C31F
-Create view ViewFIL404FA AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404FA" ("單別", "單號", "繳庫袋數", "繳庫袋數_箱數", "繳庫總袋數", "繳庫總袋數_箱數", "尾數成品", "尾數成品_箱數", "每箱幾袋", "序號") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.贈品數量 - decode(A.贈品數量, B.數值2, 0, A.贈品數量)) 繳庫袋數,
@@ -14500,8 +14941,8 @@ GROUP BY
 	A.單據編號
 );
 
--- Home #1964 ViewFIL404FB.氣閥日報分析主檔
-Create view ViewFIL404FB AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404FB" ("單別", "單號", "作業日期", "製令單別", "製令單號", "機台代碼", "機台名稱", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "開始時間", "結束時間", "委外", "作業人員", "作業人員姓名", "繳庫總袋數", "繳庫總袋數_箱數") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14532,8 +14973,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31F');
 
--- Home #1965 ViewFIL404FC.氣閥日報分析明細
-Create view ViewFIL404FC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404FC" ("單別", "單號", "序號", "繳庫袋數", "開始時間", "每箱結束時間", "開始秒數", "結束秒數", "上一筆秒數", "差異秒數") AS (
 SELECT 
 	A.單別,
 	A.單號,
@@ -14554,8 +14995,8 @@ FROM
 	INNER JOIN ViewFIL404F1 B ON A.單別=B.單別 AND A.單號=B.單號
 );
 
--- Home #1966 ViewFIL404FD.氣閥日報分析合併
-Create view ViewFIL404FD AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404FD" ("單別", "單號", "作業日期", "製令單別", "製令單號", "機台代碼", "機台名稱", "委外", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "作業人員", "作業人員姓名", "報廢數量", "繳庫總袋數", "報廢率") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14615,8 +15056,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31F');
 
--- Home #1967 ViewFIL404FE.氣閥日報彙總_C31F
-Create view ViewFIL404FE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404FE" ("單別", "單號", "彙總") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -14643,8 +15084,8 @@ GROUP BY
 	A.單別, 
 	A.單號);
 
--- Home #1975 ViewFIL404F_G.氣閥鐵條作業人員
-Create Or Replace view ViewFIL404F_G AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404F_G" ("單別", "單號", "序號", "作業日期", "製令單別", "製令單號", "作業人員", "每箱結束時間", "計件日時", "製程代碼", "繳庫袋數") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -14666,8 +15107,8 @@ WHERE
 	(B.製程代碼 = 'C31F' OR B.製程代碼 = 'C31G')
 	);
 
--- Home #1968 ViewFIL404G1.鐵條日報主檔.C41
-Create view ViewFIL404G1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404G1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "機台代碼", "機台名稱", "委外", "單位主管流水編號", "本日件數順序", "主旨", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "作業面", "開始時間", "結束時間", "每束幾袋", "每箱幾袋", "下壓秒數", "出袋距離_左", "出袋距離_右", "簽核系統", "備註", "作業人員", "作業人員姓名", "確認碼", "簽核狀態", "流水編號", "填表人", "填表人姓名", "員工流水編號", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14723,8 +15164,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31G');
 
--- Home #1970 ViewFIL404G2.鐵條日報明細
-Create view ViewFIL404G2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404G2" ("單別", "單號", "序號", "批號1", "批號2", "數量1", "數量2", "日期", "箱號", "繳庫袋數", "位置是否正確", "溫度", "壓力", "牢固完整度", "單位代碼", "單位名稱", "庫別代碼", "庫別名稱", "半成品編號", "每箱結束時間", "紙袋報廢數", "成品庫存數", "庫存數1", "庫存數2", "建檔時的庫存1", "建檔時的庫存2", "備註說明", "結案碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -14769,8 +15210,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	C.製程代碼 = 'C31G');
 
--- Home #1969 ViewFIL404G3.鐵條袋重明細
-Create view ViewFIL404G3 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404G3" ("製令單別", "製令單號", "箱號", "繳庫袋數", "重量", "每袋重量") AS (                                                                                                                                                      
 SELECT 
 	C.歸屬類別 製令單別,
 	C.歸屬編號 製令單號,
@@ -14796,8 +15237,8 @@ GROUP BY
 	C.歸屬編號,
 	A.異動數量);
 
--- Home #1971 ViewFIL404GA.鐵條日報合計_C31G
-Create view ViewFIL404GA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404GA" ("單別", "單號", "繳庫袋數", "繳庫袋數_箱數", "繳庫總袋數", "繳庫總袋數_箱數", "尾數成品", "尾數成品_箱數", "每箱幾袋", "序號") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -14821,8 +15262,8 @@ GROUP BY
 	A.單據編號
 	);
 
--- Home #1972 ViewFIL404GB.鐵條日報分析主檔
-Create view ViewFIL404GB AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404GB" ("單別", "單號", "作業日期", "製令單別", "製令單號", "機台代碼", "機台名稱", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "開始時間", "結束時間", "委外", "作業人員", "作業人員姓名", "繳庫總袋數", "繳庫總袋數_箱數") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14853,8 +15294,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31G');
 
--- Home #1973 ViewFIL404GC.鐵條日報分析明細
-Create view ViewFIL404GC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404GC" ("單別", "單號", "序號", "繳庫袋數", "開始時間", "每箱結束時間", "開始秒數", "結束秒數", "上一筆秒數", "差異秒數") AS (
 SELECT 
 	A.單別,
 	A.單號,
@@ -14874,8 +15315,8 @@ FROM
 	INNER JOIN ViewFIL404G1 B ON A.單別=B.單別 AND A.單號=B.單號
 );
 
--- Home #1974 ViewFIL404GE.鐵條日報彙總_C31G
-Create view ViewFIL404GE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404GE" ("單別", "單號", "彙總") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -14902,8 +15343,8 @@ GROUP BY
 	A.單別, 
 	A.單號);
 
--- Home #1976 ViewFIL404H1.印檢日報主檔.C41
-Create view ViewFIL404H1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404H1" ("單別", "單號", "作業日期", "公司代碼", "公司名稱", "機台代碼", "機台名稱", "備註", "作業人員", "作業人員姓名", "確認碼", "標籤機代碼", "簽核系統", "簽核狀態", "主旨", "單位主管流水編號", "員工流水編號", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "起始時間", "結束時間", "總耗時", "改件調整") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -14948,8 +15389,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31H');
 
--- Home #1977 ViewFIL404H2.印檢日報明細_C31H
-Create view ViewFIL404H2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404H2" ("單別", "單號", "序號", "日期", "開始時間", "結束時間", "製令單別", "製令單號", "加工別", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "前製程編號", "前製程米數", "檢品編號", "檢品米數", "庫存米數", "合併編號", "合併米數", "印刷色數", "機台選擇", "機台名稱", "機台名稱串", "是否符合", "字圖清晰度", "接頭數量", "線外不良剔除", "線內不良剔除", "不良剔除米數", "合理剔除數", "標籤列印次數二", "前製程條碼", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日", "PLC抓取日期", "PLC抓取時間") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -15009,8 +15450,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	B.製程代碼 = 'C31H');
 
--- Home #1978 ViewFIL404H3.印檢製令日報
-Create view ViewFIL404H3 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404H3" ("單別", "單號", "序號", "作業日期", "機台代碼", "機台名稱", "開始時間", "結束時間", "製令單別", "製令單號", "機台選擇", "選擇名稱", "機台名稱串") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	D.單據序號 序號,
@@ -15037,8 +15478,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31H');
 
--- Home #1979 ViewFIL404I1.裁檢日報主檔.C41
-Create view ViewFIL404I1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404I1" ("單別", "單號", "作業日期", "公司代碼", "公司名稱", "機台代碼", "機台名稱", "備註", "作業人員", "作業人員姓名", "確認碼", "標籤機代碼", "簽核系統", "簽核狀態", "主旨", "單位主管流水編號", "員工流水編號", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "起始時間", "結束時間", "總耗時", "改件調整") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -15083,8 +15524,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31K');
 
--- Home #1980 ViewFIL404I2.裁檢日報明細_C31K
-Create view ViewFIL404I2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404I2" ("單別", "單號", "序號", "日期", "開始時間", "結束時間", "製令單別", "製令單號", "加工別", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "前製程編號", "前製程米數", "檢品編號", "檢品米數", "庫存米數", "合併編號", "合併米數", "印刷色數", "機台選擇", "機台名稱", "機台名稱串", "是否符合", "字圖清晰度", "接頭數量", "線外不良剔除", "線內不良剔除", "不良剔除米數", "合理剔除數", "標籤列印次數二", "前製程條碼", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日", "PLC抓取日期", "PLC抓取時間") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -15144,8 +15585,8 @@ WHERE
 	A.異動類別 = 'A' AND
 	B.製程代碼 = 'C31K');
 
--- Home #1981 ViewFIL404I3.裁檢製令日報
-Create view ViewFIL404I3 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404I3" ("單別", "單號", "序號", "作業日期", "機台代碼", "機台名稱", "開始時間", "結束時間", "製令單別", "製令單號", "機台選擇", "選擇名稱", "機台名稱串") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	D.單據序號 序號,
@@ -15172,8 +15613,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	B.製程代碼 = 'C31K');
 
--- Home #1982 ViewFIL404J1.製令送簽主檔
-Create  Or Replace view ViewFIL404J1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404J1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "製程代碼", "單位主管流水編號", "主旨", "客戶名稱", "產品名稱", "產品規格", "時間一", "時間二", "委外", "流水編號", "填表人", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -15200,9 +15641,8 @@ FROM
 WHERE
 	A.單據類別 = 'C41');
 
--- Home #1983 ViewFIL404K1.成捲日報主檔.C31I
-Create or Replace view ViewFIL404K1 AS                                                                                                                                                      
-WITH TMP1 AS
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K1" ("單別", "單號", "作業日期", "製令單別", "製令單號", "簽核系統", "備註", "作業人員", "確認碼", "主旨", "流水編號", "填表人", "填表日", "最後更新者", "最後更新日", "待補", "結束", "開始時間", "結束時間", "總耗時", "包裝方式", "每箱捲數", "紙箱編號", "待補日報", "尾數紙箱編號", "機台代碼", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "機台名稱", "紙箱品名", "尾數紙箱品名", "作業人員姓名", "員工流水編號", "填表人姓名", "更新者姓名", "簽核狀態", "單位主管流水編號") AS WITH TMP1 AS
 (SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -15302,8 +15742,8 @@ FROM
 	LEFT JOIN ViewFIL1012 Z4 ON Z4.產品編號 = A.紙箱編號
 	LEFT JOIN ViewFIL1012 Z5 ON Z5.產品編號 = A.尾數紙箱編號;
 
--- Home #1984 ViewFIL404K2.成捲日報合計_C31I
-Create view ViewFIL404K2 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K2" ("單別", "單號", "全部箱數", "尾數箱", "全部捲數", "尾數捲數") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	count(A.單據序號) 全部箱數,
@@ -15323,8 +15763,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1986 ViewFIL404K3.成捲細分_C31I
-Create view ViewFIL404K3 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K3" ("單別", "單號", "序號", "細分", "箱號", "半成品編號", "數量", "重量", "入庫日期", "製造日期", "單號序號") AS (                                                                                                                                                      SELECT 
 	A.單別, 
 	A.單號,
 	A.序號,
@@ -15345,8 +15785,8 @@ WHERE
 	B.製程代碼 = 'C31I'
 );
 
--- Home #1985 ViewFIL404K4.成捲最後箱號_C311
-Create view ViewFIL404K4 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K4" ("製令單別", "製令單號", "箱號") AS (                                                                                                                                                      SELECT 
 	D.歸屬類別 製令單別, 
 	D.歸屬編號 製令單號,
 	max(C.異動數量) 箱號
@@ -15363,8 +15803,8 @@ GROUP BY
 	D.歸屬編號
 );
 
--- Home #1987 ViewFIL404K5.成捲製令捲數_C31I
-Create view ViewFIL404K5 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K5" ("製令單別", "製令單號", "捲數") AS (                                                                                                                                                      SELECT 
 	D.歸屬類別 製令單別, 
 	D.歸屬編號 製令單號,
 	SUM(nvl(C.包裝數量,0)) 捲數
@@ -15382,8 +15822,8 @@ GROUP BY
 	D.歸屬類別, 
 	D.歸屬編號);
 
--- Home #1988 ViewFIL404K6.成捲製令箱號_C31I
-Create or Replace view ViewFIL404K6 AS (        
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K6" ("製令單別", "製令單號", "箱號") AS (        
 SELECT Distinct
 	D.歸屬類別 製令單別, 
 	D.歸屬編號 製令單號,
@@ -15399,9 +15839,8 @@ WHERE
 	B.製程代碼 = 'C31I' 
 );
 
--- Home #1989 ViewFIL404K7.成捲批號庫存
-Create or Replace view ViewFIL404K7 AS                                                                                                                                                 
-with tmp1 AS
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K7" ("製令單號", "條碼", "庫存數") AS with tmp1 AS
 (SELECT 
 	REGEXP_SUBSTR(REGEXP_SUBSTR(A.文字一, '[^_]+', 1,1),'[^-]+', 1,1) 製令單號,
 	A.文字一 條碼,
@@ -15439,9 +15878,8 @@ GROUP BY
 	A.製令單號,
 	A.條碼;
 
--- Home #1990 ViewFIL404K8.成捲製令庫存
-Create or Replace view ViewFIL404K8 AS                                                                                                                                                       
-with tmp1 AS
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404K8" ("製令單號", "庫存數") AS with tmp1 AS
 (SELECT 
 	REGEXP_SUBSTR(REGEXP_SUBSTR(A.文字一, '[^_]+', 1, 1), '[^-]+', 1, 1) 製令單號,
 	A.文字一 條碼,
@@ -15477,8 +15915,8 @@ FROM
 GROUP BY
 	A.製令單號;
 
--- Home #1991 ViewFIL404Z1.製程機台日報筆數
-Create view ViewFIL404Z1 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z1" ("製程代碼", "機台代碼", "作業日期", "製令單別", "製令單號", "筆數") AS (                                                                                                                                                      SELECT
 	A.製程代碼,
 	A.機台代碼,
 	B.單據日期 作業日期,
@@ -15498,8 +15936,8 @@ GROUP BY
 	B.歸屬類別,
 	B.歸屬編號);
 
--- Home #1992 ViewFIL404Z2.生產日報全部單號
-Create view ViewFIL404Z2 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z2" ("單別", "單號", "作業日期", "公司代碼", "公司名稱", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "備註", "作業人員", "作業人員姓名", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 作業日期,
@@ -15536,8 +15974,8 @@ FROM
 WHERE
 	A.單據類別 = 'C41');
 
--- Home #1993 ViewFIL404Z3.機台材料領用明細
-Create view ViewFIL404Z3 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z3" ("單別", "單號", "序號", "料號", "品名", "規格", "批號", "領用日期", "領用數量", "庫存數", "單位代碼", "庫別代碼", "庫別名稱", "回庫日期", "回庫數量", "回庫庫別", "報廢數量", "回庫名稱", "主檔序號", "備註說明", "沿用", "使用廢料", "接頭數", "標籤列印次數", "標籤列印日期一", "標籤列印時間一", "狀態", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -15580,8 +16018,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	A.異動類別 = 'C');
 
--- Home #1994 ViewFIL404Z4.機台材料領用合計
-Create view ViewFIL404Z4 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z4" ("單別", "單號", "領用數量", "回庫數量", "報廢數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.異動數量) 領用數量,
@@ -15596,8 +16034,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1995 ViewFIL404Z5.批號領用合計
-Create view ViewFIL404Z5 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z5" ("批號", "領用數量") AS (                                                                                                                                                      SELECT 
 	B.批號,
 	sum(A.異動數量 * nvl(E.換算率, 1)) 領用數量
 FROM 
@@ -15613,8 +16051,19 @@ WHERE
 GROUP BY
 	B.批號);
 
--- Home #1996 ViewFIL404Z7.機台材料報廢明細
-Create view ViewFIL404Z7 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z6" ("流水編號", "前製程編號") AS (                                                                                                                                                      SELECT
+	A.流水編號,
+	listagg
+	(trim(B.文數字1) , ',') within group (order by B.文數字1) as 前製程編號
+FROM
+	FIL0045 A 
+	INNER JOIN FIL0040 B ON A.領用編號 = B.流水編號 AND B.單據類別 = 'C41'
+group by 
+	A.流水編號);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z7" ("單別", "單號", "序號", "料號", "品名", "規格", "批號", "報廢日期", "報廢數量", "單位代碼", "庫別代碼", "庫別名稱", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -15642,8 +16091,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	A.異動類別 = 'D');
 
--- Home #1997 ViewFIL404Z8.機台材料報廢合計
-Create view ViewFIL404Z8 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z8" ("單別", "單號", "報廢數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.異動數量) 報廢數量
@@ -15656,8 +16105,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #1998 ViewFIL404Z9.印刷油墨領用明細
-CREATE or Replace VIEW ViewFIL404Z9 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404Z9" ("單別", "單號", "序號", "料號", "品名", "規格", "批號", "領用日期", "領用數量", "單位代碼", "庫別代碼", "庫別名稱", "回庫日期", "回庫數量", "回庫庫別", "回庫名稱", "品名規格", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -15692,8 +16141,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	A.異動類別 = 'E');
 
--- Home #1999 ViewFIL404ZA.印刷油墨領用合計
-CREATE or Replace VIEW ViewFIL404ZA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZA" ("單別", "單號", "領用數量", "回庫數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -15708,8 +16157,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2000 ViewFIL404ZB.印刷批號領用耗用
-CREATE or Replace VIEW ViewFIL404ZB AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZB" ("單別", "單號", "批號", "領用數量", "耗用數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -15728,8 +16177,8 @@ GROUP BY
 	A.單據編號,
 	B.批號);
 
--- Home #2001 ViewFIL404ZC.日報製令生產日期
-CREATE or Replace VIEW ViewFIL404ZC AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZC" ("單別", "歸屬類別", "歸屬編號", "生產日期") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.歸屬類別,
@@ -15746,8 +16195,8 @@ GROUP BY
 	A.歸屬類別,
 	A.歸屬編號);
 
--- Home #2002 ViewFIL404ZD.裁切製造日期
-CREATE or Replace VIEW ViewFIL404ZD AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZD" ("製令單別", "製令單號", "製造日期") AS (
 SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
@@ -15788,8 +16237,8 @@ GROUP BY
 		A.歸屬編號		
 );
 
--- Home #2003 ViewFIL404ZE.製令最後製造日
-CREATE or Replace VIEW ViewFIL404ZE AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZE" ("製令單別", "製令單號", "製造日期") AS (
 SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
@@ -15837,8 +16286,8 @@ GROUP BY
 		A.歸屬編號		
 );
 
--- Home #2004 ViewFIL404ZE_A.製令箱最後製日
-CREATE or Replace VIEW ViewFIL404ZE_A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZE_A" ("製令單別", "製令單號", "箱號", "製造日期") AS (
 SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
@@ -15891,8 +16340,8 @@ GROUP BY
 		A.箱號
 );
 
--- Home #2005 ViewFIL404ZF.機台材料別彙總
-Create view ViewFIL404ZF AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZF" ("單別", "單號", "材料編號", "領用數量", "回庫數量", "報廢數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.產品編號 材料編號,
@@ -15909,8 +16358,8 @@ GROUP BY
 	A.單據編號,
 	A.產品編號);
 
--- Home #2006 ViewFIL404ZF_A.機台主檔別彙總
-Create or Replace view ViewFIL404ZF_A AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZF_A" ("單別", "單號", "主檔別", "領用數量", "回庫數量", "報廢數量", "合理剔除數") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.QRNO 主檔別,
@@ -15929,8 +16378,8 @@ GROUP BY
 	A.單據編號,
 	A.QRNO);
 
--- Home #2007 ViewFIL404ZG.前製程半成品退庫
-Create OR Replace view ViewFIL404ZG AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZG" ("單別", "單號", "序號", "半成品編號", "製程編號", "製令單號", "加工別", "製程代碼", "製程名稱", "回庫日期", "回庫數量", "接頭數", "備註說明", "標籤列印次數", "標籤列印日期一", "標籤列印時間一", "退庫條碼", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -15961,8 +16410,8 @@ WHERE
 	A.單據類別 = 'C41' AND
 	A.異動類別 = 'G');
 
--- Home #2008 ViewFIL404ZH前製半成品退庫合計
-Create or replace view ViewFIL404ZH AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZH" ("單別", "單號", "回庫數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.贈品數量) 回庫數量
@@ -15975,8 +16424,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2009 ViewFIL404ZI.製令起迄耗時
-Create view ViewFIL404ZI AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZI" ("製程", "單別", "單號", "製令單別", "製令單號", "加工別", "開始時間", "結束時間", "總耗時") AS (                                                                                                                                                      
 /* 印刷~積層*/
 SELECT
 	to_char(decode(B.製程代碼,'C31A','印刷','C32D','上臘','C31B','淋膜','積層')) 製程,
@@ -16023,8 +16472,8 @@ WHERE
 	（B.時間二 between '000000' and '235959')
 ）;
 
--- Home #2010 ViewFIL404ZJ.製令起迄耗時彙總
-Create view ViewFIL404ZJ AS (          
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZJ" ("製令單別", "製令單號", "開始時間", "結束時間") AS (          
 SELECT 
 	A.製令單別,
 	A.製令單號,
@@ -16078,8 +16527,8 @@ GROUP BY
 	A.製令單號
 );
 
--- Home #2011 ViewFIL404ZK,製令產量明細
-Create or replace view ViewFIL404ZK AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZK" ("製程", "單別", "單號", "製令單別", "製令單號", "入庫米數") AS (
 SELECT 
 	to_char(decode(B.製程代碼,'C31A','印刷','C32D','上臘','C31B','淋膜','積層')) 製程,	
 	A.單據類別 單別, 
@@ -16159,8 +16608,8 @@ GROUP BY
 	D.歸屬編號		
 );
 
--- Home #2012 ViewFIL404ZL,製令產量彙總
-Create or replace view ViewFIL404ZL AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZL" ("製程", "製令單別", "製令單號", "入庫米數") AS (
 SELECT 
 	to_char(decode(B.製程代碼,'C31A','1.印刷','C32D','2.上臘','C31B','3.淋膜','4.積層')) 製程,	
 	C.歸屬類別 製令單別,
@@ -16228,8 +16677,8 @@ GROUP BY
 	D.歸屬編號		
 );
 
--- Home #2013 ViewFIL404ZM,後製程產量彙總
-Create or replace view ViewFIL404ZM AS (          
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZM" ("製令單別", "製令單號", "起始時間", "結束時間") AS (          
 SELECT
 	A.歸屬類別 製令單別,
 	A.歸屬編號 製令單號,
@@ -16249,8 +16698,8 @@ GROUP BY
 	A.歸屬編號
 );
 
--- Home #2014 ViewFIL404ZN,製令製程備註
-CREATE or Replace VIEW ViewFIL404ZN AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZN" ("單別", "單號", "序號", "製令單別", "製令單號", "產品編號", "製程", "製程編號", "加工別", "箱號", "備註說明") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -16281,9 +16730,8 @@ WHERE
 	(B.製程代碼 between 'C31A' and 'C31I') or B.製程代碼 = 'C32D'
 	);
 
--- Home #2015 ViewFil404ZO.製令日報人員費用
-CREATE or Replace VIEW ViewFIL404ZO AS 
-(Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZO" ("單別", "單號", "單據日期", "製程", "作業人員", "作業人員姓名", "總耗時", "直接人工") AS (Select 
 	A.單別,
 	A.單號,
 	A.單據日期,
@@ -16406,9 +16854,8 @@ INNER JOIN FIL0010 D ON A.作業人員 = D.員工編號
 INNER JOIN ViewFIL310N E ON E.代碼 = A.製程代碼
 );
 
--- Home #2016 ViewFil404ZP.製令日報費用
-CREATE or Replace VIEW ViewFIL404ZP AS 
-(Select 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZP" ("單別", "單號", "單據日期", "製程", "總耗時", "直接人工") AS (Select 
 	A.單別,
 	A.單號,
 	A.單據日期,
@@ -16424,8 +16871,8 @@ GROUP BY
 	A.製程
 );
 
--- Home #2017 ViewFil404ZQ.製令日報入庫數
-CREATE or Replace VIEW ViewFIL404ZQ AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZQ" ("單別", "單號", "入庫數") AS (
 Select 
 	A.單別,
 	A.單號,
@@ -16544,9 +16991,8 @@ WHERE
 	B.單據日期 > '2025'
 );
 
--- Home #2018 ViewFil404ZR.成品總標籤明細
-Create or Replace view ViewFIL404ZR AS  
-With tmp as (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZR" ("總標籤", "箱號", "產品標籤", "製令單號", "數量", "單別", "單號", "製程代碼", "名稱") AS With tmp as (
 SELECT 
 	A.單別||'_'||A.單號 總標籤,
 	C.異動數量 箱號,
@@ -16623,8 +17069,8 @@ from
 	tmp A
 	left join fil0044b B on B.產品標籤 = A.產品標籤;
 
--- Home #2019 ViewFil404ZS.成品總標籤
-Create or Replace view ViewFIL404ZS AS ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL404ZS" ("總標籤", "製令單號", "製程名稱") AS ( 
 SELECT DISTINCT
 	A.總標籤,
 	A.製令單號,
@@ -16633,8 +17079,8 @@ FROM
 	ViewFIL404ZR A
 );
 
--- Home #2020 ViewFIL4050.原物料請領主檔.C4L
-Create view ViewFIL4050 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4050" ("單別", "單號", "排程日期", "公司代碼", "公司名稱", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "機台代碼", "機台名稱", "部門編號", "部門名稱", "確認碼", "開放領料", "備註", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "員工流水編號", "主旨", "結案") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 排程日期,
@@ -16677,8 +17123,8 @@ FROM
 WHERE
 	A.單據類別 = 'C4L');
 
--- Home #2021 ViewFIL4051.原物料請領明細
-Create view ViewFIL4051 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4051" ("單別", "單號", "序號", "料號", "品名", "規格", "請領數量", "庫存異動數", "單位代碼", "單位名稱", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -16703,8 +17149,8 @@ FROM
 WHERE
 	A.單據類別 = 'C4L');
 
--- Home #2022 ViewFIL405A.原物料請領合計
-Create view ViewFIL405A AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL405A" ("單別", "單號", "請領數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.異動數量) 請領數量
@@ -16716,8 +17162,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2023 ViewFIL405B.原物料請領製令合計
-Create or Replace view ViewFIL405B AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL405B" ("單別", "單號", "製令單別", "製令單號", "加工別", "色順數", "料號", "請領數量") AS (                                                                                                                                                      
 SELECT 
 	A.單別 單別, 
 	A.單號 單號,
@@ -16742,8 +17188,8 @@ GROUP BY
 	B.產品編號
 	);
 
--- Home #2024 ViewFIL4060.原物料領料主檔.C4M
-Create view ViewFIL4060 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4060" ("單別", "單號", "發料日期", "請領單別", "請領單號", "排程日期", "公司代碼", "公司名稱", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "機台代碼", "機台名稱", "部門編號", "部門名稱", "備註", "已簽收", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 發料日期,
@@ -16787,8 +17233,8 @@ FROM
 WHERE
 	A.單據類別 = 'C4M');
 
--- Home #2025 ViewFIL4061.原物料領料明細
-Create view ViewFIL4061 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4061" ("單別", "單號", "序號", "料號", "請領單別", "請領單號", "請領料號", "批號", "品名", "規格", "發料日期", "發料數量", "單位代碼", "單位名稱", "倉庫代碼", "倉庫名稱", "製程代碼", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -16824,8 +17270,8 @@ FROM
 WHERE
 	A.單據類別 = 'C4M');
 
--- Home #2026 ViewFIL406A.原物料領料合計
-Create view ViewFIL406A AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL406A" ("單別", "單號", "發料數量") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	sum(A.異動數量) 發料數量
@@ -16837,8 +17283,188 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2027 ViewFIL408B.請領發料合計
-Create view ViewFIL408B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4070" ("單別", "單號", "退料日期", "公司代碼", "公司名稱", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "部門編號", "部門名稱", "備註", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
+	A.單據類別 單別,
+	A.單據編號 單號,
+	A.單據日期 退料日期,
+	A.公司代碼,
+	nvl(F.名稱, ' ') 公司名稱,
+	B.製程代碼,
+	nvl(D.名稱, ' ') 製程名稱,
+	B.機台代碼,
+	nvl(C.名稱, ' ') 機台名稱,
+	A.部門編號,
+	nvl(E.部門名稱, ' ') 部門名稱,
+	A.備註, 
+	A.簽核系統, 
+	nvl(Z3.簽核狀態, ' ') 簽核狀態,
+	A.流水編號,
+	A.填表人,
+	nvl(Z1.員工姓名,' ') 填表人姓名, 
+	A.填表日, 
+	A.最後更新者,
+	nvl(Z2.員工姓名,' ') 更新者姓名, 
+	A.最後更新日
+FROM
+	FIL0030 A
+	INNER JOIN FIL0031 B ON A.單據類別 = B.單別 AND A.單據編號 = B.單號
+	LEFT JOIN ViewFIL310P C ON B.機台代碼 = C.代碼
+	LEFT JOIN ViewFIL310N D ON B.製程代碼 = D.代碼
+	LEFT JOIN ViewFIL0012 E ON A.部門編號 = E.部門編號
+	LEFT JOIN ViewFIL0011 F ON A.公司代碼 = F.代碼
+	LEFT JOIN FIL0010 Z1 ON A.填表人 = Z1.員工編號
+	LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號
+	LEFT JOIN ViewFIL0030 Z3 ON A.簽核系統 = Z3.簽核系統 AND A.單據編號 = Z3.單號
+WHERE
+	A.單據類別 = 'C4N');
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4071" ("單別", "單號", "序號", "料號", "批號", "品名", "規格", "退料數量", "不良數量", "單位代碼", "單位名稱", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	A.單據序號 序號,
+	A.產品編號 料號,
+	C.批號,
+	nvl(D.品名, ' ') 品名,
+	nvl(D.規格, ' ') 規格,
+	A.異動數量 退料數量,
+	A.贈品數量 不良數量,
+	A.單位代碼,
+	nvl(E.名稱, ' ') 單位名稱,
+	A.前置單別 製令單別,
+	A.前置單號 製令單號,
+	B.公司代碼,
+	B.公司名稱,
+	B.訂單單別,
+	B.訂單單號,
+	B.客戶編號,
+	B.客戶名稱,
+	B.產品編號,
+	B.產品名稱,
+	B.產品規格,
+	A.備註說明,
+	A.流水編號,
+	A.最後更新者,
+	nvl(Z1.員工姓名,' ') 更新者姓名,
+	A.最後更新日
+FROM 
+	FIL0040 A
+	INNER JOIN ViewFIL4030 B ON A.前置單別 = B.製令單別 AND A.前置單號 = B.製令單號
+	INNER JOIN FIL0041 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號 AND A.單據序號 = C.序號
+	LEFT JOIN FIL0012 D ON A.產品編號 = D.產品編號
+	LEFT JOIN ViewFIL3103 E ON A.單位代碼 = E.代碼
+	LEFT JOIN FIL0010 Z1 ON A.最後更新者 = Z1.員工編號
+WHERE
+	A.單據類別 = 'C4N');
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL407A" ("單別", "單號", "退料數量", "不良數量") AS (                                                                                                                                                      SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	sum(A.異動數量) 退料數量,
+	sum(A.贈品數量) 不良數量
+FROM 
+	FIL0040 A
+WHERE
+	A.單據類別 = 'C4N'
+GROUP BY
+	A.單據類別, 
+	A.單據編號);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4080" ("單別", "單號", "退料日期", "公司代碼", "公司名稱", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "部門編號", "部門名稱", "備註", "簽核系統", "簽核狀態", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT
+	A.單據類別 單別,
+	A.單據編號 單號,
+	A.單據日期 退料日期,
+	A.公司代碼,
+	nvl(F.名稱, ' ') 公司名稱,
+	B.製程代碼,
+	nvl(D.名稱, ' ') 製程名稱,
+	B.機台代碼,
+	nvl(C.名稱, ' ') 機台名稱,
+	A.部門編號,
+	nvl(E.部門名稱, ' ') 部門名稱,
+	A.備註, 
+	A.簽核系統, 
+	nvl(Z3.簽核狀態, ' ') 簽核狀態,
+	A.流水編號,
+	A.填表人,
+	nvl(Z1.員工姓名,' ') 填表人姓名, 
+	A.填表日, 
+	A.最後更新者,
+	nvl(Z2.員工姓名,' ') 更新者姓名, 
+	A.最後更新日
+FROM
+	FIL0030 A
+	INNER JOIN FIL0031 B ON A.單據類別 = B.單別 AND A.單據編號 = B.單號
+	LEFT JOIN ViewFIL310P C ON B.機台代碼 = C.代碼
+	LEFT JOIN ViewFIL310N D ON B.製程代碼 = D.代碼
+	LEFT JOIN ViewFIL0012 E ON A.部門編號 = E.部門編號
+	LEFT JOIN ViewFIL0011 F ON A.公司代碼 = F.代碼
+	LEFT JOIN FIL0010 Z1 ON A.填表人 = Z1.員工編號
+	LEFT JOIN FIL0010 Z2 ON A.最後更新者 = Z2.員工編號
+	LEFT JOIN ViewFIL0030 Z3 ON A.簽核系統 = Z3.簽核系統 AND A.單據編號 = Z3.單號
+WHERE
+	A.單據類別 = 'C4O');
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4081" ("單別", "單號", "序號", "料號", "批號", "品名", "規格", "退料日期", "實收數量", "單位代碼", "單位名稱", "倉庫代碼", "倉庫名稱", "製令單別", "製令單號", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	A.單據序號 序號,
+	A.產品編號 料號,
+	C.批號,
+	nvl(D.品名, ' ') 品名,
+	nvl(D.規格, ' ') 規格,
+	A.異動日期 退料日期,
+	A.異動數量 實收數量,
+	A.單位代碼,
+	nvl(F.名稱, ' ') 單位名稱,
+	A.倉庫代碼,
+	nvl(E.名稱, ' ') 倉庫名稱,
+	A.前置單別 製令單別,
+	A.前置單號 製令單號,
+	B.公司代碼,
+	B.公司名稱,
+	B.訂單單別,
+	B.訂單單號,
+	B.客戶編號,
+	B.客戶名稱,
+	B.產品編號,
+	B.產品名稱,
+	B.產品規格,
+	A.備註說明,
+	A.流水編號,
+	A.最後更新者,
+	nvl(Z1.員工姓名,' ') 更新者姓名,
+	A.最後更新日
+FROM 
+	FIL0040 A
+	INNER JOIN ViewFIL4030 B ON A.前置單別 = B.製令單別 AND A.前置單號 = B.製令單號
+	INNER JOIN FIL0041 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號 AND A.單據序號 = C.序號
+	LEFT JOIN FIL0012 D ON A.產品編號 = D.產品編號
+	LEFT JOIN ViewFIL3106 E ON A.倉庫代碼 = E.代碼
+	LEFT JOIN ViewFIL3103 F ON A.單位代碼 = F.代碼
+	LEFT JOIN FIL0010 Z1 ON A.最後更新者 = Z1.員工編號
+WHERE
+	A.單據類別 = 'C4O');
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL408A" ("單別", "單號", "實收數量") AS (                                                                                                                                                      SELECT 
+	A.單據類別 單別, 
+	A.單據編號 單號,
+	sum(A.異動數量) 實收數量
+FROM 
+	FIL0040 A
+WHERE
+	A.單據類別 = 'C4O'
+GROUP BY
+	A.單據類別, 
+	A.單據編號);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL408B" ("請領單別", "請領單號", "排程日期", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "機台代碼", "機台名稱", "料號", "品名", "規格", "公司代碼", "公司名稱", "請領數量", "核准數量", "發料數量", "未發料數") AS (
 SELECT 
 	A.請領單別,
 	A.請領單號,
@@ -16906,8 +17532,8 @@ FROM
 WHERE
 	A.請領數量 > 0);
 
--- Home #2028 ViewFIL408C.請領單發料數
-Create view ViewFIL408C AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL408C" ("請領單別", "請領單號", "請領數量", "發料數量") AS (                                                                                                                                                      SELECT
 	A.請領單別,
 	A.請領單號,
 	sum(A.請領數量) 請領數量,
@@ -16928,9 +17554,8 @@ GROUP BY
 	A.請領單別,
 	A.請領單號);
 
--- Home #2029 ViewFIL4090.各製程生產製令數
-Create Or Replace View ViewFIL4090 as
-(
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4090" ("單位年月", "生產製令筆數") AS (
 SELECT 
 	A.單位年月,
 	COUNT(A.製令單號) 生產製令筆數
@@ -16950,8 +17575,8 @@ GROUP BY
 	A.單位年月
 );
 
--- Home #2034 ViewFIL4101.製袋巡檢表.C47
-CREATE or Replace VIEW ViewFIL4101 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4101" ("單別", "單號", "作業區域", "機台名稱", "巡檢日期", "製令單別", "製令單號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "成品尺寸", "訂單數量", "作業速率", "檢驗時間", "箱號", "缺失說明", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "機台狀態") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	C.機台代碼 作業區域,
@@ -16995,8 +17620,111 @@ FROM
 WHERE
 	A.單據類別 = 'C47');
 
--- Home #2035 ViewFIL4102.製袋巡檢次數
-CREATE or Replace VIEW ViewFIL4102 AS (                                                                                                                                            SELECT
+-- Oracle user_views（在 Oracle 已失效）
+CREATE VIEW "VIEWFIL41012" ("單別", "單號", "序號", "子序", "半成品編號", "作業日期", "機台代碼", "機台名稱", "庫別代碼", "庫別名稱", "異動日期", "異動數量", "製令單號") AS (                                                                                                                                                      SELECT 
+	A.單別,
+	A.單號,
+	A.序號,
+	A.子序,
+	A.半成品編號,
+	A.作業日期,
+	A.機台代碼,
+	nvl(B.名稱, ' ') 機台名稱,
+	A.庫別代碼,
+	nvl(C.名稱, ' ') 庫別名稱,
+	A.異動日期,
+	A.異動數量,
+	regexp_substr(A.半成品編號, '[^-]+', 1, 1) 製令單號
+FROM 
+	(	SELECT 
+			A.單據類別 單別,
+			A.單據編號 單號,
+			A.單據序號 序號,
+			0 子序,
+			A.文數字1 半成品編號,
+			B.單據日期 作業日期,
+			C.機台代碼,
+			A.異動日期,
+			A.倉庫代碼 庫別代碼,
+			A.贈品數量 異動數量
+		FROM 
+			FIL0040 A
+			INNER JOIN FIL0030 B ON A.單據類別 = B.單據類別 AND A.單據編號 = B.單據編號
+			INNER JOIN FIL0031 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號
+		WHERE
+			A.單據類別 = 'C41' AND
+			A.異動類別 = 'A' AND
+			A.文數字1 != ' ' AND
+			A.結案碼 = 'Y'
+			
+		union
+		
+		SELECT 
+			B.單據類別 單別,
+			B.單據編號 單號,
+			B.單據序號 序號,
+			A.序號 子序,
+			A.半成品編號,
+			A.生產日期 作業日期,
+			A.生產機台 機台代碼,
+			A.領用日期 異動日期,
+			A.庫別代碼,
+			A.領用數量 * -1 異動數量
+		FROM 
+			FIL0045 A
+			/*異動明細*/
+			INNER JOIN FIL0040 B ON A.流水編號 = B.流水編號
+	) A
+	LEFT JOIN ViewFIL310P B ON A.機台代碼 = B.代碼
+	LEFT JOIN ViewFIL3106 C ON A.庫別代碼 = C.代碼);
+
+-- Oracle user_views（在 Oracle 已失效）
+CREATE VIEW "VIEWFIL41013" ("半成品編號", "作業日期", "機台代碼", "庫別代碼", "入庫數量", "領用數量", "庫存數量") AS (                                                                                                                                                      SELECT 
+	A.半成品編號,
+	A.作業日期,
+	A.機台代碼,
+	A.庫別代碼,
+	sum(A.入庫數量) 入庫數量,
+	sum(A.領用數量) 領用數量,
+	sum(A.入庫數量 - A.領用數量) 庫存數量
+FROM
+	(	SELECT 
+			A.文數字1 半成品編號,
+			B.單據日期 作業日期,
+			C.機台代碼,
+			A.倉庫代碼 庫別代碼,
+			A.贈品數量 入庫數量,
+			0 領用數量
+		FROM 
+			FIL0040 A
+			INNER JOIN FIL0030 B ON A.單據類別 = B.單據類別 AND A.單據編號 = B.單據編號
+			INNER JOIN FIL0031 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號
+		WHERE
+			A.單據類別 = 'C41' AND
+			A.異動類別 = 'A' AND
+			A.文數字1 != ' ' AND
+			A.結案碼 = 'Y'
+			
+		union
+		
+		SELECT 
+			A.半成品編號,
+			A.生產日期 作業日期,
+			A.生產機台 機台代碼,
+			A.庫別代碼,
+			0 入庫數量,
+			A.領用數量
+		FROM 
+			FIL0045 A
+	) A
+GROUP BY
+	A.半成品編號,
+	A.作業日期,
+	A.機台代碼,
+	A.庫別代碼);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4102" ("單別", "單號", "作業區域", "巡檢日期", "製令單號", "箱號", "檢驗時間", "次數") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	C.機台代碼 作業區域,
@@ -17011,8 +17739,188 @@ FROM
 WHERE
 	A.單據類別 = 'C47');
 
--- Home #2036 ViewFIL4111.氣閥巡檢表.C45
-CREATE or Replace VIEW ViewFIL4111 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4103" ("條碼", "單別", "單號", "序號", "半成品編號", "作業日期", "製令單別", "製令單號", "公司代碼", "公司名稱", "產品名稱", "產品規格", "作業人員", "作業員姓名", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "異動日期", "庫別代碼", "庫別名稱", "異動數量", "備註說明") AS (                                                                                                                                                      SELECT 
+	A.條碼,
+	A.單別,
+	A.單號,
+	A.序號,
+	A.半成品編號,
+	A.作業日期,
+	A.製令單別,
+	A.製令單號,
+	D.公司代碼,
+	D.公司名稱,
+	D.產品名稱,
+	D.產品規格,
+	A.作業人員,
+	nvl(E.員工姓名, ' ') 作業員姓名,
+	A.製程代碼,
+	nvl(F.名稱, ' ') 製程名稱,
+	A.機台代碼,
+	nvl(B.名稱, ' ') 機台名稱,
+	A.異動日期,
+	A.庫別代碼,
+	nvl(C.名稱, ' ') 庫別名稱,
+	A.異動數量,
+	A.備註說明
+FROM 
+	(	SELECT 
+			A.流水編號 條碼,
+			A.單據類別 單別,
+			A.單據編號 單號,
+			A.單據序號 序號,
+			A.文數字1 半成品編號,
+			B.單據日期 作業日期,
+			B.歸屬類別 製令單別,
+			B.歸屬編號 製令單號,
+			B.業務員 作業人員,
+			C.製程代碼,
+			C.機台代碼,
+			A.異動日期,
+			A.倉庫代碼 庫別代碼,
+			A.贈品數量 異動數量,
+			A.備註說明
+		FROM 
+			FIL0040 A
+			INNER JOIN FIL0030 B ON A.單據類別 = B.單據類別 AND A.單據編號 = B.單據編號
+			INNER JOIN FIL0031 C ON A.單據類別 = C.單別 AND A.單據編號 = C.單號
+		WHERE
+			A.單據類別 = 'C41' AND
+			A.異動類別 = 'A' AND
+			A.文數字1 != ' ' AND
+			A.結案碼 = 'Y'
+			
+		union
+		
+		SELECT 
+			A.領用編號 條碼,
+			B.單據類別 單別,
+			B.單據編號 單號,
+			B.單據序號 序號,
+			B.文數字1 半成品編號,
+			C.單據日期 作業日期,
+			C.歸屬類別 製令單別,
+			C.歸屬編號 製令單號,
+			C.業務員 作業人員,
+			D.製程代碼,
+			D.機台代碼,
+			A.領用日期 異動日期,
+			A.庫別代碼,
+			A.領用數量 * -1 異動數量,
+			B.備註說明
+		FROM 
+			FIL0045 A
+			/*流水編號*/
+			INNER JOIN FIL0040 B ON A.流水編號 = B.流水編號 AND B.單據類別 = 'C41'
+			INNER JOIN FIL0030 C ON B.單據類別 = C.單據類別 AND B.單據編號 = C.單據編號
+			INNER JOIN FIL0031 D ON B.單據類別 = D.單別 AND B.單據編號 = D.單號
+			/*領用編號
+			INNER JOIN FIL0040 B1 ON A.領用編號 = B1.流水編號 AND B1.單據類別 = 'C41'
+			INNER JOIN FIL0030 C1 ON B1.單據類別 = C1.單據類別 AND B1.單據編號 = C1.單據編號
+			INNER JOIN FIL0031 D1 ON B1.單據類別 = D1.單別 AND B1.單據編號 = D1.單號
+			*/
+	) A
+	LEFT JOIN ViewFIL310P B ON A.機台代碼 = B.代碼
+	LEFT JOIN ViewFIL3106 C ON A.庫別代碼 = C.代碼
+	LEFT JOIN ViewFIL4030 D ON A.製令單別 = D.製令單別 AND A.製令單號 = D.製令單號
+	LEFT JOIN FIL0010 E ON A.作業人員 = E.員工編號
+	LEFT JOIN ViewFIL310N F ON A.製程代碼 = F.代碼);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4104" ("條碼", "單別", "單號", "序號", "半成品編號", "作業日期", "製令單別", "製令單號", "製程代碼", "製程名稱", "機台代碼", "機台名稱", "庫別代碼", "庫別名稱", "入庫數量", "領用數量", "庫存數量", "產品名稱", "產品規格", "公司代碼", "公司名稱") AS (                                                                                                                                                      SELECT
+	A.條碼,
+	B.單據類別 單別,
+	B.單據編號 單號,
+	B.單據序號 序號,
+	B.文數字1 半成品編號,
+	C.單據日期 作業日期,
+	C.歸屬類別 製令單別,
+	C.歸屬編號 製令單號,
+	D.製程代碼,
+	nvl(E.名稱, ' ') 製程名稱,
+	D.機台代碼,
+	nvl(F.名稱, ' ') 機台名稱,
+	A.庫別代碼,
+	nvl(G.名稱, ' ') 庫別名稱,
+	A.入庫數量,
+	A.領用數量,
+	A.庫存數量,
+	nvl(H.產品名稱, ' ') 產品名稱,
+	nvl(H.產品規格, ' ') 產品規格,
+	nvl(H.公司代碼, ' ') 公司代碼,
+	nvl(H.公司名稱, ' ') 公司名稱
+FROM
+	(	SELECT
+			A.條碼,
+			A.庫別代碼,
+			sum(A.入庫數量) 入庫數量,
+			sum(A.領用數量) 領用數量,
+			sum(A.入庫數量 - A.領用數量) 庫存數量
+		FROM
+			(	SELECT 
+					A.流水編號 條碼,
+					A.倉庫代碼 庫別代碼,
+					A.贈品數量 入庫數量,
+					0 領用數量
+				FROM 
+					FIL0040 A
+				WHERE
+					A.單據類別 = 'C41' AND
+					A.異動類別 = 'A' AND
+					A.文數字1 != ' ' AND
+					A.結案碼 = 'Y'
+					
+				union
+				
+				SELECT 
+					A.領用編號 條碼,
+					A.庫別代碼,
+					0 入庫數量,
+					A.領用數量
+				FROM 
+					FIL0045 A
+			) A
+		GROUP BY
+			A.條碼,
+			A.庫別代碼
+	) A
+	INNER JOIN FIL0040 B ON A.條碼 = B.流水編號 AND B.單據類別 = 'C41'
+	INNER JOIN FIL0030 C ON B.單據類別 = C.單據類別 AND B.單據編號 = C.單據編號
+	INNER JOIN FIL0031 D ON B.單據類別 = D.單別 AND B.單據編號 = D.單號
+	LEFT JOIN ViewFIL310N E ON D.製程代碼 = E.代碼
+	LEFT JOIN ViewFIL310P F ON D.機台代碼 = F.代碼
+	LEFT JOIN ViewFIL3106 G ON A.庫別代碼 = G.代碼
+	LEFT JOIN ViewFIL4030 H ON C.歸屬類別 = H.製令單別 AND C.歸屬編號 = H.製令單號);
+
+-- Oracle user_views（在 Oracle 已失效）
+CREATE VIEW "VIEWFIL4105" ("製令單別", "製令單號", "製程代碼", "製程名稱", "入庫數量", "出庫數量", "結存數量") AS (SELECT 
+	A.製令單別,
+	A.製令單號,
+	A.製程代碼,
+	A.製程名稱,
+	sum(A.入庫數量) 入庫數量,
+	sum(A.出庫數量) 出庫數量,
+	sum(A.入庫數量) - sum(A.出庫數量) 結存數量
+FROM
+	(	SELECT 
+			A.製令單別,
+			A.製令單號,
+			A.製程代碼,
+			A.製程名稱,
+			A.入庫數量,
+			0 出庫數量
+		FROM 
+			ViewFIL4101 A
+	) A
+GROUP BY
+	A.製令單別,
+	A.製令單號,
+	A.製程代碼,
+	A.製程名稱);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4111" ("單別", "單號", "機台代碼", "機台名稱", "作業位置", "出袋距離_左", "出袋距離_右", "巡檢日期", "製令單別", "製令單號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "成品尺寸", "訂單數量", "檢驗時間", "箱號", "Y牢固完整度", "N牢固完整度", "作業員", "作業員姓名", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "機台狀態") AS (                                                                                                                                            SELECT
 	B.單據類別 單別,
 	B.單據編號 單號,
 	A.機台代碼,
@@ -17062,8 +17970,8 @@ FROM
 WHERE
 	A.巡檢項目 = 'C31F');
 
--- Home #2037 ViewFIL4112.氣閥巡檢次數
-CREATE or Replace VIEW ViewFIL4112 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4112" ("單別", "單號", "作業區域", "巡檢日期", "製令單號", "箱號", "檢驗時間", "次數") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	C.機台代碼 作業區域,
@@ -17078,8 +17986,8 @@ FROM
 WHERE
 	A.單據類別 = 'C45');
 
--- Home #2038 ViewFIL4121.鐵條巡檢表.C46
-CREATE or Replace VIEW ViewFIL4121 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4121" ("單別", "單號", "機台代碼", "機台名稱", "作業位置", "出袋距離_左", "出袋距離_右", "巡檢日期", "製令單別", "製令單號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "成品尺寸", "訂單數量", "檢驗時間", "箱號", "Y牢固完整度", "N牢固完整度", "作業員", "作業員姓名", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "機台狀態") AS (                                                                                                                                            SELECT
 	B.單據類別 單別,
 	B.單據編號 單號,
 	A.機台代碼,
@@ -17129,8 +18037,8 @@ FROM
 WHERE
 	A.巡檢項目 = 'C31G');
 
--- Home #2039 ViewFIL4122.鐵條巡檢次數
-CREATE or Replace VIEW ViewFIL4122 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4122" ("單別", "單號", "作業區域", "巡檢日期", "製令單號", "箱號", "檢驗時間", "次數") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	C.機台代碼 作業區域,
@@ -17145,8 +18053,8 @@ FROM
 WHERE
 	A.單據類別 = 'C46');
 
--- Home #2040 ViewFIL4201.成品檢驗記錄表.C48
-CREATE or Replace VIEW ViewFIL4201 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4201" ("單別", "單號", "檢驗日期", "巡檢單別", "巡檢單號", "製令單別", "製令單號", "箱號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "預計交期", "生產數量", "製造日期", "檢驗數量", "不良數量", "交貨日期", "交貨數量", "判定", "判定其他說明", "作業人員1", "作業員1姓名", "作業人員2", "作業員2姓名", "作業人員3", "作業員3姓名", "標籤類別", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -17213,8 +18121,8 @@ FROM
 WHERE
 	A.單據類別 = 'C48');
 
--- Home #2041 ViewFIL4202.出廠檢驗報告.C44
-CREATE or Replace VIEW ViewFIL4202 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4202" ("單別", "單號", "檢驗日期", "檢驗單別", "檢驗單號", "製令單別", "製令單號", "箱號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "預計交期", "生產數量", "製造日期", "檢驗數量", "不良數量", "交貨日期", "交貨數量", "判定", "判定其他說明", "作業人員1", "作業員1姓名", "作業人員2", "作業員2姓名", "作業人員3", "作業員3姓名", "標籤類別", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 檢驗日期,
@@ -17280,8 +18188,8 @@ FROM
 WHERE
 	A.單據類別 = 'C44');
 
--- Home #2042 ViewFIL4301.成品檢驗記錄表.C49
-CREATE or Replace VIEW ViewFIL4301 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4301" ("單別", "單號", "檢驗日期", "巡檢單別", "巡檢單號", "製令單別", "製令單號", "箱號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "預計交期", "生產數量", "製造日期", "檢驗數量", "不良數量", "交貨日期", "交貨數量", "判定", "判定其他說明", "作業人員1", "作業員1姓名", "作業人員2", "作業員2姓名", "作業人員3", "作業員3姓名", "標籤類別", "備註", "依檢驗結果", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -17349,8 +18257,8 @@ FROM
 WHERE
 	A.單據類別 = 'C49');
 
--- Home #2043 ViewFIL4302.出廠檢驗報告.C43
-CREATE or Replace VIEW ViewFIL4302 AS (                                                                                                                                            SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4302" ("單別", "單號", "檢驗日期", "檢驗單別", "檢驗單號", "製令單別", "製令單號", "箱號", "簽核系統", "簽核狀態", "公司代碼", "公司名稱", "訂單單別", "訂單單號", "客戶編號", "客戶名稱", "產品編號", "產品名稱", "產品規格", "預計交期", "生產數量", "製造日期", "檢驗數量", "不良數量", "交貨日期", "交貨數量", "判定", "判定其他說明", "作業人員1", "作業員1姓名", "作業人員2", "作業員2姓名", "作業人員3", "作業員3姓名", "標籤類別", "備註", "依檢驗結果", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                            SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期 檢驗日期,
@@ -17417,8 +18325,8 @@ FROM
 WHERE
 	A.單據類別 = 'C43');
 
--- Home #2149 ViewFIL4A00.請購單主檔.D01
-Create view ViewFIL4A00 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A00" ("單別", "單號", "單據日期", "公司代碼", "公司名稱", "簽核系統", "備註", "請購人", "請購人姓名", "幣別代碼", "幣別名稱", "匯率", "稅率", "國內外", "國內外名稱", "貿易條件", "貿易條件名稱", "運輸方式", "運輸方式名稱", "付款方式", "付款方式名稱", "付款條件", "付款條件名稱", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "主旨", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.單據日期,
@@ -17469,8 +18377,8 @@ FROM
 WHERE
 	A.單據類別 = 'D01');
 
--- Home #2150 ViewFIL4A01.請購單明細
-Create view ViewFIL4A01 AS (                                                                                                                                                      SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A01" ("單別", "單號", "序號", "廠商編號", "廠商簡稱", "廠商全名", "料號", "品名", "規格", "廠商料號", "數量", "送貨規格", "送貨單位", "送貨數量", "庫存異動數", "庫存單位", "單位代碼", "單位名稱", "單價", "總價", "預交日", "備註", "結案", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -17508,8 +18416,8 @@ FROM
 WHERE
 	A.單據類別 = 'D01');
 
--- Home #2151 ViewFIL4A0A.請購單合計
-Create view ViewFIL4A0A AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A0A" ("單別", "單號", "數量", "總價", "稅率", "稅額", "含稅價") AS (SELECT
 	A.單別,
 	A.單號,
 	A.數量,
@@ -17533,8 +18441,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #2152 ViewFIL4A10.採購單主檔.D11
-Create view ViewFIL4A10 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A10" ("單別", "單號", "請購單別", "請購單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "廠商編號", "廠商簡稱", "廠商全名", "備註", "採購人", "採購人姓名", "幣別代碼", "幣別名稱", "匯率", "稅別", "稅率", "未稅金額", "稅額", "應稅金額", "預付原幣", "預付台幣", "國內外", "國內外名稱", "貿易條件", "貿易條件名稱", "運輸方式", "運輸方式名稱", "付款方式", "付款方式名稱", "廠商已讀", "付款條件", "送貨地址", "付款條件名稱", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "主旨", "員工流水編號", "需要總經理簽", "印採購總標") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 請購單別,
@@ -17601,8 +18509,8 @@ FROM
 WHERE
 	A.單據類別 = 'D11');
 
--- Home #2153 ViewFIL4A11.採購單明細
-Create view ViewFIL4A11 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A11" ("單別", "單號", "序號", "料號", "品名", "規格", "廠商料號", "廠商批號", "數量", "單位代碼", "單位名稱", "單價", "總價", "收貨量", "收貨單位", "收貨規格", "預交日", "備註", "製令單別", "製令單號", "批號", "批號規格", "QRNO", "庶物用品", "紙管箱", "急用", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -17643,8 +18551,8 @@ FROM
 WHERE
 	A.單據類別 = 'D11');
 
--- Home #2154 ViewFIL4A1A.採購單合計
-Create view ViewFIL4A1A AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1A" ("單別", "單號", "數量", "總價", "稅率", "稅額", "含稅價", "原幣總價", "原物料編號", "原物料名稱") AS (SELECT
 	A.單別,
 	A.單號,
 	A.數量,
@@ -17676,8 +18584,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #2155 ViewFIL4A1B.請購採購數
-Create view ViewFIL4A1B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1B" ("單別", "單號", "序號", "廠客編號", "料號", "請購數量", "採購數量", "未採購數", "請購金額", "採購金額", "結案") AS (
 SELECT
 	A.單別,
 	A.單號,
@@ -17732,8 +18640,8 @@ FROM
 			A.數值1
 	) B ON A.單別 = B.單別 AND A.單號 = B.單號 AND A.序號 = B.序號);
 
--- Home #2156 ViewFIL4A1C.請購採購數by單號
-Create view ViewFIL4A1C AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1C" ("單別", "單號", "請購數量", "採購數量", "未採購數", "請購金額", "採購金額") AS (SELECT
 	nvl(A.單別, B.單別) 單別,
 	nvl(A.單號, B.單號) 單號,
 	nvl(A.請購數量, 0) 請購數量,
@@ -17774,8 +18682,8 @@ FROM
 			B.歸屬編號
 	) B ON A.單別 = B.單別 AND A.單號 = B.單號);
 
--- Home #2157 ViewFIL4A1D.採購廠商出貨明細
-CREATE or Replace VIEW ViewFIL4A1D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1D" ("單別", "單號", "序號", "細分", "出貨支數", "庫存異動數", "單價", "採購數量", "廠商規格", "製作日期", "截止日期", "廠商預交日期", "製造批號", "廠商料號", "廠商發票", "喜美批號", "平台上傳", "備註", "已開發票", "喜美收貨", "建檔人員", "出貨支數單位", "運送方式代碼", "運送方式") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -17811,9 +18719,8 @@ WHERE
 	A.單別 = 'D11' AND 
 	nvl(Z3.簽核狀態, '0') <>'A');
 
--- Home #2158 ViewFIL4A1E.採購廠商出貨合計
-CREATE or Replace VIEW ViewFIL4A1E AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1E" ("單別", "單號", "序號", "採購單數量", "採購單庫存異動數", "廠商出貨採購數", "廠商出貨庫存異動數", "廠商出貨支數", "喜美收料庫存異動數", "廠商條碼筆數", "喜美收料採購數", "未交貨採購數", "廠商未交貨庫存異動數") AS WITH 
 /*採購單明細*/
 TMP1 AS 
 (
@@ -17887,9 +18794,8 @@ FROM
 	LEFT JOIN TMP3 P ON P.單別 = A.單別 AND P.單號 = A.單號 AND P.序號 = A.序號
 	LEFT JOIN ViewFIL3103 D ON A.單位代碼 = D.代碼;
 
--- Home #2159 ViewFIL4A1EA.採購平台廠商出貨
-CREATE or Replace VIEW ViewFIL4A1EA AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1EA" ("單別", "單號", "序號", "料號", "品名", "規格", "單價", "預交日", "備註", "批號", "收貨量", "收貨單位", "收貨規格", "庶物用品", "急用", "流水編號", "採購單數量", "採購單庫存異動數", "廠商出貨採購數", "廠商出貨庫存異動數", "廠商出貨支數", "廠商條碼筆數", "喜美收料採購數", "喜美收料庫存異動數", "未交貨採購數", "廠商未交貨庫存異動數", "單據日期", "廠商編號", "廠商簡稱", "簽核系統", "簽核狀態", "送貨地址", "廠商已讀") AS WITH 
 /*採購單明細*/
 TMP1 AS 
 (
@@ -17970,9 +18876,8 @@ FROM
 	TMP1 A
 	INNER JOIN ViewFIL4A1E N ON N.單別 = A.單別 AND N.單號 = A.單號 AND N.序號 = A.序號;
 
--- Home #2160 ViewFIL4A1EB.採購廠商出貨小計
-CREATE or Replace VIEW ViewFIL4A1EB AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1EB" ("單別", "單號", "序號", "採購單庫存異動數", "喜美收料庫存異動數") AS WITH 
 /*採購單明細*/
 TMP1 AS 
 (
@@ -18015,8 +18920,8 @@ FROM
 	TMP1 A
 	LEFT JOIN TMP3 P ON P.單別 = A.單別 AND P.單號 = A.單號 AND P.序號 = A.序號;
 
--- Home #2161 ViewFIL4A1F.採購預交日單號
-CREATE or Replace VIEW ViewFIL4A1F AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A1F" ("廠客編號", "預交日", "狀態", "補件說明", "採購單號") AS (
 SELECT
   A.廠客編號,
   A.預交日,
@@ -18057,8 +18962,8 @@ GROUP BY
 	nvl(B.簽核系統_結案,' ')
 );
 
--- Home #2162 ViewFIL4A20.進料單主檔.D21
-Create view ViewFIL4A20 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A20" ("單別", "單號", "採購單別", "採購單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "廠商編號", "廠商簡稱", "廠商全名", "廠商送貨單", "備註", "收貨人", "收貨人姓名", "幣別代碼", "幣別名稱", "匯率", "稅率", "未稅金額", "稅額", "應稅金額", "總重量", "原幣金額", "統一編號", "發票號碼", "發票聯式", "運送方式", "發票日期", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "主旨", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 採購單別,
@@ -18114,8 +19019,8 @@ FROM
 WHERE
 	A.單據類別 = 'D21');
 
--- Home #2163 ViewFIL4A21.進料單明細
-Create view ViewFIL4A21 AS (                                                                                                                                                      
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A21" ("單別", "單號", "序號", "採購單別", "採購單號", "採購序號", "料號", "品名", "規格", "入庫日期", "倉庫代碼", "倉庫名稱", "數量", "贈品數量", "單位代碼", "單位名稱", "單價", "總價", "庫存異動數", "批號", "批號規格", "廠商批號", "備註", "簽核狀態", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (                                                                                                                                                      
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -18159,8 +19064,8 @@ FROM
 WHERE
 	A.單據類別 = 'D21' and A.異動類別 = 'A');
 
--- Home #2164 ViewFIL4A2A.進料單發票合計
-Create view ViewFIL4A2A AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A2A" ("單別", "單號", "數量", "贈品", "總價", "重量", "稅率", "稅額", "含稅價", "原幣總價") AS (SELECT
 	A.單別,
 	A.單號,
 	A.數量,
@@ -18193,8 +19098,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #2165 ViewFIL4A2B.採購進料數
-Create or Replace view ViewFIL4A2B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A2B" ("單別", "單號", "序號", "料號", "採購數量", "採購數量_庫存單位", "進料數量", "進料數量_庫存單位", "收料數量", "收料數量_庫存單位", "未進料數", "未進料數_庫存單位", "收料未入庫數_庫存單位", "採購金額", "進料金額", "結案否") AS (
 SELECT
 	nvl(A.單別, B.單別) 單別,
 	nvl(A.單號, B.單號) 單號,
@@ -18272,8 +19177,8 @@ FROM
 			A.料號
 	) C ON A.單別 = C.單別 AND A.單號 = C.單號 AND A.序號 = C.序號);
 
--- Home #2166 ViewFIL4A2C.採購進料額
-Create or Replace view ViewFIL4A2C AS (                                                                                                                                                 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A2C" ("採購單別", "採購單號", "進料原幣總價", "進料台幣總價") AS (                                                                                                                                                 
 SELECT 
 	A.前置單別 採購單別, 
 	A.前置單號 採購單號,
@@ -18292,8 +19197,8 @@ GROUP BY
 	A.前置單號
 	);
 
--- Home #2167 ViewFIL4A30.進料檢驗單主檔.D31
-Create view ViewFIL4A30 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A30" ("單別", "單號", "進料單別", "進料單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "廠商編號", "廠商簡稱", "廠商全名", "備註", "檢驗員", "檢驗員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "主旨", "運送方式", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 進料單別,
@@ -18334,8 +19239,8 @@ FROM
 WHERE
 	A.單據類別 = 'D31');
 
--- Home #2168 ViewFIL4A31.進料檢驗單明細
-Create view ViewFIL4A31 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A31" ("單別", "單號", "序號", "料號", "品名", "規格", "進料日期", "檢驗日期", "倉庫代碼", "倉庫名稱", "數量", "單位代碼", "單位名稱", "進料序號", "批號", "檢附COA", "檢驗外觀", "檢驗清潔度", "檢驗顏色", "檢驗尺寸", "檢驗厚度", "檢驗滑度", "檢驗人員", "檢驗姓名", "判定", "特採", "不合格原因", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -18382,8 +19287,8 @@ FROM
 WHERE
 	A.單據類別 = 'D31');
 
--- Home #2169 ViewFIL4A3A.進料檢驗單合計
-Create view ViewFIL4A3A AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A3A" ("單別", "單號", "數量") AS (SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	sum(A.異動數量) 數量
@@ -18395,8 +19300,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #2170 ViewFIL4A40.退料單主檔.D41
-Create view ViewFIL4A40 AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A40" ("單別", "單號", "進料單別", "進料單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "廠商編號", "廠商簡稱", "廠商全名", "備註", "倉管員", "倉管員姓名", "幣別代碼", "幣別名稱", "收付方式", "統一編號", "發票號碼", "發票聯數", "發票日期", "稅別", "稅率", "匯率", "未稅金額", "稅額", "應稅金額", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "主旨", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 進料單別,
@@ -18451,8 +19356,8 @@ FROM
 WHERE
 	A.單據類別 = 'D41');
 
--- Home #2171 ViewFIL4A41.退料單明細
-Create view ViewFIL4A41 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A41" ("單別", "單號", "序號", "料號", "品名", "規格", "退料日期", "倉庫代碼", "倉庫名稱", "數量", "金額", "單價", "庫存異動數", "單位代碼", "單位名稱", "進料序號", "批號", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -18489,8 +19394,8 @@ FROM
 WHERE
 	A.單據類別 = 'D41' and A.異動類別='S');
 
--- Home #2172 ViewFIL4A4A.退料單合計
-Create view ViewFIL4A4A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4A" ("單別", "單號", "數量", "贈品", "總價", "稅率", "稅額", "含稅價") AS (
 SELECT
 	A.單別,
 	A.單號,
@@ -18519,9 +19424,8 @@ FROM
 	) A
 	INNER JOIN FIL0030 B ON A.單別 = B.單據類別 AND A.單號 = B.單據編號);
 
--- Home #2173 ViewFIL4A4B.採購進退驗數
-Create or Replace view ViewFIL4A4B AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4B" ("單別", "單號", "料號", "採購數量", "進料數量", "未進料數", "採購數量_庫存單位", "進料數量_庫存單位", "未進料數_庫存單位", "採購金額", "進料金額", "退料數量", "檢驗數量") AS WITH 
 TMP1 AS 
 (
 SELECT
@@ -18594,8 +19498,8 @@ FROM
 	LEFT JOIN TMP2 B ON A.單別 = B.單別 AND A.單號 = B.單號 AND A.料號 = B.料號
 	LEFT JOIN TMP3 C ON A.單別 = C.單別 AND A.單號 = C.單號 AND A.料號 = C.料號;
 
--- Home #2174 ViewFIL4A4C.批號退料數
-Create view ViewFIL4A4C AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4C" ("批號", "進料數量", "退料數量", "未退料數", "檢驗數量", "未檢驗數") AS (SELECT
 	nvl(A.批號, B.批號) 批號,
 	nvl(A.進料數量, 0) 進料數量,
 	nvl(A.退料數量, 0) 退料數量,
@@ -18638,8 +19542,8 @@ FROM
 			A.批號	
 	) B ON A.批號 = B.批號);
 
--- Home #2175 ViewFIL4A4D.批號委外數
-Create view ViewFIL4A4D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4D" ("料號", "批號", "委外數量") AS (
 SELECT
 			A.料號,
 			A.批號,	
@@ -18651,8 +19555,8 @@ SELECT
 			A.批號
 );
 
--- Home #2176 ViewFIL4A4E.批號異動數
-Create view ViewFIL4A4E AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4E" ("料號", "批號", "數量") AS (
 SELECT
 	材料編號 料號,
 	批號,
@@ -18664,8 +19568,8 @@ GROUP BY
 	批號
 );
 
--- Home #2177 ViewFIL4A4F.客供品主檔.D51
-Create view ViewFIL4A4F AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4F" ("單別", "單號", "進料單別", "進料單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "客戶編號", "客戶簡稱", "客戶全名", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "需品檢", "主旨", "員工流水編號", "指定簽核人員") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 進料單別,
@@ -18710,8 +19614,8 @@ FROM
 WHERE
 	A.單據類別 = 'D51');
 
--- Home #2178 ViewFIL4A4G.客供品明細
-Create or Replace view ViewFIL4A4G AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4G" ("單別", "單號", "序號", "單據日期", "客戶編號", "客戶簡稱", "料號", "品名", "規格", "來料日期", "倉庫代碼", "批號", "倉庫名稱", "數量", "庫存異動數", "單位代碼", "庫存單位", "單位名稱", "廠商批號", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -18748,8 +19652,8 @@ FROM
 WHERE
 	A.單據類別 = 'D51' and A.異動類別 = ' ');
 
--- Home #2179 ViewFIL4A4H.客供品合計
-Create view ViewFIL4A4H AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4H" ("單別", "單號", "數量", "庫存異動數") AS (SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	sum(A.異動數量) 數量,
@@ -18762,8 +19666,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #2180 ViewFIL4A4I.客供品退料主檔.D52
-Create Or Replace view ViewFIL4A4I AS (                                                                                                                                                      SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4I" ("單別", "單號", "客供單別", "客供單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "客戶編號", "客戶簡稱", "客戶全名", "備註", "倉管員", "倉管員姓名", "寄回或喜美處理", "收件人", "收件人電話", "收件人地址", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "發函代理人", "代理人姓名", "需品檢", "主旨", "員工流水編號") AS (                                                                                                                                                      SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	A.歸屬類別 客供單別,
@@ -18808,8 +19712,8 @@ FROM
 WHERE
 	A.單據類別 = 'D52');
 
--- Home #2181 ViewFIL4A4J.客供品退料明細
-Create Or Replace view ViewFIL4A4J AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4J" ("單別", "單號", "序號", "料號", "品名", "規格", "來料日期", "倉庫代碼", "倉庫名稱", "數量", "單位代碼", "單位名稱", "進料序號", "批號", "廠商批號", "庫存異動數", "庫存單位", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -18846,8 +19750,8 @@ FROM
 WHERE
 	A.單據類別 = 'D52' and A.異動類別 = 'S');
 
--- Home #2182 ViewFIL4A4K.客供品退料合計
-Create Or Replace view ViewFIL4A4K AS (SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4K" ("單別", "單號", "庫存異動數", "數量") AS (SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
 	sum(A.數值4) 庫存異動數,
@@ -18860,8 +19764,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #2183 ViewFIL4A4L.客供品料號
-Create Or Replace view ViewFIL4A4L AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFIL4A4L" ("產品編號") AS (SELECT 
 	DISTINCT A.產品編號 產品編號
 FROM 
 	FIL0043 M
@@ -18870,8 +19774,8 @@ WHERE
 	M.單別 = 'D51' AND 
 	A.產品編號 != ' ' );
 
--- Home #2268 ViewFIL5001.PLC機台位置
-CREATE or Replace VIEW ViewFIL5001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL5001" ("機台代碼", "位置") AS (
 SELECT
 	distinct
 	A.機台代碼,
@@ -18879,8 +19783,8 @@ SELECT
 FROM
 	FIL300B A);
 
--- Home #2269 ViewFIL5002.PLC製令清單
-Create OR Replace view ViewFIL5002 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFIL5002" ("製令單號", "產品編號", "產品名稱", "產品規格", "讀取日時") AS (
 SELECT	Distinct
 	A.製令單號,
 	B.產品編號,
@@ -18894,8 +19798,8 @@ WHERE
 	A.PLC數值<>0
 	);
 
--- Home #2186 ViewFILA001.訂單進度表
-Create view ViewFILA001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILA001" ("訂單號碼", "產品編號", "單據日期", "父階", "父階單別", "父階單號", "子階", "子階單別", "子階單號", "排序") AS (
 SELECT
 	B.訂單號碼,
 	A.產品編號,
@@ -19035,8 +19939,8 @@ WHERE
 	A.單別 = 'C41'
 /* 日報表 */);
 
--- Home #2187 ViewFILA010.採購進度表
-Create view ViewFILA010 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILA010" ("採購單號", "單據日期", "父階", "父階單別", "父階單號", "子階", "子階單別", "子階單號") AS (
 SELECT
 	A.採購單號,
 	A.單據日期,
@@ -19103,8 +20007,8 @@ WHERE
 	A.單據類別 = 'D31'
 /* 檢驗單 */);
 
--- Home #2190 ViewFILE010.原物料入庫主檔.E11
-CREATE or Replace VIEW ViewFILE010 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE010" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19136,8 +20040,8 @@ FROM
 WHERE
 	A.單據類別 = 'E11');
 
--- Home #2191 ViewFILE011.原物料入庫明細
-CREATE or Replace VIEW ViewFILE011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE011" ("單別", "單號", "序號", "料號", "品名", "規格", "盤點日期", "進貨日期", "有效日期", "廠別代碼", "倉別代碼", "庫別代碼", "庫別名稱", "庫存數量", "包裝數量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "批號", "廠商批號", "QRNO", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19178,8 +20082,8 @@ FROM
 WHERE
 	A.單據類別 = 'E11');
 
--- Home #2192 ViewFILE01A.原物料入庫合計
-CREATE or Replace VIEW ViewFILE01A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE01A" ("單別", "單號", "庫存數量", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19193,8 +20097,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2193 ViewFILE01B.廠商批號對照
-CREATE or Replace VIEW ViewFILE01B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE01B" ("批號", "廠商批號") AS (
 SELECT DISTINCT
 	C.批號,
 	A.廠客品號 廠商批號
@@ -19205,8 +20109,8 @@ FROM
 WHERE
 	A.單據類別 = 'E11');
 
--- Home #2194 ViewFILE01C.原物料入庫沖銷.E11
-CREATE or Replace VIEW ViewFILE01C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE01C" ("單別", "單號", "序號", "料號", "品名", "規格", "單據日期", "入庫原因", "廠商名稱", "庫存異動數", "沖銷異動數", "待沖銷數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19246,8 +20150,8 @@ WHERE
 	A.單據類別 = 'E11' AND B.收付方式 <> ' '
 );
 
--- Home #2195 ViewFILE020.調整單主檔.E12
-CREATE or Replace VIEW ViewFILE020 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE020" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19279,8 +20183,8 @@ FROM
 WHERE
 	A.單據類別 = 'E12');
 
--- Home #2196 ViewFILE021.調整單明細
-CREATE or Replace VIEW ViewFILE021 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE021" ("單別", "單號", "序號", "料號", "品名", "規格", "調整日期", "廠別代碼", "倉別代碼", "庫別代碼", "庫別名稱", "入或領", "調整數量", "庫存單位代碼", "庫存單位名稱", "批號", "QRNO", "廠商批號", "有效日期", "製造日期", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19318,8 +20222,8 @@ FROM
 WHERE
 	A.單據類別 = 'E12');
 
--- Home #2197 ViewFILE025.裁切材料主檔.E13
-CREATE or Replace VIEW ViewFILE025 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE025" ("單別", "單號", "公司代碼", "公司名稱", "廠客編號", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "機台代碼", "機台名稱", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19353,8 +20257,8 @@ FROM
 WHERE
 	A.單據類別 = 'E13');
 
--- Home #2198 ViewFILE026.裁切材料明細
-CREATE or Replace VIEW ViewFILE026 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE026" ("單別", "單號", "序號", "料號", "品名", "規格", "調整日期", "廠別代碼", "倉別代碼", "庫別代碼", "庫別名稱", "調整數量", "庫存異動數", "庫存單位代碼", "庫存單位名稱", "批號", "QRNO", "廠商批號", "廠商規格", "有效日期", "製造日期", "備註", "標籤列印次數", "標籤列印日期", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19395,8 +20299,8 @@ FROM
 WHERE
 	A.單據類別 = 'E13');
 
--- Home #2199 ViewFILE027.裁切材料合計
-CREATE or Replace VIEW ViewFILE027 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE027" ("單別", "單號", "調整數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19409,8 +20313,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2200 ViewFILE02A.調整單合計
-CREATE or Replace VIEW ViewFILE02A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02A" ("單別", "單號", "調整數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19423,8 +20327,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2201 ViewFILE02B.裁切調整主檔.E22
-CREATE or Replace VIEW ViewFILE02B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02B" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "製令類別", "製令單號", "裁切單號", "分條號", "主旨", "員工流水編號", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19475,8 +20379,8 @@ FROM
 WHERE
 	A.單據類別 = 'E22');
 
--- Home #2202 ViewFILE02C.裁切調整明細
-CREATE or Replace VIEW ViewFILE02C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02C" ("單別", "單號", "序號", "異動類別", "半成品編號", "品名", "規格", "調整日期", "廠別代碼", "倉別代碼", "庫別代碼", "庫別名稱", "調整數量", "報廢數量", "庫存單位代碼", "庫存單位名稱", "製令單號", "QRCODE", "製成品編號", "接頭數", "備註", "作業者", "作業者姓名", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19518,8 +20422,8 @@ FROM
 WHERE
 	A.單據類別 = 'E22');
 
--- Home #2203 ViewFILE02D.裁切調整單合計
-CREATE or Replace VIEW ViewFILE02D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02D" ("單別", "單號", "異動類別", "調整數量", "報廢數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19536,8 +20440,8 @@ GROUP BY
 	A.異動類別
 );
 
--- Home #2204 ViewFILE02H.裁切入庫主檔.E23
-CREATE or Replace VIEW ViewFILE02H AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02H" ("單別", "單號", "公司代碼", "公司名稱", "製令類別", "製令單號", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "分條號", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19585,8 +20489,8 @@ FROM
 WHERE
 	A.單據類別 = 'E23');
 
--- Home #2205 ViewFILE02I.裁切入庫明細
-CREATE or Replace VIEW ViewFILE02I AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02I" ("單別", "單號", "序號", "異動類別", "半成品編號", "品名", "規格", "調整日期", "廠別代碼", "倉別代碼", "庫別代碼", "庫別名稱", "調整數量", "庫存單位代碼", "庫存單位名稱", "製令單號", "QRCODE", "製成品編號", "接頭數", "備註", "作業者", "作業者姓名", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19627,8 +20531,8 @@ FROM
 WHERE
 	A.單據類別 = 'E23');
 
--- Home #2206 ViewFILE02J.裁切入庫單合計
-CREATE or Replace VIEW ViewFILE02J AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02J" ("單別", "單號", "異動類別", "調整數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19644,8 +20548,8 @@ GROUP BY
 	A.異動類別
 );
 
--- Home #2219 ViewFILE02K.半成品入庫主檔.E24
-CREATE or Replace VIEW ViewFILE02K AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02K" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19677,8 +20581,8 @@ FROM
 WHERE
 	A.單據類別 = 'E24');
 
--- Home #2220 ViewFILE02L.半成品入庫明細
-CREATE or Replace VIEW ViewFILE02L AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02L" ("單別", "單號", "序號", "製令單別", "製令單號", "本製程編號", "製程編號", "加工別", "批號", "盤點日期", "製造日期", "有效日期", "庫存數量", "接頭數", "規格", "廠商批號", "廠商規格", "備註說明", "標籤列印次數", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19711,8 +20615,8 @@ FROM
 WHERE
 	A.單據類別 = 'E24' and A.異動類別='A');
 
--- Home #2221 ViewFILE02M.半成品入庫合計
-CREATE or Replace VIEW ViewFILE02M AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE02M" ("單別", "單號", "庫存數量", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19726,8 +20630,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2076 ViewFILE030.箱號異動主檔.E32
-CREATE or Replace VIEW ViewFILE030 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE030" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19759,8 +20663,8 @@ FROM
 WHERE
 	A.單據類別 = 'E32');
 
--- Home #2077 ViewFILE031.箱號異動明細
-CREATE or Replace VIEW ViewFILE031 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE031" ("單別", "單號", "序號", "料號", "品名", "規格", "盤點日期", "進貨日期", "庫別代碼", "庫別名稱", "箱號", "包裝數量", "重量", "紙箱料號", "紙箱重量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "批號", "幾束一袋", "氣閥重量", "鐵條重量", "調整前製袋重量", "調整前氣閥重量", "調整前鐵條重量", "製令單號", "QRNO", "備註", "業務員", "業務員二", "業務員三", "業務員姓名", "業務員姓名二", "業務員姓名三", "領用或入庫", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19818,8 +20722,8 @@ FROM
 WHERE
 	A.單據類別 = 'E32');
 
--- Home #2078 ViewFILE032.箱號異動合計
-CREATE or Replace VIEW ViewFILE032 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE032" ("單別", "單號", "庫存數量", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19833,8 +20737,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2079 ViewFILE032A.箱號異動平均重量
-Create or replace view ViewFILE032A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE032A" ("製令單別", "製令單號", "箱號", "平均袋重", "紙箱重量", "氣閥重量", "鐵條重量", "每袋幾束") AS (
 SELECT	
 	TO_CHAR('C11') 製令單別,
 	A.廠客品號 製令單號,
@@ -19856,8 +20760,8 @@ Group by
 	A.異動數量
 );
 
--- Home #2080 ViewFILE033.成品重工主檔.E33
-CREATE or Replace VIEW ViewFILE033 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE033" ("單別", "單號", "製令單別", "製令單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "報廢數量", "重工人員1", "重工人員2", "重工人員3", "重工人員4", "品檢人員", "重工人員名稱1", "重工人員名稱2", "重工人員名稱3", "重工人員名稱4", "品檢人員名稱", "判定", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "主旨", "員工流水編號", "指定簽核人員") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -19911,8 +20815,8 @@ FROM
 WHERE
 	A.單據類別 = 'E33');
 
--- Home #2081 ViewFILE034.成品重工明細
-CREATE or Replace VIEW ViewFILE034 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE034" ("單別", "單號", "序號", "單據日期", "異動類別", "父項序號", "料號", "品名", "規格", "盤點日期", "進貨日期", "庫別代碼", "庫別名稱", "箱號", "包裝數量", "報廢數量", "重量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "批號", "幾束一袋", "氣閥重量", "鐵條重量", "製袋重量", "製令單別", "製令單號", "QRNO", "紙箱代碼", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日", "倉管人員", "重工人員1", "重工人員2", "重工人員3", "重工人員4", "品檢人員", "重工人員名稱1", "重工人員名稱2", "重工人員名稱3", "重工人員名稱4", "品檢人員名稱", "倉管人員名稱") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -19982,8 +20886,8 @@ FROM
 WHERE
 	A.單據類別 = 'E33');
 
--- Home #2082 ViewFILE035.成品重工合計
-CREATE or Replace VIEW ViewFILE035 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE035" ("單別", "單號", "異動類別", "包裝數量", "重量", "箱數", "氣閥重量", "鐵條重量", "製袋重量", "紙箱重量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20007,8 +20911,8 @@ GROUP BY
 	A.異動類別
 );
 
--- Home #2083 ViewFILE035A.重工平均重量
-Create or replace view ViewFILE035A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE035A" ("製令類別", "製令單號", "箱號", "平均袋重", "數量", "製袋重量", "氣閥重量", "鐵條重量", "紙箱重量") AS (
 SELECT 
 	To_Char('C11') 製令類別,
 	A.廠客品號 製令單號,
@@ -20031,8 +20935,8 @@ GROUP BY
 	A.異動數量	
 );
 
--- Home #2084 ViewFILE036.成品出廠主檔.E35
-CREATE or Replace VIEW ViewFILE036 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE036" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "車號", "最後更新日", "簽核狀態", "廠商簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20065,8 +20969,8 @@ FROM
 WHERE
 	A.單據類別 = 'E35');
 
--- Home #2085 ViewFILE037.成品出廠明細
-CREATE or Replace VIEW ViewFILE037 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE037" ("單別", "單號", "序號", "料號", "品名", "規格", "異動日期", "預交日", "庫別代碼", "庫別名稱", "箱號", "包裝數量", "重量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "箱數", "批號", "製令單號", "QRNO", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20106,8 +21010,8 @@ FROM
 WHERE
 	A.單據類別 = 'E35');
 
--- Home #2086 ViewFILE038.成品出廠合計
-CREATE or Replace VIEW ViewFILE038 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE038" ("單別", "單號", "箱數", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20121,9 +21025,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2087 ViewFILE039.成品品檢主檔.E37
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "APK"."VIEWFILE039" ("單別", "單號", "裝櫃單別", "貨櫃號碼", "嘜頭序號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "品檢員", "品檢員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "工站代碼", "機台代碼", "機台名稱", "工站名稱", "製程名稱", "最後更新日", "簽核狀態", "品檢簽收") AS 
-  (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE039" ("單別", "單號", "裝櫃單別", "貨櫃號碼", "嘜頭序號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "品檢員", "品檢員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "工站代碼", "機台代碼", "機台名稱", "工站名稱", "製程名稱", "最後更新日", "簽核狀態", "品檢簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20166,9 +21069,8 @@ FROM
 WHERE
 	A.單據類別 = 'E37');
 
--- Home #2088 ViewFILE039A.成品品檢主檔客編
-CREATE or Replace VIEW ViewFILE039A AS
-(
+-- Oracle user_views
+CREATE VIEW "VIEWFILE039A" ("單別", "單號", "客戶編號") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20190,8 +21092,8 @@ GROUP BY
 	A.單據編號	
 );
 
--- Home #2089 ViewFILE03A.成品品檢明細
-CREATE or Replace VIEW ViewFILE03A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03A" ("單別", "單號", "序號", "料號", "品名", "規格", "英文品名", "異動日期", "預交日", "庫別代碼", "庫別名稱", "原庫存數", "箱號", "包裝數量", "差異數量", "重量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "箱數", "批號", "製令單號", "客戶編號", "QRNO", "標籤類別", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20239,8 +21141,8 @@ FROM
 WHERE
 	A.單據類別 = 'E37');
 
--- Home #2090 ViewFILE03B.成品品檢合計(嘜頭)
-CREATE or Replace VIEW ViewFILE03B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03B" ("單別", "單號", "箱數", "包裝數量", "淨重", "毛重") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20256,8 +21158,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2091 ViewFILE03C.成品調整平均重量
-Create or replace view ViewFILE03C AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03C" ("製令單號", "箱號", "來源單別", "平均袋重") AS (
 SELECT	
 	A.廠客品號 製令單號,
 	A.異動數量 箱號,
@@ -20273,8 +21175,8 @@ Group by
 	A.單據類別
 );
 
--- Home #2092 ViewFILE03D.成品平均重量
-Create or replace view ViewFILE03D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03D" ("製令單別", "製令單號", "箱號", "每袋重量") AS (
 SELECT	
 	Decode(nvl(A.平均袋重,0),0,to_char('C11'),A.製令單別) 製令單別,
 	Decode(nvl(A.平均袋重,0),0,D.製令單號,A.製令單號) 製令單號,
@@ -20287,8 +21189,8 @@ FROM
 	Full Outer Join ViewFILE03C D ON A.製令單號=D.製令單號 AND A.箱號=D.箱號 AND nvl(D.平均袋重,0)<>0
 );
 
--- Home #2093 ViewFILE03E.成品批號庫存
-Create or replace view ViewFILE03E AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03E" ("批號", "結存數量", "製袋重量", "生產日期", "氣閥重量", "鐵條重量", "紙箱重量", "箱號異動", "重工", "品檢", "製袋平均重量", "氣閥平均重量", "鐵條平均重量") AS (
 SELECT  
 	A.批號,
 	ROUND(NVL(case when B.結存數量<0 then 0 else B.結存數量 end,0)) 結存數量,
@@ -20392,8 +21294,8 @@ FROM
 	) I ON I.批號=A.批號
 );
 
--- Home #2094 ViewFILE03F.成品批號庫存彙總
-Create or replace view ViewFILE03F AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE03F" ("製令單號", "結存數量", "結存重量", "平均製袋重量", "平均氣閥重量", "平均鐵條重量") AS (
 SELECT  REGEXP_SUBSTR(A.批號, '[^-]+', 1, 1) 製令單號,
 	SUM(A.結存數量) 結存數量,
 	SUM(DECODE(A.結存數量,0,0,A.製袋重量+A.氣閥重量+A.鐵條重量+紙箱重量)) 結存重量,
@@ -20406,8 +21308,8 @@ GROUP BY
 	REGEXP_SUBSTR(A.批號, '[^-]+', 1, 1)
 );
 
--- Home #2095 ViewFILE040.貨櫃號碼主檔.E38
-CREATE or Replace VIEW ViewFILE040 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE040" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "客戶編號", "貨櫃號碼", "客戶名稱", "ATTN", "TEL", "FAX", "ADDRESS", "價格條件", "目的地", "封條號碼", "車架號碼", "SO", "貨櫃尺寸", "運送方式", "VESSELNO", "ONBOARDDATE", "ETA", "運送方式名稱", "幣別代碼", "備註", "作業員", "作業員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "裝櫃簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20460,8 +21362,8 @@ FROM
 WHERE
 	A.單據類別 = 'E38');
 
--- Home #2096 ViewFILE041.貨櫃號碼明細
-CREATE or Replace VIEW ViewFILE041 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE041" ("裝櫃單別", "貨櫃號碼", "嘜頭序號", "品檢單別", "品檢單號", "品檢序號", "料號", "品名", "規格", "異動日期", "庫別代碼", "庫別名稱", "箱號", "包裝數量", "重量", "庫存單位代碼", "庫存單位名稱", "包裝單位代碼", "包裝單位名稱", "箱數", "批號", "製令單號", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	B.歸屬類別 裝櫃單別,
 	B.歸屬編號 貨櫃號碼,
@@ -20505,8 +21407,8 @@ FROM
 WHERE
 	A.單據類別 = 'E37');
 
--- Home #2097 ViewFILE042.貨櫃製令合計
-CREATE or Replace VIEW ViewFILE042 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE042" ("單別", "單號", "製令單號", "產品編號", "箱數", "數量", "製令序號") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -20536,8 +21438,8 @@ FROM
 			A.產品編號
 	) A);
 
--- Home #2098 ViewFILE043.貨櫃號碼合計
-CREATE or Replace VIEW ViewFILE043 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE043" ("單別", "單號", "箱數", "數量", "淨重", "毛重") AS (
 SELECT 
 	B.歸屬類別 單別, 
 	B.歸屬編號 單號,
@@ -20555,8 +21457,8 @@ GROUP BY
 	B.歸屬類別, 
 	B.歸屬編號);
 
--- Home #2099 ViewFILE044.嘜頭製令合計
-CREATE or Replace VIEW ViewFILE044 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE044" ("單別", "單號", "嘜頭序號", "製令單號", "產品編號", "箱數", "數量", "品名", "客戶成品尺寸", "客戶最終名稱") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -20592,8 +21494,8 @@ FROM
 	) A
 	LEFT JOIN FIL0012 B ON A.產品編號 = B.產品編號);
 
--- Home #2100 ViewFILE045.貨櫃明細(B)INV
-CREATE or Replace VIEW ViewFILE045 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE045" ("單別", "單號", "序號", "製令序號", "DESCRIPTION", "製令單號", "數量", "單位", "單價", "金額", "客戶最終名稱", "備註", "板費", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20623,8 +21525,8 @@ WHERE
 	A.單據類別 = 'E38' AND
 	A.異動類別 = 'B');
 
--- Home #2101 ViewFILE046.貨櫃合計(B)INV
-CREATE or Replace VIEW ViewFILE046 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILE046" ("單別", "單號", "數量", "金額") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20639,8 +21541,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2104 ViewFILF010.委外加工主檔.F11
-CREATE or Replace VIEW ViewFILF010 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF010" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "工站代碼", "機台代碼", "機台名稱", "工站名稱", "製程名稱", "最後更新日", "簽核狀態", "廠商簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20680,8 +21582,8 @@ FROM
 WHERE
 	A.單據類別 = 'F11');
 
--- Home #2105 ViewFILF011.委外加工明細
-CREATE or Replace VIEW ViewFILF011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF011" ("單別", "單號", "序號", "料號", "品名", "規格", "異動日期", "製造日期", "箱號", "包裝數量", "重量", "箱數", "批號", "製令單號", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20714,8 +21616,8 @@ FROM
 WHERE
 	A.單據類別 = 'F11');
 
--- Home #2106 ViewFILF012.委外加工合計
-CREATE or Replace VIEW ViewFILF012 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF012" ("單別", "單號", "箱數", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20729,8 +21631,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2107 ViewFILF013.委外批號填表日
-CREATE or Replace VIEW ViewFILF013 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF013" ("工站代碼", "批號", "填表日") AS (
 SELECT 
 	D.工站代碼,	
 	A.批號,
@@ -20745,8 +21647,8 @@ GROUP BY
 	D.工站代碼,	
 	A.批號);
 
--- Home #2108 ViewFILF014.委外加工生產數
-CREATE or Replace VIEW ViewFILF014 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF014" ("製程代碼", "工站代碼", "製令單號", "生產數量", "合理剔除數", "報廢數量") AS (
 SELECT 
 	B.製程代碼,
 	B.工站代碼,
@@ -20770,8 +21672,8 @@ GROUP BY
 	C.歸屬編號
 );
 
--- Home #2109 ViewFILF015.委外製令填表日
-CREATE or Replace VIEW ViewFILF015 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF015" ("工站代碼", "製令單號", "填表日") AS (
 SELECT 
 	D.工站代碼,	
 	E.廠客品號 製令單號,
@@ -20786,8 +21688,8 @@ GROUP BY
 	D.工站代碼,	
 	E.廠客品號);
 
--- Home #2110 ViewFILF016.委外加工生產明細
-CREATE or Replace VIEW ViewFILF016 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF016" ("單據類別", "單據編號", "單據序號", "製程代碼", "工站代碼", "製令單號", "生產數量", "報廢數量") AS (
 SELECT 
 	A.單據類別,
 	A.單據編號,
@@ -20809,8 +21711,8 @@ WHERE
 	B.製程代碼 BETWEEN 'C31F' AND 'C31G'
 );
 
--- Home #2111 ViewFILF020.委外回廠主檔.F21
-CREATE or Replace VIEW ViewFILF020 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF020" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "工站代碼", "機台代碼", "機台名稱", "工站名稱", "製程名稱", "最後更新日", "簽核狀態", "廠商簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20850,8 +21752,8 @@ FROM
 WHERE
 	A.單據類別 = 'F21');
 
--- Home #2112 ViewFILF021.委外回廠明細
-CREATE or Replace VIEW ViewFILF021 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF021" ("單別", "單號", "序號", "料號", "品名", "規格", "異動日期", "製造日期", "箱號", "包裝數量", "重量", "箱數", "退回", "批號", "製令單號", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20885,8 +21787,8 @@ FROM
 WHERE
 	A.單據類別 = 'F21');
 
--- Home #2113 ViewFILF022.委外回廠合計
-CREATE or Replace VIEW ViewFILF022 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF022" ("單別", "單號", "箱數", "包裝數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20900,8 +21802,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2114 ViewFILF030.庫存盤點主檔.F31
-CREATE or Replace VIEW ViewFILF030 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF030" ("單別", "單號", "類別代碼", "類別說明", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "機台代碼", "機台名稱", "已轉調整", "最後更新日", "簽核狀態", "廠商簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -20948,8 +21850,8 @@ FROM
 WHERE
 	A.單據類別 = 'F31');
 
--- Home #2115 ViewFILF031.庫存盤點明細
-CREATE or Replace VIEW ViewFILF031 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF031" ("單別", "單號", "序號", "料號", "品名", "規格", "異動類別", "異動說明", "異動日期", "製造日期", "箱號", "數量", "重量", "箱數", "批號", "製令單號", "庫存數", "差異數", "委外庫存數", "已盤", "備註說明", "流水編號", "最後更新者", "更新者姓名", "廠商批號", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -20989,8 +21891,8 @@ FROM
 WHERE
 	A.單據類別 = 'F31');
 
--- Home #2116 ViewFILF031A.庫存盤點明細簡表
-CREATE or Replace VIEW ViewFILF031A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF031A" ("單別", "單號", "序號", "料號", "批號", "異動日期", "盤點數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21005,8 +21907,8 @@ FROM
 WHERE
 	A.單據類別 = 'F31');
 
--- Home #2117 ViewFILF032.庫存盤點合計
-CREATE or Replace VIEW ViewFILF032 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF032" ("單別", "單號", "箱數", "數量", "庫存數", "差異數", "委外數") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21023,8 +21925,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2118 ViewFILF040.盤點調整主檔.F32
-CREATE or Replace VIEW ViewFILF040 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF040" ("單別", "單號", "類別代碼", "類別說明", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "機台代碼", "機台名稱", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -21069,8 +21971,8 @@ FROM
 WHERE
 	A.單據類別 = 'F32');
 
--- Home #2119 ViewFILF041.盤點調整明細
-CREATE or Replace VIEW ViewFILF041 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF041" ("單別", "單號", "序號", "料號", "品名", "規格", "異動類別", "異動說明", "異動日期", "製造日期", "箱號", "調整數量", "重量", "箱數", "批號", "廠商批號", "製令單號", "庫存數", "差異數", "已盤", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21109,8 +22011,8 @@ FROM
 WHERE
 	A.單據類別 = 'F32');
 
--- Home #2120 ViewFILF042.盤點調整合計
-CREATE or Replace VIEW ViewFILF042 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF042" ("單別", "單號", "數量") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21123,8 +22025,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2121 ViewFILF050.版銅送修出廠H.F33
-CREATE or Replace VIEW ViewFILF050 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF050" ("單別", "單號", "廠商編號", "廠商名稱", "公司代碼", "公司名稱", "單據日期", "簽核系統", "交貨地點", "交貨方式", "出廠原因", "作業員", "作業員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -21159,8 +22061,8 @@ FROM
 WHERE
 	A.單據類別 = 'F33');
 
--- Home #2122 ViewFILF051.版銅送修出廠
-CREATE or Replace VIEW ViewFILF051 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF051" ("單別", "單號", "序號", "版銅編號", "品名", "規格", "圓周", "版長", "說明", "數量", "交期", "出庫單號", "備註說明", "出廠原因", "回廠", "回廠日期", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21191,8 +22093,8 @@ FROM
 WHERE
 	A.單據類別 = 'F33');
 
--- Home #2123 ViewFILF052.版銅送修合計
-CREATE or Replace VIEW ViewFILF052 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF052" ("單別", "單號", "出廠數", "出庫數", "回廠數", "已出庫", "已結案") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21220,8 +22122,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2124 ViewFILF053.版銅送修出庫H.F34
-CREATE or Replace VIEW ViewFILF053 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF053" ("單別", "單號", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "作業員", "作業員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態", "簽收") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -21252,8 +22154,8 @@ FROM
 WHERE
 	A.單據類別 = 'F34');
 
--- Home #2125 ViewFILF054.版銅送修出庫
-CREATE or Replace VIEW ViewFILF054 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF054" ("單別", "單號", "序號", "出廠單號", "日期", "數量", "版銅編號", "品名", "規格", "說明", "圓周", "版長", "備註說明", "回廠", "回廠日期", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	'F34' 單別, 
 	A.文數字1 單號, 
@@ -21287,8 +22189,8 @@ WHERE
 	A.單據類別 = 'F33' AND
 	A.文數字1 != ' ');
 
--- Home #2126 ViewFILF055.版銅出庫合計
-CREATE or Replace VIEW ViewFILF055 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF055" ("單別", "單號", "筆數", "數量") AS (
 SELECT 
 	'F34' 單別, 
 	A.文數字1 單號,
@@ -21303,8 +22205,8 @@ WHERE
 GROUP BY
 	A.文數字1);
 
--- Home #2127 ViewFILF061.期初庫存主檔.F35
-CREATE or Replace VIEW ViewFILF061 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF061" ("單別", "單號", "類別代碼", "類別說明", "公司代碼", "公司名稱", "單據日期", "簽核系統", "備註", "倉管員", "倉管員姓名", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "機台代碼", "機台名稱", "最後更新日", "簽核狀態") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -21349,8 +22251,8 @@ FROM
 WHERE
 	A.單據類別 = 'F35');
 
--- Home #2128 ViewFILF062.期初庫存明細
-CREATE or Replace VIEW ViewFILF062 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF062" ("單別", "單號", "序號", "料號", "品名", "規格", "異動類別", "異動說明", "異動日期", "製造日期", "箱號", "調整數量", "金額", "重量", "箱數", "批號", "廠商批號", "製令單號", "單價", "差異數", "已盤", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21390,8 +22292,8 @@ FROM
 WHERE
 	A.單據類別 = 'F35');
 
--- Home #2129 ViewFILF063.期初庫存合計
-CREATE or Replace VIEW ViewFILF063 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILF063" ("單別", "單號", "數量", "金額") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21405,8 +22307,8 @@ GROUP BY
 	A.單據類別, 
 	A.單據編號);
 
--- Home #2130 ViewFILF0W0.委外半成品結存檔
-Create or Replace view ViewFILF0W0 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W0" ("製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "產品編號", "品名", "規格", "氣閥代碼", "製令單號", "製造日期", "加工數量", "回廠數量", "退回數量", "調整數量", "生產數量", "報廢數量", "合理剔除數", "結存數量", "待生產數量", "待回廠數量", "結案") AS (
 SELECT 
 	A.製程代碼,
 	D.製程名稱,
@@ -21459,8 +22361,8 @@ INNER JOIN FIL0032 C ON C.製令單別 = 'C11' AND C.製令單號 = A.製令單�
 LEFT JOIN ViewFILF014 B ON A.工站代碼 = B.工站代碼 AND A.製令單號 = B.製令單號
 );
 
--- Home #2131 ViewFILF0W1.委外半成品異動檔
-Create or Replace view ViewFILF0W1 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W1" ("單別", "單號", "序號", "產品編號", "品名", "規格", "異動日期", "箱號", "數量", "重量", "箱數", "批號", "庫存參數", "製令單號", "製造日期", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "類別", "備註說明", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -21507,8 +22409,8 @@ WHERE
 	A.單據類別 between 'F11' and 'F32' AND
 	A.單據類別 != 'F31');
 
--- Home #2132 ViewFILF0W3.委外原物料異動檔
-Create or Replace view ViewFILF0W3 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W3" ("單別", "單號", "序號", "異動日期", "料號", "品名", "規格", "箱數", "數量", "批號", "類別", "庫存參數", "製程代碼", "工站代碼", "製程名稱", "工站名稱", "製程工站", "備註說明", "填表日") AS (
 Select
 	A.單別, 
 	A.單號,
@@ -21654,8 +22556,8 @@ INNER JOIN FIL0012 E ON A.料號 = E.產品編號
 INNER JOIN ViewFIL310O G ON A.工站代碼 = G.代碼	
 );
 
--- Home #2133 ViewFILF0W3A.委外原物料異動檔
-Create or Replace view ViewFILF0W3A AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W3A" ("單別", "單號", "序號", "料號", "數量", "製程代碼", "工站代碼", "批號", "填表日") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -21785,8 +22687,8 @@ WHERE
 	INNER JOIN ViewFILF013 F ON F.工站代碼=A.工站代碼 AND F.批號 = A.批號 AND A.填表日 >= F.填表日
 );
 
--- Home #2134 ViewFILF0W3B.委外原物料異動檔
-Create or Replace view ViewFILF0W3B AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W3B" ("單別", "單號", "序號", "料號", "批號", "數量", "製程代碼", "工站代碼") AS (
 SELECT 
 	A.單別, 
 	A.單號,
@@ -21906,8 +22808,8 @@ LEFT JOIN ViewOfObjProperties D1 on B.流水編號 = D1.單據流水號
 INNER JOIN ViewFILF013 F ON F.批號 = A.批號 AND DECODE(D1.送簽日時,NULL,B.填表日,D1.送簽日時) >= F.填表日	
 );
 
--- Home #2135 ViewFILF0W3C.委外原物料批號檔
-Create or Replace view ViewFILF0W3C AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W3C" ("批號", "料號", "製程代碼", "工站代碼") AS (
 SELECT DISTINCT
 	C.批號,
 	A.產品編號 料號,
@@ -21967,8 +22869,8 @@ WHERE
 	D.料號 != ' '
 );
 
--- Home #2136 ViewFILF0W3D.委外原物料預估檔
-Create or Replace view ViewFILF0W3D AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W3D" ("料號", "工站代碼", "預估用量") AS (
 SELECT 
 		A.氣閥代碼 料號,
 		A.工站代碼,
@@ -22009,8 +22911,8 @@ GROUP BY
 	A.氣閥代碼,
 	A.工站代碼);
 
--- Home #2137 ViewFILF0W4.委外原物枓結存檔
-Create or Replace view ViewFILF0W4 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4" ("料號", "品名", "規格", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "加工數量", "回廠數量", "耗用數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.料號,
 	A.品名,
@@ -22037,8 +22939,8 @@ GROUP BY
 	A.工站名稱,
 	A.製程工站);
 
--- Home #2138 ViewFILF0W4A.委外原物料結存檔
-Create or Replace view ViewFILF0W4A AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4A" ("料號", "品名", "規格", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.料號,
 	E.品名,
@@ -22071,8 +22973,8 @@ GROUP BY
 	G.名稱,
 	G.製程工站);
 
--- Home #2139 ViewFILF0W4B.委外原物料結存檔
-Create or Replace view ViewFILF0W4B AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4B" ("料號", "製程代碼", "工站代碼", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.料號,
 	A.製程代碼,
@@ -22226,8 +23128,8 @@ GROUP BY
 	A.工站代碼
 );
 
--- Home #2140 ViewFILF0W4B1.委外原物料結存檔
-Create or Replace view ViewFILF0W4B_1 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4B_1" ("料號", "製程代碼", "工站代碼", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.產品編號 料號,
 	B.製程代碼,
@@ -22262,8 +23164,8 @@ GROUP BY
 	B.工站代碼
 );
 
--- Home #2141 ViewFILF0W4B2.委外原物料結存檔
-Create or Replace view ViewFILF0W4B_2 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4B_2" ("料號", "製程代碼", "工站代碼", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 /*材料耗用.氣閥.鐵條*/
 	/*批號1*/
 SELECT 
@@ -22297,8 +23199,8 @@ GROUP BY
 	C.工站代碼
 );
 
--- Home #2142 ViewFILF0W4B3.委外原物料結存檔
-Create or Replace view ViewFILF0W4B_3 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4B_3" ("料號", "製程代碼", "工站代碼", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 /*材料耗用.氣閥.鐵條*/
 	/*批號2*/
 SELECT 
@@ -22332,8 +23234,8 @@ GROUP BY
 	C.工站代碼
 );
 
--- Home #2143 ViewFILF0W4B4.委外原物料結存檔
-Create or Replace view ViewFILF0W4B_4 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W4B_4" ("料號", "製程代碼", "工站代碼", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 /*材料耗用.氣閥.鐵條*/
 /*報廢*/	
 SELECT 
@@ -22367,8 +23269,8 @@ GROUP BY
 	C.工站代碼		
 );
 
--- Home #2144 ViewFILF0W5.委外批號工站結存檔
-Create or Replace view ViewFILF0W5 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W5" ("料號", "批號", "品名", "規格", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 SELECT 
 	nvl(A.料號,' ') 料號,
 	nvl(A.批號,' ') 批號,
@@ -22402,8 +23304,8 @@ GROUP BY
 	G.名稱,
 	G.製程工站);
 
--- Home #2145 ViewFILF0W5A.委外批號工站結存
-Create or Replace view ViewFILF0W5A AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W5A" ("料號", "批號", "品名", "規格", "製程代碼", "製程名稱", "工站代碼", "工站名稱", "製程工站", "加工數量", "回廠數量", "耗用數量", "報廢數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.料號,
 	A.批號,
@@ -22439,8 +23341,8 @@ GROUP BY
 	G.製程工站
 	);
 
--- Home #2146 ViewFILF0W6.委外批號彙總結存檔
-Create or Replace view ViewFILF0W6 AS(
+-- Oracle user_views
+CREATE VIEW "VIEWFILF0W6" ("料號", "批號", "品名", "規格", "加工數量", "回廠數量", "耗用數量", "調整數量", "結存數量") AS (
 SELECT 
 	A.料號,
 	A.批號,
@@ -22459,8 +23361,8 @@ GROUP BY
 	A.品名,
 	A.規格);
 
--- Home #2276 ViewFILH001.請假申請單.H01
-CREATE or Replace VIEW ViewFILH001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH001" ("單別", "單號", "單據日期", "主旨", "填寫人", "填寫人姓名", "申請人", "申請人姓名", "填寫日期", "假別", "假別名稱", "請假假別", "請假假別名稱", "起始日期", "起始時間", "截止日期", "截止時間", "天數", "時數", "請假時數", "代理人", "代理人姓名", "部門編號", "部門名稱", "簽核狀態", "簽核排序", "簽核系統", "每日時數合計", "流水編號", "請假事由", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	'H01' 單別,
 	A.單號,
@@ -22524,8 +23426,8 @@ WHERE
 	B.單據類別 = 'H01'
 	);
 
--- Home #2277 ViewFILH002.特休排定表.H02
-CREATE or Replace VIEW ViewFILH002 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH002" ("單別", "單號", "單據日期", "主旨", "類別", "填寫人", "填寫人姓名", "申請人", "申請人姓名", "填寫日期", "年度", "應休天數", "生效日期", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月", "合計", "部門編號", "部門名稱", "簽核狀態", "簽核系統", "流水編號", "事由", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	'H02' 單別,
 	A.單號,
@@ -22573,8 +23475,8 @@ FROM
 	LEFT JOIN A30 Z3 ON B.部門編號 = Z3.GroupID
 	);
 
--- Home #2278 ViewFILH003.員工排休表
-CREATE or Replace VIEW ViewFILH003 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH003" ("申請人", "年度", "單號", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月", "合計") AS (
 SELECT
 	A.申請人,
 	A.年度,
@@ -22605,8 +23507,8 @@ FROM
 	) A
 	INNER JOIN HRFIL1032 B ON A.單號 = B.單號);
 
--- Home #2279 ViewFILH004.加班費主檔.H03
-CREATE or Replace VIEW ViewFILH004 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH004" ("單別", "單號", "主旨", "公司代碼", "公司名稱", "加班日期", "計薪日期", "部門編號", "部門名稱", "簽核系統", "簽核狀態", "簽核排序", "備註", "流水編號", "填表人", "填表人姓名", "填表人職稱", "填表日", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -22642,8 +23544,8 @@ FROM
 WHERE
 	A.單據類別 = 'H03');
 
--- Home #2280 ViewFILH005.加班費明細
-CREATE or Replace VIEW ViewFILH005 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH005" ("單別", "單號", "序號", "申請人", "加班日期", "申請人姓名", "部門編號", "部門名稱", "工作內容", "數量", "單位代碼", "單位名稱", "時間起", "時間訖", "休息起1", "休息迄1", "休息起2", "休息迄2", "時數", "休息1", "休息2", "小計", "計件", "調補", "教育", "計時", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -22707,8 +23609,8 @@ FROM
 WHERE
 	A.單據類別 = 'H03');
 
--- Home #2281 ViewFILH005A.每日加班費(已簽)
-CREATE or Replace VIEW ViewFILH005A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH005A" ("申請人", "加班日期", "調補", "小計") AS (
 SELECT 
 	A.產品編號 申請人,
 	decode(A.異動日期,'00000000',B.單據日期,A.異動日期) 加班日期,
@@ -22727,8 +23629,8 @@ GROUP BY
 	A.Logical2
 	);
 
--- Home #2282 ViewFILH005B.每日加班費(教育)
-CREATE or Replace VIEW ViewFILH005B AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH005B" ("申請人", "加班日期", "調補", "教育", "小計") AS (
 SELECT 
 	A.產品編號 申請人,
 	decode(A.異動日期,'00000000',B.單據日期,A.異動日期) 加班日期,
@@ -22749,9 +23651,8 @@ GROUP BY
 	A.Logical3
 	);
 
--- Home #2283 ViewFILH005C.氣閥計件加班
-CREATE OR REPLACE VIEW ViewFILH005C AS
-WITH Tmp1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH005C" ("單別", "單號", "序號", "氣閥日報", "氣閥產量", "申請人代號", "申請人姓名", "加班日期", "單據加班時數", "製令單號") AS WITH Tmp1 AS (
 select
 	A.製令單別 單別,
 	A.製令單號 單號,
@@ -22805,8 +23706,8 @@ FROM
 	INNER JOIN Tmp2 B on A.單別=B.單別 AND A.單號=B.單號 AND A.序號=B.序號
 	INNER JOIN FIL0030 C ON C.單據類別='C41' AND C.單據編號 = A.氣閥日報;
 
--- Home #2284 ViewFILH006.加班費合計
-CREATE or Replace VIEW ViewFILH006 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH006" ("單別", "單號", "數量", "時數", "申請人") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -22835,8 +23736,8 @@ WHERE
 		A.單據類別 = 'H03'	
 	);
 
--- Home #2285 ViewFILH006A.加班日筆數
-CREATE or Replace VIEW ViewFILH006A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH006A" ("申請人", "加班日期", "筆數") AS (
 SELECT 
 	A.產品編號 申請人,
 	decode(A.異動日期,'00000000',B.單據日期,A.異動日期) 加班日期,
@@ -22854,8 +23755,8 @@ GROUP BY
 	decode(A.異動日期,'00000000',B.單據日期,A.異動日期)
 	);
 
--- Home #2286 ViewFILH007.出缺勤日結.H04
-CREATE or Replace VIEW VIEWFILH007 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH007" ("員工編號", "員工姓名", "公司別", "部門名稱", "職位名稱", "生產部門禁", "出勤日期", "遲到", "早退", "假別", "上班刷卡", "下班刷卡", "夜班", "大夜", "平日打卡日", "假日打卡日", "打卡日調整", "門禁上班刷卡", "門禁下班刷卡", "門禁中午進", "門禁中午出", "門禁午休時間", "班別", "班別時間起", "班別時間迄", "平日前2小時", "平日前4小時", "平日大於4小時", "休息日前2小時", "休息日前8小時", "休息日大於8小時", "例假日前8小時", "例假日大於8小時", "例假日大於10小時", "例假日補休小時", "國定假日前8小時", "國定假日大於8小時", "國定假日大於10小時", "調補時數", "已手動修正", "星期代碼", "星期說明", "星期幾", "流水編號", "最後更新者", "最後更新日") AS (
 SELECT 
 	A.員工編號,
 	B.員工姓名,
@@ -22965,8 +23866,8 @@ FROM
 	LEFT JOIN ViewFIL3805 F ON A.出勤日期 = F.日期
 );
 
--- Home #2287 ViewFILH008.出缺勤月結.H04
-CREATE or Replace VIEW VIEWFILH008 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH008" ("員工編號", "出勤年月", "遲到", "早退", "夜班", "大夜", "平日前2小時", "平日前4小時", "平日大於4小時", "休息日前2小時", "休息日前8小時", "休息日大於8小時", "例假日前8小時", "例假日大於8小時", "例假日大於10小時", "例假日補休小時", "國定假日前8小時", "國定假日大於8小時", "國定假日大於10小時", "平日打卡日", "假日打卡日", "調補時數", "打卡日調整") AS (
 SELECT 
 	A.員工編號,
 	substr(A.出勤日期,1,6) 出勤年月,
@@ -23059,8 +23960,8 @@ GROUP BY
 	substr(A.出勤日期,1,6)
 );
 
--- Home #2288 ViewFILH009.加班說明
-CREATE or Replace VIEW ViewFILH009 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH009" ("單別", "單號", "單據序號", "序號", "申請人", "加班日期", "申請人姓名", "部門編號", "部門名稱", "工作內容", "數量", "單位代碼", "單位名稱", "計件", "相關單號", "簽核狀態") AS (
 SELECT 
 	M.製令單別 單別, 
 	M.製令單號 單號,
@@ -23092,8 +23993,8 @@ WHERE
 	M.製令單別 = 'H03'  AND	
 	M.屬性 = '4');
 
--- Home #2289 ViewFILH010.員工假別月統計
-CREATE or Replace VIEW ViewFILH010 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH010" ("年月", "申請人", "假別", "請假時數", "請假扣薪", "假別轉換") AS (
 SELECT  
 	substr(A.異動日期,1,6) 年月,
 	B.申請人, 
@@ -23118,8 +24019,8 @@ GROUP BY
 	B.假別
 );
 
--- Home #2290 ViewFILH011.員工假別年統計
-CREATE or Replace VIEW ViewFILH011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH011" ("年度", "申請人", "假別", "請假時數") AS (
 SELECT  
 	substr(A.異動日期,1,4) 年度,
 	B.申請人, 
@@ -23139,8 +24040,8 @@ GROUP BY
 	B.假別
 );
 
--- Home #2291 ViewFILH012.員工每日請假時數
-CREATE or Replace VIEW ViewFILH012 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH012" ("異動日期", "申請人", "請假時數", "出勤扣點", "出勤扣支", "午餐扣支", "伙食扣支") AS (
 SELECT  
 	A.異動日期,
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人) 申請人, 
@@ -23176,8 +24077,8 @@ GROUP BY
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人)
 );
 
--- Home #2292 ViewFILH012A.員工日請假含未核
-CREATE or Replace VIEW ViewFILH012A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH012A" ("異動日期", "申請人", "請假時數") AS (
 SELECT  
 	A.異動日期,
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人) 申請人, 
@@ -23195,8 +24096,8 @@ GROUP BY
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人)
 );
 
--- Home #2293 ViewFILH013.員工當次請假時數
-CREATE or Replace VIEW ViewFILH013 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH013" ("單據編號", "請假時數") AS (
 SELECT  
 	A.單據編號,
 	sum(A.異動數量) 請假時數
@@ -23208,8 +24109,8 @@ GROUP BY
 	A.單據編號
 );
 
--- Home #2294 ViewFILH014.員工伙食請假日數
-CREATE or Replace VIEW ViewFILH014 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH014" ("年月", "申請人", "請假時數合計", "伙食扣假") AS (
 SELECT  
 	substr(A.異動日期,1,6) 年月,
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人) 申請人, 
@@ -23227,8 +24128,8 @@ GROUP BY
 	DECODE(A.單據類別,'H01',B.申請人,B1.申請人)
 );
 
--- Home #2295 ViewFILH015.員工每月請假扣支
-CREATE or Replace VIEW ViewFILH015 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH015" ("年月", "申請人", "請假扣支", "請假時數", "出勤扣點", "伙食扣支") AS (
 SELECT  
 	substr(A.異動日期,1,6) 年月,
 	A.申請人, 
@@ -23278,8 +24179,8 @@ GROUP BY
 	F.請假扣支
 );
 
--- Home #2296 ViewFILH016.每月假日天數
-CREATE or Replace VIEW ViewFILH016 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH016" ("年月", "假日天數") AS (
 Select
  to_char(年月) 年月,
  sum(decode(休假日,0,0,1,0,1)+decode(休假一,0,0,1,0,1)+decode(休假二,0,0,1,0,1)+decode(休假三,0,0,1,0,1)+decode(休假四,0,0,1,0,1)+decode(休假五,0,0,1,0,1)+decode(休假六,0,0,1,0,1)) 假日天數
@@ -23288,8 +24189,8 @@ From
 Group by to_char(年月) 
 );
 
--- Home #2297 ViewFILH017.員工每月加班
-CREATE or Replace VIEW ViewFILH017 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH017" ("申請人", "加班年月", "平日前2小時", "平日前4小時", "平日大於4小時", "休息日前2小時", "休息日前8小時", "休息日大於8小時", "例假日前8小時", "例假日大於8小時", "例假日大於10小時", "例假日補休小時", "國定假日前8小時", "國定假日大於8小時", "國定假日大於10小時", "調補時數") AS (
 SELECT 
 		A.申請人,
 		substr(A.加班日期,1,6) 加班年月,
@@ -23320,8 +24221,8 @@ SELECT
 		substr(A.加班日期,1,6)	 
 );
 
--- Home #2298 ViewFILH018.出勤調整單.H05
-CREATE or Replace VIEW ViewFILH018 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH018" ("單別", "單號", "單據日期", "主旨", "填寫人", "填寫人姓名", "申請人", "申請人姓名", "填寫日期", "假別", "假別名稱", "請假假別", "請假假別名稱", "起始日期", "起始時間", "截止日期", "截止時間", "天數", "時數", "代理人", "代理人姓名", "部門編號", "部門名稱", "簽核狀態", "簽核系統", "流水編號", "請假事由", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	'H05' 單別,
 	A.單號,
@@ -23369,8 +24270,8 @@ WHERE
 	B.單據類別 = 'H05'	
 	);
 
--- Home #2299 ViewFILH019.每日請假清單
-CREATE or Replace VIEW VIEWFILH019 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH019" ("申請人", "起始日期", "假別") AS (
 SELECT
 	A.申請人,
 	M.異動日期 起始日期,
@@ -23385,8 +24286,206 @@ GROUP BY
 	M.異動日期	
 );
 
--- Home #2301 ViewFILH021.每日加班一
-CREATE or Replace VIEW VIEWFILH021 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH020" ("申請人", "加班日期", "倍數欄位", "小時") AS (
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	1 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)<=1  THEN (CASE WHEN A.小計>=2 THEN 2 ELSE A.小計 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	1
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	2 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)<=1  THEN (CASE WHEN A.小計>2 AND A.小計<4 THEN A.小計-2 WHEN A.小計>=4 THEN 2 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	2
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	4 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=2  THEN (CASE WHEN A.小計>=2 THEN 2 ELSE A.小計 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	4
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	5 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=2  THEN (CASE WHEN A.小計>2 AND A.小計<8 THEN A.小計-2 WHEN A.小計>=8 THEN 6 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	5
+	
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	6 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=2  THEN (CASE WHEN A.小計>8 AND A.小計<12 THEN A.小計-8 WHEN A.小計>=12 THEN 4 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	6		
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	7 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=3  THEN (CASE WHEN A.小計>0 THEN (case when A.小計>8 then 8 else A.小計 end) ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	7
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	8 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=3  THEN (CASE WHEN A.小計>8 AND A.小計<10 THEN A.小計-8 WHEN A.小計>=10 THEN 2 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0  AND A.教育=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	8
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	9 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=3  THEN (CASE WHEN A.小計>10 AND A.小計<12 THEN A.小計-10 WHEN A.小計>=12 THEN 2 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.教育=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	9		
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	10 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=4  THEN (CASE WHEN A.小計>0 THEN (case when A.小計>8 then 8 else A.小計 end) ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.教育=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	10
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	11 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=4  THEN (CASE WHEN A.小計>8 AND A.小計<10 THEN A.小計-8 WHEN A.小計>=10 THEN 2 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.教育=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	11			
+
+Union All
+
+SELECT 
+	A.申請人,
+	A.加班日期 加班日期,
+	12 倍數欄位,
+	SUM(NVL(CASE WHEN NVL(C.休假,0)=4  THEN (CASE WHEN A.小計>10 AND A.小計<12 THEN A.小計-10 WHEN A.小計>=12 THEN 2 ELSE 0 END) ELSE 0 END ,0)) 小時
+ FROM
+	VIEWFILH005 A
+	INNER JOIN VIEWFILH004 B ON B.單別 =  A.單別 AND B.單號 = A.單號
+	LEFT JOIN ViewFIL3805 C ON A.加班日期 = C.日期
+ WHERE 
+	B.簽核狀態 = 'E' AND A.計件=0 AND A.教育=0 AND A.調補=0	
+ GROUP BY 
+	A.申請人,
+	A.加班日期,
+	12				
+);
+
+-- Oracle user_views
+CREATE VIEW "VIEWFILH021" ("申請人", "加班日期", "加班小時", "上班時間", "下班時間", "加班費") AS (
 SELECT 
 	A.申請人,
 	A.加班日期,
@@ -23403,8 +24502,8 @@ GROUP BY
 	A.加班日期		
 );
 
--- Home #2302 ViewFILH022.每月加班一
-CREATE or Replace VIEW VIEWFILH022 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH022" ("申請人", "加班年月", "加班小時", "加班費") AS (
 SELECT 
 	A.申請人,
 	substr(A.加班日期,1,6) 加班年月,
@@ -23417,8 +24516,8 @@ GROUP BY
 	substr(A.加班日期,1,6)		
 );
 
--- Home #2303 ViewFILH023.費用申請主檔.H11
-CREATE or Replace VIEW ViewFILH023 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH023" ("單別", "單號", "主旨", "公司代碼", "公司名稱", "申請日期", "帳款年月", "部門編號", "部門名稱", "簽核系統", "費用類別", "簽核狀態", "簽核排序", "備註", "流水編號", "填表人", "填表人姓名", "填表人職稱", "填表日", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -23455,8 +24554,8 @@ FROM
 WHERE
 	A.單據類別 = 'H11');
 
--- Home #2304 ViewFILH024.費用申請明細
-CREATE or Replace VIEW ViewFILH024 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH024" ("單別", "單號", "序號", "申請人", "申請人姓名", "部門編號", "部門名稱", "金額", "備註", "流水編號", "最後更新者", "更新者姓名", "最後更新日", "簽核狀態") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -23483,8 +24582,8 @@ FROM
 WHERE
 	A.單據類別 = 'H11');
 
--- Home #2305 ViewFILH025.費用申請合計
-CREATE or Replace VIEW ViewFILH025 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH025" ("單別", "單號", "金額") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -23497,8 +24596,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #2306 ViewFILH026.月計件彙總
-CREATE or Replace VIEW ViewFILH026 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH026" ("作業人員", "年月", "件數", "加工費") AS (
 select 
 	D.產品編號 作業人員,
 	substr(C.匯率日期,1,6) 年月,
@@ -23522,8 +24621,8 @@ Group by
 	substr(C.匯率日期,1,6)
 );
 
--- Home #2307 ViewFILH027.年計件彙總
-CREATE or Replace VIEW ViewFILH027 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH027" ("作業人員", "年度", "件數", "加工費") AS (
 select 
 	D.產品編號 作業人員,
 	substr(C.匯率日期,1,4) 年度,
@@ -23547,8 +24646,8 @@ Group by
 	substr(C.匯率日期,1,4)
 );
 
--- Home #2308 ViewFILH030.薪資清單.H21
-CREATE or Replace VIEW ViewFILH030 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH030" ("單別", "單號", "主旨", "公司代碼", "公司名稱", "申請日期", "帳款年月", "簽核系統", "簽核狀態", "簽核排序", "費用類別", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -23581,8 +24680,8 @@ FROM
 WHERE
 	A.單據類別 = 'H21');
 
--- Home #2309 ViewFILH031.車馬費.H22
-CREATE or Replace VIEW ViewFILH031 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH031" ("單別", "單號", "主旨", "公司代碼", "公司名稱", "申請日期", "帳款年月", "簽核系統", "簽核狀態", "簽核排序", "費用類別", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -23615,8 +24714,8 @@ FROM
 WHERE
 	A.單據類別 = 'H22');
 
--- Home #2310 ViewFILH032.加班2及計件.H23
-CREATE or Replace VIEW ViewFILH032 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH032" ("單別", "單號", "主旨", "公司代碼", "公司名稱", "申請日期", "帳款年月", "簽核系統", "簽核狀態", "簽核排序", "費用類別", "備註", "流水編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "員工流水編號", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -23649,8 +24748,8 @@ FROM
 WHERE
 	A.單據類別 = 'H23');
 
--- Home #2311 ViewFILH033.計件工資明細
-Create Or Replace View ViewFILH033 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFILH033" ("員工編號", "年月", "計件工資") AS (
 select 
 		D.產品編號 員工編號,
 		substr(C.匯率日期,1,6) 年月,
@@ -23673,8 +24772,8 @@ Group by
 	substr(C.匯率日期,1,6)			
 );
 
--- Home #2272 ViewFILHS01.個人薪資主檔
-CREATE or Replace VIEW ViewFILHS01 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILHS01" ("年月", "員工編號", "員工姓名", "公司代碼", "公司別", "部門編號", "部門名稱", "職位名稱", "國籍", "薪資分群", "所得稅率", "健保卡號", "勞保費", "健保費", "自提退休金", "二代健保", "本薪", "職務津貼", "出勤日支", "出勤津貼", "交通津貼", "技術津貼", "午餐津貼", "伙食津貼", "午餐日支", "借支", "固定所得稅", "退休金提撥", "特休日支", "職等", "職級", "薪點") AS (
 SELECT
 	substr(B.年月,1,6) 年月,
 	A.員工編號,
@@ -23716,8 +24815,8 @@ WHERE
 	A.停止使用=0
 	);
 
--- Home #2273 ViewFILHS02.月薪資彙總
-CREATE or Replace VIEW ViewFILHS02 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILHS02" ("年月", "員工編號", "員工姓名", "身份證", "工資卡號", "公司代碼", "薪資分群", "部門代號", "部門", "職稱", "出差", "遲到", "早退", "假別一", "假別二", "假別三", "假別四", "假別五", "假別六", "假別七", "假別八", "假別九", "假別十", "假別十一", "假別十二", "假別十三", "本薪", "職務津貼", "出勤日支", "出勤津貼", "交通津貼", "技術津貼", "午餐津貼", "特休津貼", "伙食津貼", "夜班津貼", "大夜津貼", "車馬費", "加班費", "本月應發金額", "事病假薪點", "遲到早退扣支", "調補扣支", "借支", "自提退休金", "所得稅", "勞保費", "健保費", "二代健保", "加班費一", "加班費二", "實發金額", "上班打卡日", "加班計算日薪", "特休計算日薪", "平日前2小時", "平日前4小時", "平日大於4小時", "休息日前2小時", "休息日前8小時", "休息日大於8小時", "例假日前8小時", "例假日大於8小時", "例假日大於10小時", "例假日補休小時", "國定假日前8小時", "國定假日大於8小時", "國定假日大於10小時", "製程代碼", "成本類別", "實際直接人工時薪", "直接人工時薪") AS (
 select
 	A.年月,
 	A.員工編號,
@@ -23796,8 +24895,8 @@ From
 	LEFT JOIN HRFIL2001 B ON SUBSTR(B.年月,1,6)=SUBSTR(A.年月,1,6) AND B.員工編號=A.員工編號
 	);
 
--- Home #2274 ViewFILHS03.年薪資彙總
-CREATE or Replace VIEW ViewFILHS03 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILHS03" ("年度", "員工編號", "特休支薪天數", "遲到", "早退", "病假", "事假", "公傷病假", "調補", "公假", "婚假", "喪假", "特別休假", "產假", "產檢假", "陪產假", "調補剩餘", "調補減少", "本薪", "職務津貼", "出勤日支", "出勤津貼", "交通津貼", "技術津貼", "午餐津貼", "特休津貼", "伙食津貼", "夜班津貼", "大夜津貼", "加班費", "車馬費", "本月應發金額", "病假薪點", "遲到早退扣支", "調補扣支", "借支", "自提退休金", "所得稅", "勞保費", "健保費", "二代健保", "加班費一", "加班費二", "實發金額", "上班打卡日", "加班計算日薪", "特休計算日薪", "日前2小時", "平日前4小時", "日大於4小時", "休息日前2小時", "休息日前8小時", "休息日大於8小時", "假日前8小時", "例假日大於8小時", "例假日大於10小時", "例假日補休小時", "國定假日前8小時", "國定假日大於8小時", "國定假日大於10小時") AS (
 select
 	substr(A.年月,1,4) 年度,
 	A.員工編號,
@@ -23869,9 +24968,8 @@ Group By
 	A.員工編號
 	);
 
--- Home #2208 ViewFILM000S.料碼最後倉位
-CREATE OR REPLACE VIEW VIEWFILM000S  AS 
-(
+-- Oracle user_views
+CREATE VIEW "VIEWFILM000S" ("條碼", "目前庫位") AS (
 SELECT  DISTINCT
 	條碼, 
 	LAST_VALUE (庫位) OVER (PARTITION BY 條碼 ORDER BY 序號 RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as 目前庫位
@@ -23881,8 +24979,8 @@ WHERE
   條碼<>' ' AND 庫位<>' '	
 );
 
--- Home #2222 ViewFILM001.材料月異動數
-Create view ViewFILM001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM001" ("月份", "倉庫代碼", "材料編號", "異動數量") AS (
 SELECT
 	substr(A.異動日期,1,6) 月份,
 	A.倉庫代碼,
@@ -23895,8 +24993,8 @@ GROUP BY
 	A.倉庫代碼,
 	A.材料編號);
 
--- Home #2223 ViewFILM005.材料月庫存數
-Create view ViewFILM005 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM005" ("月份", "庫別代碼", "庫別名稱", "倉別代碼", "倉別名稱", "材料編號", "前期庫存", "本期異動", "期末庫存", "年月序") AS (
 SELECT
 	A.月份,
 	A.倉庫代碼 庫別代碼,
@@ -23929,8 +25027,8 @@ FROM
 	LEFT JOIN ViewFIL3106 B ON A.倉庫代碼 = B.代碼
 	LEFT JOIN ViewFIL310R C ON B.倉別代碼 = C.代碼);
 
--- Home #2224 ViewFILM006.不分倉庫存數(含負)
-CREATE or Replace VIEW ViewFILM006 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM006" ("材料編號", "庫存數") AS (
 SELECT
 	A.材料編號,
 	sum(A.異動數) 庫存數
@@ -23939,8 +25037,8 @@ FROM
 GROUP BY
 	A.材料編號);
 
--- Home #2244 ViewFILM006A.不分倉庫存(含負)
-CREATE or Replace VIEW ViewFILM006A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM006A" ("材料編號", "庫存數") AS (
 SELECT
 	A.材料編號,
 	sum(A.庫存數) 庫存數
@@ -23949,8 +25047,8 @@ FROM
 GROUP BY
 	A.材料編號);
 
--- Home #2225 ViewFILM007.不分月庫存數
-CREATE or Replace VIEW ViewFILM007 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM007" ("材料編號", "庫別代碼", "庫別名稱", "倉別代碼", "倉別名稱", "庫存數") AS (
 SELECT
 	A.材料編號,
 	A.庫別代碼,
@@ -23972,8 +25070,8 @@ FROM
 	LEFT JOIN ViewFIL3106 B ON A.庫別代碼 = B.代碼
 	LEFT JOIN ViewFIL310R C ON B.倉別代碼 = C.代碼);
 
--- Home #2245 ViewFILM007A.不分月庫存數
-CREATE or Replace VIEW ViewFILM007A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM007A" ("材料編號", "庫別代碼", "庫別名稱", "倉別代碼", "倉別名稱", "庫存數") AS (
 SELECT 
 	A.材料編號,
 	A.倉庫代碼 庫別代碼,
@@ -24018,8 +25116,8 @@ GROUP BY
 	nvl(C.名稱, ' ')
 );
 
--- Home #2226 ViewFILM007.不分月庫存數_WK
-CREATE or Replace VIEW ViewFILM007_WK AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM007_WK" ("材料編號", "庫別代碼", "庫別名稱", "倉別代碼", "倉別名稱", "庫存數") AS (
 SELECT
 	A.材料編號,
 	A.庫別代碼,
@@ -24041,8 +25139,8 @@ FROM
 	LEFT JOIN ViewFIL3106 B ON A.庫別代碼 = B.代碼
 	LEFT JOIN ViewFIL310R C ON B.倉別代碼 = C.代碼);
 
--- Home #2227 ViewFILM008.不分倉庫存數(唯正)
-CREATE or Replace VIEW ViewFILM008 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008" ("材料編號", "庫存數") AS (
 SELECT
 	A.材料編號,
 	sum(CASE WHEN B.批號管理=0 THEN 
@@ -24056,8 +25154,8 @@ FROM
 GROUP BY
 	A.材料編號);
 
--- Home #2246 ViewFILM008A.不分倉庫存(唯正)
-CREATE or Replace VIEW ViewFILM008A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008A" ("材料編號", "庫存數") AS (
 SELECT
 	A.材料編號,
 	sum(CASE WHEN B.批號管理=0 THEN 
@@ -24071,8 +25169,8 @@ FROM
 GROUP BY
 	A.材料編號);
 
--- Home #2239 ViewFILM008H.不分倉庫存數
-CREATE or Replace VIEW ViewFILM008H AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008H" ("製令單別", "製令單號", "加工別", "製程代碼", "半成品編號", "庫存數") AS (
 SELECT
 	to_char('C11')製令單別,
 	regexp_substr (A.批號, '[^_]+', 1) 製令單號,
@@ -24095,8 +25193,8 @@ GROUP BY
 	A.批號
 	);
 
--- Home #2240 ViewFILM008H_WK.不分倉庫存數
-CREATE or Replace VIEW ViewFILM008H_WK AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008H_WK" ("製令單別", "製令單號", "加工別", "製程代碼", "半成品編號", "庫存數") AS (
 SELECT
 	to_char('C11')製令單別,
 	regexp_substr (A.批號, '[^_]+', 1) 製令單號,
@@ -24119,8 +25217,8 @@ GROUP BY
 	A.批號
 	);
 
--- Home #2213 ViewFILM008S.材料庫存數不分倉
-CREATE or Replace VIEW ViewFILM008S AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008S" ("材料編號", "品名", "規格", "庫存數") AS (
 SELECT
 	A.料號 材料編號,
 	E.品名,
@@ -24140,8 +25238,8 @@ FROM
 	INNER JOIN FIL0012 E ON E.產品編號 = A.料號
 	);
 
--- Home #2215 ViewFILM008SA.材料庫存數分倉
-CREATE or Replace VIEW ViewFILM008SA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008SA" ("材料編號", "品名", "規格", "庫位", "庫存數") AS (
 SELECT
 	A.料號 材料編號,
 	E.品名,
@@ -24166,9 +25264,8 @@ GROUP BY
 	A.庫位
 	);
 
--- Home #2216 ViewFILM008SC.紙箱/管庫存數
-CREATE or Replace VIEW ViewFILM008SC AS 
-with temp1 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008SC" ("材料編號", "品名", "規格", "庫存數") AS with temp1 as (
 SELECT 
 	A.產品編號 材料編號,
 	SUM(decode(A.單據類別,'D21',A.數值4,(A.異動數量 + A.贈品數量) * B.材料庫存參數)) 異動數
@@ -24363,8 +25460,8 @@ GROUP BY
 	E.品名,
 	E.規格;
 
--- Home #2214 ViewFILM008S_WK.材料庫存數
-CREATE or Replace VIEW ViewFILM008S_WK AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM008S_WK" ("材料編號", "品名", "規格", "庫存數") AS (
 SELECT
 	A.料號 材料編號,
 	E.品名,
@@ -24384,8 +25481,8 @@ FROM
 	INNER JOIN FIL0012 E ON E.產品編號 = A.料號
 	);
 
--- Home #2228 ViewFILM011.材料月異動數(批號)
-Create view ViewFILM011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM011" ("月份", "倉庫代碼", "材料編號", "批號", "異動數量") AS (
 SELECT
 	substr(A.異動日期,1,6) 月份,
 	A.倉庫代碼,
@@ -24402,8 +25499,8 @@ GROUP BY
 	A.材料編號,
 	A.批號);
 
--- Home #2229 ViewFILM015.材料月庫存數(批號)
-Create view ViewFILM015 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM015" ("月份", "倉庫代碼", "倉庫名稱", "倉別代碼", "倉別名稱", "材料編號", "批號", "前期庫存", "本期異動", "期末庫存", "年月序") AS (
 SELECT
 	A.月份,
 	A.倉庫代碼,
@@ -24438,8 +25535,8 @@ FROM
 	) A
 	LEFT JOIN ViewFIL3106 B ON A.倉庫代碼 = B.代碼);
 
--- Home #2230 ViewFILM016.不分倉庫存數(批號)
-Create view ViewFILM016 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM016" ("批號", "庫存數") AS (
 SELECT
 	A.批號,
 	sum(A.異動數) 庫存數
@@ -24564,8 +25661,8 @@ FROM
 GROUP BY
 	A.批號);
 
--- Home #2247 ViewFILM016A.不分倉庫存(批號)
-Create or Replace view ViewFILM016A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM016A" ("批號", "庫存數") AS (
 SELECT 
 	A.批號,
 	SUM(A.庫存數量) 庫存數
@@ -24596,8 +25693,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2231 ViewFILM017.不分倉(料號＋批號)
-CREATE or Replace VIEW ViewFILM017 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM017" ("材料編號", "物料大類", "品名", "規格", "批號", "庫存數") AS (
 SELECT
 	A.產品編號 材料編號,
 	E.物料大類,
@@ -24748,8 +25845,8 @@ GROUP BY
 	E.規格,
 	DECODE(E.批號管理,0,'',A.批號));
 
--- Home #2243 ViewFILM017A.不分倉(料/批號)
-Create or Replace view ViewFILM017A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM017A" ("材料編號", "物料大類", "品名", "規格", "批號", "庫存數") AS (
 SELECT 
 	A.材料編號,
 	E.物料大類,
@@ -24793,8 +25890,8 @@ GROUP BY
 	DECODE(E.批號管理,0,'',A.批號)
 );
 
--- Home #2238 ViewFILM017H.不分倉批號(H)
-CREATE or Replace VIEW ViewFILM017H AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM017H" ("製令單號", "產品編號", "產品名稱", "批號", "廠客編號", "接頭數", "圓周", "規格", "熟成條件", "庫存數") AS (
 SELECT
 	F.製令單號,
 	E.產品編號,
@@ -24829,8 +25926,8 @@ GROUP BY
 	F.廠客
 	);
 
--- Home #2236 ViewFILM017S.不分倉批號(S)
-CREATE or Replace VIEW ViewFILM017S AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM017S" ("材料編號", "物料大類", "品名", "規格", "批號", "廠客編號", "庫存數") AS (
 SELECT
 	F.料號 材料編號,
 	E.物料大類,
@@ -25119,8 +26216,8 @@ GROUP BY
 	F.廠客
 	);
 
--- Home #2237 ViewFILM017SA.條碼庫存
-CREATE or Replace VIEW ViewFILM017SA AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM017SA" ("批號", "庫存數") AS (
 SELECT
 	A.批號,
 	sum(nvl(A.異動數,0)) 庫存數
@@ -25425,8 +26522,8 @@ GROUP BY
 	A.批號
 	);
 
--- Home #2232 ViewFILM018.不分倉批號異動檔
-CREATE or Replace VIEW ViewFILM018 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018" ("單別", "單號", "序號", "異動日期", "料號", "批號", "異動數") AS (
 SELECT 
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -25586,8 +26683,8 @@ WHERE
 	A.單據類別 = 'F32' AND
 	A.異動類別 = '2');
 
--- Home #2233 ViewFILM018A.製/裁材料異動檔
-CREATE or Replace VIEW ViewFILM018A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018A" ("單據類別", "單據編號", "單據序號", "製程代碼", "異動類別", "單據日期", "批號", "最後更新日", "異動數") AS (
 /*A材*/
 SELECT 
 	A.單據類別,
@@ -25720,8 +26817,8 @@ WHERE
 	C.文數字5 <> ' '		
 );
 
--- Home #2234 ViewFILM018A0.製/裁半成品領用
-CREATE or Replace VIEW ViewFILM018A0 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018A0" ("單據類別", "單據編號", "單據序號", "製程代碼", "異動類別", "單據日期", "批號", "最後更新日", "異動數") AS (
 /*A材*/
 SELECT 
 	A.單據類別,
@@ -25854,8 +26951,8 @@ WHERE
 	INSTR(C.文數字5,'^')>0	
 );
 
--- Home #2235 ViewFILM018A1.製/裁半成品領退
-CREATE or Replace VIEW ViewFILM018A1 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018A1" ("單據類別", "單據編號", "單據序號", "製程代碼", "異動類別", "單據日期", "批號", "最後更新日", "異動數") AS (
 /*A材退庫*/
 SELECT 
 	A.單據類別,
@@ -25948,9 +27045,8 @@ WHERE
 	C.數值22 <> 0
 );
 
--- Home #2217 ViewFILM018H.半成品碼庫存異動
-CREATE OR REPLACE VIEW VIEWFILM018H  AS 
-  (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018H" ("單別", "單號", "序號", "異動類別", "單據日期", "批號", "製程代碼", "接頭數", "最後接頭數", "圓周", "規格", "熟成條件", "來源", "最後更新日", "異動數") AS (
 	SELECT
 		A.單據類別 單別,
 		A.單據編號 單號,
@@ -26257,8 +27353,8 @@ CREATE OR REPLACE VIEW VIEWFILM018H  AS
 	) A	
 );
 
--- Home #2209 ViewFILM018S.料碼庫存異動
-CREATE or Replace VIEW ViewFILM018S AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018S" ("單別", "單號", "序號", "異動類別", "異動日期", "料號", "批號", "最後更新日", "異動數", "來源") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -26625,9 +27721,8 @@ FROM
 	INNER JOIN ViewFIL1012 E ON F.料號 = E.產品編號
 	);
 
--- Home #2210 ViewFILM018SA.條碼領退清單
-CREATE or Replace VIEW ViewFILM018SA AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018SA" ("請領單別", "請領單號", "料號", "請領數量", "發料數量", "日報領用數量", "日報退庫數量", "日報沿用數量") AS WITH 
 TMP1 AS
 	(
 /*請領發料*/	
@@ -26770,9 +27865,8 @@ GROUP BY
 	A.請領單號,
 	A.料號;
 
--- Home #2211 ViewFILM018SB.條碼退庫明細
-CREATE or Replace VIEW ViewFILM018SB AS 
-WITH 
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018SB" ("請領單別", "請領單號", "料號", "異動數量", "來源單別", "來源單號", "來源序號", "批號", "製令單別", "製令單號", "來源") AS WITH 
 TMP0 AS
 	(
 	SELECT
@@ -26873,18 +27967,16 @@ TMP3 AS
 		((D.製程代碼 BETWEEN 'C31A' AND 'C31C') OR D.製程代碼 = 'C32D' OR D.製程代碼 = 'C31H' OR D.製程代碼 = 'C31K') AND 
 		C.文數字4 != ' '	
 	)	
-SELECT * FROM TMP0
+SELECT "請領單別","請領單號","料號","異動數量","來源單別","來源單號","來源序號","批號","製令單別","製令單號","來源" FROM TMP0
 UNION ALL 
-SELECT * FROM TMP1
+SELECT "請領單別","請領單號","料號","異動數量","來源單別","來源單號","來源序號","批號","製令單別","製令單號","來源" FROM TMP1
 UNION ALL 
-SELECT * FROM TMP2
+SELECT "請領單別","請領單號","料號","異動數量","來源單別","來源單號","來源序號","批號","製令單別","製令單號","來源" FROM TMP2
 UNION ALL 
-SELECT * FROM TMP3;
+SELECT "請領單別","請領單號","料號","異動數量","來源單別","來源單號","來源序號","批號","製令單別","製令單號","來源" FROM TMP3;
 
--- Home #2212 ViewFILM018SC.條碼日報領退
-CREATE or Replace VIEW ViewFILM018SC AS 
-/*日報領用*/	
-SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFILM018SC" ("請領單別", "請領單號", "日報單號", "料號", "製令單別", "製令單號", "批號", "領用數量", "退庫數量", "沿用數量", "異動日時", "沿用", "製程代碼") AS SELECT 
 	'C4L' 請領單別,
 	E.其它單號 請領單號,
 	A.單據編號 日報單號,
@@ -26937,8 +28029,8 @@ WHERE
 	(A.折讓>0 OR D.數值1 > 0) AND
 	A.廠客單號 != ' ';
 
--- Home #2241 ViewFILM019.分倉批號庫存
-Create or Replace view ViewFILM019 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM019" ("倉庫代碼", "倉庫名稱", "材料編號", "批號", "庫存數") AS (
 SELECT
 	A.倉庫代碼,
 	nvl(B.名稱, ' ') 倉庫名稱,
@@ -26955,8 +28047,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2248 ViewFILM019A.分倉批號庫存
-Create or Replace view ViewFILM019A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM019A" ("倉庫代碼", "倉庫名稱", "材料編號", "批號", "庫存數") AS (
 SELECT 
 	A.倉庫代碼,
 	nvl(B.名稱, ' ') 倉庫名稱,
@@ -26998,8 +28090,8 @@ GROUP BY
 	A.批號
 );
 
--- Home #2249 ViewFILM020A.分倉批號前月庫存
-Create or Replace view ViewFILM020A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM020A" ("材料編號", "倉庫代碼", "批號", "庫存數") AS (
 SELECT 
 	A.產品編號 材料編號,
 	A.倉庫代碼,	
@@ -27197,8 +28289,8 @@ GROUP BY
 	decode(E.批號管理,0,' ',C.批號)
 );
 
--- Home #2250 ViewFILM021A.製程人工時
-Create OR Replace view ViewFILM021A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM021A" ("製程代碼", "年月", "製程日報人工時") AS (
 SELECT
 	A.製程代碼,
 	SUBSTR(A.作業日期,1,6) 年月,
@@ -27210,8 +28302,8 @@ GROUP BY
 	SUBSTR(A.作業日期,1,6)
 );
 
--- Home #2251 ViewFILM022A.總人工時
-Create OR Replace view ViewFILM022A AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM022A" ("年月", "日報總人工時", "分攤間接人工", "分攤直接人工") AS (
 SELECT
 	SUBSTR(A.作業日期,1,6) 年月,
 	SUM(A.總耗時*A.加工人數) 日報總人工時,
@@ -27236,8 +28328,8 @@ GROUP BY
 	SUBSTR(A.作業日期,1,6)
 );
 
--- Home #2253 ViewFILM101.材料庫存異動明細
-CREATE or Replace VIEW ViewFILM101 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM101" ("單別", "單號", "序號", "異動日期", "年月", "料號", "最後更新日", "異動數", "異動單價", "異動金額", "來源", "製程代碼") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -27377,8 +28469,8 @@ FROM
 	INNER JOIN ViewFIL1012 E ON A.料號 = E.產品編號
 	);
 
--- Home #2254 ViewFILM102.材料庫存月彙總
-CREATE or Replace VIEW ViewFILM102 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM102" ("年月", "料號", "來源", "數量", "金額") AS (
 SELECT
 	A.年月,
 	A.料號,
@@ -27393,8 +28485,8 @@ GROUP BY
 	A.來源
 	);
 
--- Home #2255 ViewFILM103.材料庫存月料號
-CREATE or Replace VIEW ViewFILM103 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM103" ("年月", "料號") AS (
 SELECT 
 	A.年月,
 	A.料號
@@ -27402,8 +28494,8 @@ FROM
 	FIL004N A
 	);
 
--- Home #2256 ViewFILM104.材料進耗存月彙總
-CREATE or Replace VIEW ViewFILM104 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM104" ("年月", "料號", "期初數量", "期初金額", "進貨數量", "進貨金額", "平均單價", "耗用數量", "耗用金額", "期末數量", "期末金額") AS (
 SELECT DISTINCT 
   A.年月,
   A.料號,
@@ -27423,8 +28515,8 @@ FROM
   LEFT JOIN VIEWFILM102 D ON A.年月 = D.年月 AND A.料號 = D.料號 AND D.來源 = '4.領料'
 	);
 
--- Home #2257 ViewFILM105.材料製程領用月彙總
-CREATE or Replace VIEW ViewFILM105 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM105" ("年月", "製程代碼", "直接材料") AS (
 SELECT 
   A.年月,
   A.製程代碼,
@@ -27438,8 +28530,8 @@ GROUP BY
   A.製程代碼
 	);
 
--- Home #2258 ViewFILM106.材料單別領用彙總
-CREATE or Replace VIEW ViewFILM106 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM106" ("單別", "單號", "直接材料") AS (
 SELECT 
   A.單別 單別,
   A.單號 單號,
@@ -27453,8 +28545,8 @@ GROUP BY
   A.單號
 	);
 
--- Home #2259 ViewFILM111.客供品庫存異動明細
-CREATE or Replace VIEW ViewFILM111 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM111" ("單別", "單號", "序號", "異動日期", "年月", "料號", "最後更新日", "異動數", "異動單價", "異動金額", "來源") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -27584,8 +28676,8 @@ FROM
 	INNER JOIN ViewFIL1012 E ON A.料號 = E.產品編號
 	);
 
--- Home #2260 ViewFILM112.客供品庫存月彙總
-CREATE or Replace VIEW ViewFILM112 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM112" ("年月", "料號", "來源", "數量", "金額") AS (
 SELECT
 	A.年月,
 	A.料號,
@@ -27600,8 +28692,8 @@ GROUP BY
 	A.來源
 	);
 
--- Home #2261 ViewFILM113.客供品庫存月料號
-CREATE or Replace VIEW ViewFILM113 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM113" ("年月", "料號") AS (
 SELECT 
 	A.年月,
 	A.料號
@@ -27609,9 +28701,8 @@ FROM
 	FIL004O A
 	);
 
--- Home #2262 ViewFILM201.日報人員耗時
-Create OR Replace view ViewFILM201 AS 
-with temp1 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM201" ("單別", "單號", "作業日期", "結束", "待補", "改件調機", "員工實際時薪", "加工人數", "總耗時", "簽核狀態", "製程代碼", "年月") AS with temp1 as (
 	/*前製程*/
 SELECT
 	A.單據類別 單別,
@@ -27668,12 +28759,10 @@ WHERE
 	A.單據類別 = 'C41' AND A.單據日期>'2025' AND
 	(B.製程代碼 = 'C31H' or B.製程代碼 = 'C31K')	
 	)
-select * from temp1;
+select "單別","單號","作業日期","結束","待補","改件調機","員工實際時薪","加工人數","總耗時","簽核狀態","製程代碼","年月" from temp1;
 
--- Home #2263 ViewFILM202.製程直接人工(實薪)
-Create OR Replace view ViewFILM202 AS 
-	/*前製程*/
-with temp1 as(	
+-- Oracle user_views
+CREATE VIEW "VIEWFILM202" ("年月", "製程代碼", "實際直接人工", "分攤直接人工") AS with temp1 as(	
 SELECT
 	SUBSTR(A.單據日期,1,6) 年月,
 	B.製程代碼,
@@ -27734,9 +28823,8 @@ from
 		A.製程代碼
 	) B ON SUBSTR(A.年月,1,6)=SUBSTR(B.年月,1,6) AND A.製程代碼=B.製程代碼;
 
--- Home #2264 ViewFILM203.日報人員製令
-Create OR Replace view ViewFILM203 AS 
-with temp1 as (
+-- Oracle user_views
+CREATE VIEW "VIEWFILM203" ("單別", "單號", "作業日期", "製令單號", "訂單單號", "產品編號", "簽核狀態", "製程代碼", "年月") AS with temp1 as (
 	/*前製程*/
 SELECT
 	A.單據類別 單別,
@@ -27788,11 +28876,10 @@ WHERE
 	A.單據類別 = 'C41' AND A.單據日期>'2025' AND
 	(B.製程代碼 = 'C31H' or B.製程代碼 = 'C31K')	
 	)
-select * from temp1;
+select "單別","單號","作業日期","製令單號","訂單單號","產品編號","簽核狀態","製程代碼","年月" from temp1;
 
--- Home #2265 ViewFILM204.製程人工時費用
-Create OR Replace view ViewFILM204 AS
-with temp1 as ( 
+-- Oracle user_views
+CREATE VIEW "VIEWFILM204" ("製程代碼", "年月", "製程直接人工每人工時", "製程製造費用每人工時") AS with temp1 as ( 
 SELECT
 	M.製程代碼,
 	M.年月,
@@ -27807,10 +28894,10 @@ FROM
 	/*製程實際直接人工*/
 	LEFT JOIN ViewFILM202 C ON C.年月=M.年月 AND C.製程代碼=M.製程代碼
 )
-select * from temp1;
+select "製程代碼","年月","製程直接人工每人工時","製程製造費用每人工時" from temp1;
 
--- Home #2316 ViewFILR001.客訴單主檔.R01
-Create or Replace view ViewFILR001 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR001" ("單別", "單號", "單據日期", "品質異常單別", "品質異常單號", "品管課填表人", "品管課填表人姓名", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "客戶編號", "客戶簡稱", "客戶名稱", "摘要", "異常別權責單位", "流水編號", "員工流水編號", "填表人部門編號", "填表人", "填表人姓名", "填表日", "標籤數", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -27853,8 +28940,8 @@ FROM
 WHERE
 	A.單據類別 = 'R01');
 
--- Home #2318 ViewFILR002.客訴單明細
-Create or Replace view ViewFILR002 AS (SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWFILR002" ("單別", "單號", "序號", "製令單別", "製令單號", "產品編號", "產品名稱", "產品規格", "材質結構", "交貨備註", "異常備註", "成品規格", "交貨日期", "交貨數量", "異常數量", "單位代碼", "單位名稱", "異常單位代碼", "異常單位名稱", "客戶編號", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
 	A.單據序號 序號,
@@ -27892,8 +28979,8 @@ WHERE
 	A.單據類別 = 'R01' AND
 	A.單據編號 <>' ');
 
--- Home #2319 ViewFILR010.品質異常單主檔.R02
-Create or Replace view ViewFILR010 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR010" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "客訴單別", "客訴單號", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "異常大類", "異常大類名稱", "異常原因分類", "異常原因分類名稱", "異常單位", "異常單位名稱", "異常現象_作業者", "異常現象_作業者姓名", "異常現象_摘要", "異常現象_詳述", "異常原因分析", "矯正措施_摘要1", "矯正措施_摘要2", "再發防止措施", "追蹤確認", "異常現象_填表人", "異常現象_填表人姓名", "業務擔當", "業務擔當姓名", "流水編號", "員工流水編號", "矯正人流水編號", "矯正人姓名", "填表人", "填表人部門編號", "填表人姓名", "單位年月", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -27955,8 +29042,8 @@ FROM
 WHERE
 	A.單據類別 = 'R02');
 
--- Home #2320 ViewFILR010D.品質異常單明細
-Create or Replace view ViewFILR010D AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR010D" ("單別", "單號", "序號", "加工別", "製令單別", "製令單號", "產品編號", "產品名稱", "材質結構", "成品規格", "生產總量", "異常數量", "單位代碼", "單位名稱", "異常單位代碼", "異常單位名稱", "交貨日期", "客戶編號", "特採數量", "報廢數量", "全批", "生產中", "異常數量待確認", "特採數量待確認", "報廢數量待確認", "尚未生產", "建檔日期", "建檔時間", "流水編號", "主檔流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -28003,8 +29090,8 @@ FROM
 WHERE
 	A.單據類別 = 'R02');
 
--- Home #2317 ViewFILR011.客訴單主檔.R11
-Create or Replace view ViewFILR011 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR011" ("單別", "單號", "單據日期", "品質異常單別", "品質異常單號", "品管課填表人", "品管課填表人姓名", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "客戶編號", "客戶簡稱", "客戶名稱", "摘要", "異常別權責單位", "流水編號", "員工流水編號", "填表人部門編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	M.單據類別 單別,
 	M.單據編號 單號,
@@ -28046,8 +29133,8 @@ FROM
 WHERE
 	M.單據類別 = 'R11');
 
--- Home #2321 ViewFILR012.品質異常合計
-CREATE or Replace VIEW ViewFILR012 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR012" ("單別", "單號", "生產總量", "異常數量", "不良率", "待確認筆數", "單位不同", "總產量單位") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -28065,8 +29152,8 @@ GROUP BY
 	A.單據類別,
 	A.單據編號);
 
--- Home #2322 ViewFILR013.品質異常單位當月
-CREATE or Replace VIEW ViewFILR013 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR013" ("異常單位", "異常年月", "異常單位名稱", "異常次數", "單位年月") AS (
 SELECT
 	A.異常單位,
 	substr(B.單據日期, 1, 6) 異常年月,
@@ -28083,8 +29170,8 @@ GROUP BY
 	nvl(E.部門名稱, ' ')
 );
 
--- Home #2323 ViewFILR014.品質異常個人當月
-CREATE or Replace VIEW ViewFILR014 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR014" ("異常單位", "作業人員", "異常年月", "異常次數") AS (
 SELECT
 	A.異常單位,
 	A.作業人員,
@@ -28109,8 +29196,8 @@ GROUP BY
 	A.異常年月
 );
 
--- Home #2327 ViewFILR020.銷退處理記錄表.R03
-Create or Replace view ViewFILR020 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR020" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "退貨日期", "退貨方式", "退貨方式名稱", "退貨件數", "退貨方式說明", "退貨原因", "處理數量_入庫", "處理數量_銷毀", "處理數量_其他", "後續處理", "品管課負責人姓名", "流水編號", "員工流水編號", "填表人部門編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -28154,8 +29241,8 @@ FROM
 WHERE
 	A.單據類別 = 'R03');
 
--- Home #2329 ViewFILR021.銷退處理表明細
-Create or Replace view ViewFILR021 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR021" ("單別", "單號", "序號", "製令單別", "製令單號", "產品編號", "產品名稱", "備註說明", "數量", "客戶編號", "單位代碼", "單位名稱", "流水編號", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT 
 	A.單據類別 單別, 
 	A.單據編號 單號,
@@ -28182,8 +29269,8 @@ FROM
 WHERE
 	A.單據類別 = 'R03');
 
--- Home #2330 ViewFILR030.特採申請單.R04
-Create or Replace view ViewFILR030 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR030" ("單別", "單號", "單據日期", "異常單別", "異常單號", "異常明細序號", "廠商編號", "廠商名稱", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "特採類別", "進料批號", "進料數量", "進料單位", "進料單位名稱", "進料日期", "原物料名稱", "製令單別", "製令單號", "客戶編號", "客戶名稱", "生產數量", "製造日期", "責任單位", "責任單位名稱", "作業人員", "作業人員姓名", "特採日期", "特採數量", "特採單位", "特採單位名稱", "不良原因", "流水編號", "員工流水編號", "填表人部門編號", "填表人", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	A.單據類別 單別,
 	A.單據編號 單號,
@@ -28253,8 +29340,8 @@ FROM
 WHERE
 	A.單據類別 = 'R04');
 
--- Home #2328 ViewFILR031.銷退處理記錄表.R31
-Create or Replace view ViewFILR031 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR031" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "退貨日期", "退貨方式", "退貨件數", "退貨方式說明", "退貨原因", "處理數量_入庫", "處理數量_銷毀", "處理數量_其他", "後續處理", "品管課負責人姓名", "流水編號", "員工流水編號", "填表人部門編號", "填表人", "填表人姓名", "擔當業務", "擔當業務流水編號", "擔當業務姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	M.單據類別 單別,
 	M.單據編號 單號,
@@ -28303,8 +29390,8 @@ FROM
 WHERE
 	M.單據類別 = 'R31');
 
--- Home #2324 ViewFILR210.品質異常單主檔.R21
-Create or Replace view ViewFILR210 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR210" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "客訴單別", "客訴單號", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "異常大類", "異常大類名稱", "異常原因分類", "異常原因分類名稱", "異常單位", "異常單位名稱", "異常現象_作業者", "異常現象_作業者姓名", "異常現象_摘要", "異常現象_詳述", "異常現象_填表人", "異常原因_摘要", "異常原因分析", "再發防止措施_摘要", "再發防止措施", "矯正措施_填表人", "異常現象_填表人姓名", "流水編號", "填表人", "員工流水編號", "填表人部門編號", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	M.單據類別 單別,
 	M.單據編號 單號,
@@ -28361,8 +29448,8 @@ FROM
 WHERE
 	M.單據類別 = 'R21');
 
--- Home #2325 ViewFILR220.品質異常單主檔.R22
-Create or Replace view ViewFILR220 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR220" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "客訴單別", "客訴單號", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "異常大類", "異常大類名稱", "異常原因分類", "異常原因分類名稱", "異常單位", "異常單位名稱", "異常現象_作業者", "異常現象_作業者姓名", "異常現象_摘要", "異常現象_詳述", "異常現象_填表人", "矯正措施_填表人", "指定簽核人員", "異常現象_填表人姓名", "流水編號", "填表人", "員工流水編號", "填表人部門編號", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	M.單據類別 單別,
 	M.單據編號 單號,
@@ -28417,8 +29504,8 @@ FROM
 WHERE
 	M.單據類別 = 'R22');
 
--- Home #2326 ViewFILR230.品質異常單主檔.R23
-Create or Replace view ViewFILR230 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWFILR230" ("單別", "單號", "單據日期", "客戶編號", "客戶名稱", "客訴單別", "客訴單號", "公司代碼", "公司名稱", "簽核系統", "簽核狀態", "簽核系統_結案", "異常大類", "異常大類名稱", "異常原因分類", "異常原因分類名稱", "異常單位", "異常單位名稱", "異常現象_作業者", "異常現象_作業者姓名", "異常現象_摘要", "異常現象_詳述", "異常現象_填表人", "追蹤確認", "異常現象_填表人姓名", "流水編號", "填表人", "員工流水編號", "填表人部門編號", "填表人姓名", "填表日", "最後更新者", "更新者姓名", "最後更新日") AS (
 SELECT
 	M.單據類別 單別,
 	M.單據編號 單號,
@@ -28471,20 +29558,49 @@ FROM
 WHERE
 	M.單據類別 = 'R23');
 
--- Home #2332 ViewLOG001.PLCLog
-Create or Replace view ViewLog001 AS (
-SELECT 機台代碼, 製令單號,變更日期
-FROM (
-    SELECT 機台代碼, 製令單號,變更日期,
-           ROW_NUMBER() OVER (PARTITION BY 機台代碼, 製令單號, TO_CHAR(變更日期,'yyyymmdd HH24') ORDER BY 變更日期 ASC) AS rn
-    FROM LOG.FIL300B_:1
-) e
-WHERE rn = 1
+-- Oracle user_views
+CREATE VIEW "VIEWHRFIL1007" ("員工編號", "員工姓名", "公司別", "部門名稱", "職位名稱", "出勤日期", "遲到", "早退", "假別", "上班刷卡", "下班刷卡", "班別", "班別時間起", "班別時間迄", "加班時數一", "加班時數二", "流水編號", "最後更新者", "最後更新日") AS (
+SELECT 
+	A.員工編號,
+	B.員工姓名,
+	B.公司別,
+	B.部門名稱,
+	B.職位名稱,
+	A.出勤日期,
+	A.遲到,
+	A.早退,
+	C.假別,
+	A.上班刷卡,
+	A.下班刷卡,
+	A.班別,
+	A.班別時間起,
+	A.班別時間迄,
+	A.加班時數一,
+	A.加班時數二,
+	A.流水編號,
+	A.最後更新者,
+	A.最後更新日
+FROM
+	HRFIL1007 A
+	INNER JOIN VIEWFIL1010 B ON B.員工編號 = A.員工編號
+	LEFT JOIN 
+	(SELECT
+		A.申請人,
+		A.起始日期,
+		A.截止日期,
+		utl_raw.cast_to_nvarchar2(listagg(utl_raw.cast_to_raw(A.假別名稱||'[')||utl_raw.cast_to_raw(TO_NCHAR(ROUND(A.天數)))||utl_raw.cast_to_raw(N'天')||utl_raw.cast_to_raw(TO_NCHAR(ROUND(A.時數)))||utl_raw.cast_to_raw(N'小時]'), utl_raw.cast_to_raw(N' ')) within group (order by A.申請人)) as 假別
+	 FROM
+		VIEWFILH001 A
+	 WHERE A.簽核狀態 = 'E'	
+	 GROUP BY 
+		A.申請人,
+		A.起始日期,
+		A.截止日期
+	) C ON C.申請人 = A.員工編號 AND A.出勤日期 BETWEEN C.起始日期 AND C.截止日期 
 );
 
--- Home #2313 ViewOfA01
-Create or Replace view ViewOfA01 as  
-	Select 
+-- Oracle user_views
+CREATE VIEW "VIEWOFA01" ("流水編號", "開單人流水號", "申請人流水號", "開單日期", "簽核期限", "表單代碼") AS Select 
 		A.Serial_Num 流水編號,  
 		A.Owner 開單人流水號,
 		A.ApplyBy 申請人流水號,
@@ -28496,18 +29612,11 @@ Create or Replace view ViewOfA01 as
   WHERE
     A.CreateDate BETWEEN TO_CHAR(SYSDATE-100) AND TO_CHAR(SYSDATE);
 
--- edb #109 Create ViewOfAccNoteTemp
-Create View ViewOfAccNoteTemp(Type,Job_Type,SubjectNo,DC,Content) As SELECT 'M', A20_5.Job_Type,A20_5.科目代號, A20_5.借貸, A20_5.參考欄位 FROM A20_5 Union SELECT   'D', A20_4.DocCode,A20_4.科目代號, A20_4.借貸,A01_7.Content  FROM A01_7, A20_4 WHERE Substr(A01_7.Serial_Num,1,3)= A20_4.DocCode and  A01_7.Defined_Seq= A20_4.Serial_Num_Seq  and A20_4.科目代號<>' ';
+-- Oracle user_views
+CREATE VIEW "VIEWOFDEPTTREE" ("PARENTID", "NODEID") AS Select 'All',' ' From dual union SELECT  ' ', A30.Serial_Num FROM A30;
 
--- edb #122 CreatListView
-Create View ViewOfCal(UserID,SerialNo,DateFrom,ListItem) as  SELECT  Calendar.UserID,SerialNo,DateFrom,subject  FROM Calendar;
-
--- Home #2351 Create ViewOfDeptTree
-Create view ViewOfDeptTree(ParentID,NodeID) as Select 'All',' ' From dual union SELECT  ' ', A30.Serial_Num FROM A30;
-
--- Home #2357 Create ViewOfEmp
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "APK"."VIEWOFEMP" ("SERIALNO", "EMPID", "EMPNAME","POSITION", "SALARYPOSI", "FLOWPOSI", "ENTRYID", "ENTRYPSW", "NICKNAME", "LANGUAGE", "EMPEMAIL", "COMPSERIAL", "DEPSERIAL", "ASSIGNEE", "REPLACEBY", "IMHEADER", "IMSTATUS", "HIREDATE", "TERMDATE", "CLOSED","SALARYTYPE", "SALARY", "DISPLAYNAME", "SUPERVISOR") AS 
-  Select 
+-- Oracle user_views
+CREATE VIEW "VIEWOFEMP" ("SERIALNO", "EMPID", "EMPNAME", "POSITION", "SALARYPOSI", "FLOWPOSI", "ENTRYID", "ENTRYPSW", "NICKNAME", "LANGUAGE", "EMPEMAIL", "COMPSERIAL", "DEPSERIAL", "ASSIGNEE", "REPLACEBY", "IMHEADER", "IMSTATUS", "HIREDATE", "TERMDATE", "CLOSED", "SALARYTYPE", "SALARY", "DISPLAYNAME", "SUPERVISOR") AS Select 
 	A.Serial_Num, 
 	A.員工編號, 
 	A.員工姓名, 
@@ -28540,9 +29649,11 @@ FROM
 	left join A40 on A.SalaryPosi= A40.Serial_Num
 	left join A01 on A.Serial_Num= A01.Serial_Num;
 
--- Home #2359 Create ViewOfFlow
-Create or Replace view ViewOfFlow as 
-SELECT 	distinct A.Serial_Num 流水編號,
+-- Oracle user_views
+CREATE VIEW "VIEWOFEMPMA" ("EMPID", "DEP_ID", "EMP_NAM", "EMP_ADDR", "EMP_TEL", "EMP_MOB", "VOICE") AS SELECT  A.員工編號,  A30.GroupID, A.員工姓名, A.通訊地址, A.OffPhone, A.聯絡電話, ' ' FROM FIL0010 A   left outer join A30 on A.DepSerial= A30.Serial_Num;
+
+-- Oracle user_views
+CREATE VIEW "VIEWOFFLOW" ("流水編號", "公司流水號", "父階序號", "表身序號", "指定人員流水號", "職稱流水號", "正副本", "簽核部門流水號", "會簽判定", "會簽方式", "職稱", "指定人員", "條件欄位", "條件式", "條件內容") AS SELECT 	distinct A.Serial_Num 流水編號,
 		A.CompID 公司流水號,
 		A.Level_ 父階序號, 
 		A.Serial_Num_Seq 表身序號, 
@@ -28561,11 +29672,8 @@ FROM A20_1 A
 LEFT JOIN A40 B ON A.Serial_Num = B.Serial_Num AND B.POSITYPE='2'
 LEFT JOIN ViewOfEMP C ON A.指定人員 = C.SerialNo;
 
--- Home #2345 Create ViewOfFlowDetail
-Create OR Replace view ViewOfFlowDetail(Type,SerialNo,EmpSerialNo,FolderStatus,FlowStatus,SignOrCC,ItemNo) as  
-
-/*單據屬性:申請人 */
-SELECT 'A', A01.Serial_Num,A01.ApplyBy, A01.FlowStatus ,'A',1,0 FROM A01 
+-- Oracle user_views
+CREATE VIEW "VIEWOFFLOWDETAIL" ("TYPE", "SERIALNO", "EMPSERIALNO", "FOLDERSTATUS", "FLOWSTATUS", "SIGNORCC", "ITEMNO") AS SELECT 'A', A01.Serial_Num,A01.ApplyBy, A01.FlowStatus ,'A',1,0 FROM A01 
 
 Union  
 
@@ -28616,9 +29724,8 @@ FROM A01_2 A
 INNER JOIN A01 B ON A.Serial_Num=B.Serial_Num 
 LEFT JOIN A01_2 C ON A.Serial_Num=C.Serial_Num AND A.Version=C.Serial_Num_Seq;
 
--- Home #2361 Create ViewOfFlowType
-Create or Replace view ViewOfFlowType as 
-SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWOFFLOWTYPE" ("表單代碼", "類別代碼", "說明", "代碼說明") AS SELECT
 	Job_Type 表單代碼,
 	類別代碼,
 	說明,
@@ -28626,17 +29733,14 @@ SELECT
 FROM
 	A20_8;
 
--- Home #2354 Create ViewOfGPE
-Create view ViewOfGPE(SerialNo,ObjectName) as  SELECT  A30.Serial_Num, A30.GUName FROM A30 union SELECT A40.Serial_Num, A40.GUName FROM A40 union  SELECT ViewOfEmp.SERIALNO, ViewOfEmp.EMPNAME FROM ViewOfEmp;
+-- Oracle user_views
+CREATE VIEW "VIEWOFGROUPDOC" ("GROUPSERIALNO", "DOCSERIALNO", "JOB_TYPE", "DOCNAME") AS SELECT A30_2.Serial_Num, A30_2.DocSerialNo, A20.Job_Type, A20.GUName FROM A30_2, A20 WHERE A30_2.DocSerialNo = A20.Serial_Num and  A20.表單類別 between '1' and '2' Union  SELECT 'SUPERVISOR', A20.Serial_Num, A20.Job_Type,  A20.GUName FROM A20 where A20.表單類別 between '1' and '2' Union  SELECT A30.Serial_Num,  A20.Serial_Num, A20.Job_Type, A20.GUName FROM  A30, A07, A20 WHERE A07.ProgramID= A20.Job_Type and  A07.ForAll=1 and A20.表單類別 between '1' and '2';
 
--- Home #2344 Create ViewOfGroupDoc
-Create view ViewOfGroupDoc(GroupSerialNo,DocSerialNo, Job_Type,DocName) as  SELECT A30_2.Serial_Num, A30_2.DocSerialNo, A20.Job_Type, A20.GUName FROM A30_2, A20 WHERE A30_2.DocSerialNo = A20.Serial_Num and  A20.表單類別 between '1' and '2' Union  SELECT 'SUPERVISOR', A20.Serial_Num, A20.Job_Type,  A20.GUName FROM A20 where A20.表單類別 between '1' and '2' Union  SELECT A30.Serial_Num,  A20.Serial_Num, A20.Job_Type, A20.GUName FROM  A30, A07, A20 WHERE A07.ProgramID= A20.Job_Type and  A07.ForAll=1 and A20.表單類別 between '1' and '2';
+-- Oracle user_views
+CREATE VIEW "VIEWOFGROUPDOCID" ("GROUPSERIALNO", "PROGRAMID", "PROGRAMNAME") AS SELECT    ViewOfGroupDoc.GROUPSERIALNO, A07.ProgramID,A07.ProgramID||' '||A20.GUName FROM  ViewOfGroupDoc,A07,A20 WHERE  ViewOfGroupDoc.Job_Type= ViewOfGroupDoc.Job_Type and  A07.ProgramID= A20.Job_Type and A07.ForAll='1' union  SELECT A30_2.Serial_Num,A20.Job_Type,A20.Job_Type||' '||A20.GUName FROM A30_2, A20 WHERE A30_2.DocSerialNo= A20.Serial_Num;
 
--- Home #2347 Create ViewOfGroupDocID
-Create view ViewOfGroupDocID(GroupSerialNo,ProgramID,ProgramName) as   SELECT    ViewOfGroupDoc.GROUPSERIALNO, A07.ProgramID,A07.ProgramID||' '||A20.GUName FROM  ViewOfGroupDoc,A07,A20 WHERE  ViewOfGroupDoc.Job_Type= ViewOfGroupDoc.Job_Type and  A07.ProgramID= A20.Job_Type and A07.ForAll='1' union  SELECT A30_2.Serial_Num,A20.Job_Type,A20.Job_Type||' '||A20.GUName FROM A30_2, A20 WHERE A30_2.DocSerialNo= A20.Serial_Num;
-
--- Home #2350 Create ViewOfIMAlive
-Create or Replace view ViewOfIMAlive AS (
+-- Oracle user_views
+CREATE VIEW "VIEWOFIMALIVE" ("來源訊息", "筆數") AS (
 SELECT 
 	ForMessage 來源訊息,
 	count( Serial_Num) 筆數 
@@ -28649,9 +29753,8 @@ GROUP BY
 	ForMessage
 );
 
--- Home #2312 ViewOfIMNotEnd
-Create or Replace view ViewOfIMNotEnd as
-SELECT 
+-- Oracle user_views
+CREATE VIEW "VIEWOFIMNOTEND" ("收訊人", "員工編號", "未結案筆數") AS SELECT 
 	M.MessageTo 收訊人,
 	A.員工編號,
 	COUNT(M.Serial_Num) 未結案筆數
@@ -28672,12 +29775,11 @@ GROUP BY
 	M.MessageTo,
 	A.員工編號;
 
--- Home #2348 Create ViewOfMsgNotRep
-Create view ViewOfMsgNotRep(相關單據,流水編號,發訊人,收訊人) as    SELECT M.RefDocument,M.Serial_Num, M.CreateBy, M.MessageTo FROM   Messages M WHERE   M.Ending=0 and  M.類型='Q'  and M.Serial_Num not In ( SELECT   D.ForMessage  FROM Messages D Where D.CreateBy= M.MessageTo and D.RefDocument=M.RefDocument and  D.ForMessage= M.Serial_Num );
+-- Oracle user_views
+CREATE VIEW "VIEWOFMSGNOTREP" ("相關單據", "流水編號", "發訊人", "收訊人") AS SELECT M.RefDocument,M.Serial_Num, M.CreateBy, M.MessageTo FROM   Messages M WHERE   M.Ending=0 and  M.類型='Q'  and M.Serial_Num not In ( SELECT   D.ForMessage  FROM Messages D Where D.CreateBy= M.MessageTo and D.RefDocument=M.RefDocument and  D.ForMessage= M.Serial_Num );
 
--- Home #2362 Create ViewOfMsgRepList
-Create or Replace view ViewOfMsgRepList as  
-SELECT
+-- Oracle user_views
+CREATE VIEW "VIEWOFMSGREPLIST" ("來源訊息", "收訊人", "回覆內容") AS SELECT
 	 Messages.ForMessage 來源訊息,
 	 Messages.MessageTo 收訊人,
 	 listagg(trim(Messages.Message), ',') within group( Order By Messages.ForMessage, Messages.MessageTo) as 回覆內容
@@ -28689,12 +29791,11 @@ where
 Group by  
 	Messages.ForMessage, Messages.MessageTo;
 
--- Home #2342 Create ViewOfObj
-Create view ViewOfObj(SerialNo,ObjID,ObjName) as  Select A20.Serial_Num,  A20.Job_Type,  A20.GUName FROM A20, A01 WHERE A20.Serial_Num= A01.Serial_Num and   A01.FlowStatus='E';
+-- Oracle user_views
+CREATE VIEW "VIEWOFOBJ" ("SERIALNO", "OBJID", "OBJNAME") AS Select A20.Serial_Num,  A20.Job_Type,  A20.GUName FROM A20, A01 WHERE A20.Serial_Num= A01.Serial_Num and   A01.FlowStatus='E';
 
--- Home #1680 ViewOfObjFlow 單據簽核流程
-Create or Replace view ViewOfObjFlow as 
-SELECT Serial_Num 單據流水號,
+-- Oracle user_views
+CREATE VIEW "VIEWOFOBJFLOW" ("單據流水號", "父階序號", "流程序號", "排序", "應簽核人員", "簽核人員流水號", "員工編號", "員工姓名", "簽核日期", "簽核時間", "簽核結果", "資料夾", "簽核意見", "加簽", "執行說明", "免簽", "簽核列印列號", "簽核列印序號") AS SELECT Serial_Num 單據流水號,
 	Version 父階序號,
 	Serial_Num_Seq 流程序號,
 	decode(Version,0,Serial_Num_Seq,Version+Serial_Num_Seq/100) 排序,
@@ -28715,10 +29816,8 @@ SELECT Serial_Num 單據流水號,
 FROM A01_2,ViewOfEmp 
 Where AssignedTo<>' ' and A01_2.SignedBy=ViewOfEmp.SerialNo(+);
 
--- Home #2363 Create ViewOfObjFlowSigned
-Create or Replace view ViewOfObjFlowSigned as 
-
-SELECT Serial_Num 單據流水號,
+-- Oracle user_views
+CREATE VIEW "VIEWOFOBJFLOWSIGNED" ("單據流水號", "排序", "簽核人員流水號", "員工編號", "員工姓名") AS SELECT Serial_Num 單據流水號,
 	0 排序,
 	ApplyBy 簽核人員流水號,
 	nvl(EmpID,' ') 員工編號,
@@ -28736,31 +29835,23 @@ SELECT Serial_Num 單據流水號,
 FROM A01_2,ViewOfEmp 
 Where SignedBy<>' ' and nvl(SignedBy,' ')<>' ' and  A01_2.SignedBy=ViewOfEmp.SerialNo(+);
 
--- Home #2355 Create ViewOfObjProperties
-Create or Replace view ViewOfObjProperties as  
-SELECT
-	Serial_Num 單據流水號,
-	Name 單據名稱,
-	FlowStatus 簽核狀態,
-	TO_TIMESTAMP(CreateDate||CreateTime,'YYYYMMDDHH24MISS') 送簽日時
-FROM 
-	A01;
+-- Oracle user_views
+CREATE VIEW "VIEWOFOBJPROPERTIES" ("單據流水號", "單據名稱", "簽核狀態", "送簽日時") AS SELECT Serial_Num 單據流水號,Name 單據名稱,FlowStatus 簽核狀態,TO_TIMESTAMP(CreateDate||CreateTime,'YYYYMMDDHH24MISS') 送簽日時 FROM A01;
 
--- Home #2346 Create ViewOfObjQueryID
-Create view ViewOfObjQueryID(SerialNo,Emp_SerinalNo,Version) as   SELECT DISTINCT A01.Serial_Num, A01.Owner, A01.Version FROM A01 Union  SELECT DISTINCT A01.Serial_Num, A01.ApplyBy, A01.Version FROM A01 Union  SELECT DISTINCT A01_2.Serial_Num, A01_2.AssignedTo, A01_2.Version FROM A01_2 Union  SELECT DISTINCT A01_2.Serial_Num, A01_2.SignedBy, A01_2.Version FROM A01_2;
+-- Oracle user_views
+CREATE VIEW "VIEWOFOBJQUERYID" ("SERIALNO", "EMP_SERINALNO", "VERSION") AS SELECT DISTINCT A01.Serial_Num, A01.Owner, A01.Version FROM A01 Union  SELECT DISTINCT A01.Serial_Num, A01.ApplyBy, A01.Version FROM A01 Union  SELECT DISTINCT A01_2.Serial_Num, A01_2.AssignedTo, A01_2.Version FROM A01_2 Union  SELECT DISTINCT A01_2.Serial_Num, A01_2.SignedBy, A01_2.Version FROM A01_2;
 
--- Home #2352 Create ViewOfSubDept
-Create view ViewOfSubDept(ParentID,NodeID) as Select 'All',' ' From dual union SELECT  ' ', A30.Serial_Num FROM A30 Union  SELECT A35.GroupID, A35.Serial_Num FROM A35;
+-- Oracle user_views
+CREATE VIEW "VIEWOFSUBDEPT" ("PARENTID", "NODEID") AS Select 'All',' ' From dual union SELECT  ' ', A30.Serial_Num FROM A30 Union  SELECT A35.GroupID, A35.Serial_Num FROM A35;
 
--- Home #2343 Create ViewOfSysCode
-Create view ViewOfSysCode(SerialNo,CodeType,CodeID,CodeName) as  Select  A10.Serial_Num,   A10.CodeType,   A10.CodeID,  A10.GUName FROM  A10, A01 WHERE  A10.Serial_Num= A01.Serial_Num and   A01.FlowStatus='E';
+-- Oracle user_views
+CREATE VIEW "VIEWOFSYSCODE" ("SERIALNO", "CODETYPE", "CODEID", "CODENAME") AS Select  A10.Serial_Num,   A10.CodeType,   A10.CodeID,  A10.GUName FROM  A10, A01 WHERE  A10.Serial_Num= A01.Serial_Num and   A01.FlowStatus='E';
 
--- Home #2353 Create ViewOfSysCode1
-Create view ViewOfSysCode1(ParentID,NodeID) as Select 'All',' ' From dual union SELECT  ' ', To_char(A10.CodeID,'yyyymmdd') FROM   A10  WHERE CodeType='文件類別';
+-- Oracle user_views
+CREATE VIEW "VIEWOFSYSCODE1" ("PARENTID", "NODEID") AS Select 'All',' ' From dual union SELECT  ' ', To_char(A10.CodeID,'yyyymmdd') FROM   A10  WHERE CodeType='文件類別';
 
--- Home #2360 Create ViewOfValidAssignee
-Create or Replace view ViewOfValidAssignee as 
-SELECT  
+-- Oracle user_views
+CREATE VIEW "VIEWOFVALIDASSIGNEE" ("SERIAL_NUM", "ASIGNEE", "DATEFROM", "DATETO") AS SELECT  
 	Serial_Num, 
 	Asignee, 
 	DateFrom, 
@@ -28770,8 +29861,8 @@ FROM
 WHERE 
 	to_char(sysdate,'YYYYMMDD') between A60_7.DateFrom and A60_7.DateTo;
 
--- Home #1082     ..ViewTemp01(臨時)
-CREATE or Replace VIEW ViewTemp01 AS (
+-- Oracle user_views
+CREATE VIEW "VIEWTEMP01" ("材料編號", "庫存數") AS (
 SELECT
 	A.產品編號 材料編號,
 	sum(nvl(A.異動數,0)) 庫存數
@@ -28793,7 +29884,7 @@ FROM
 		WHERE
 			A.產品編號 != ' ' AND
 			DECODE(E.批號管理,0,'不分批號',C.批號) != ' ' AND
-			TO_CHAR(C1.填表日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(C1.填表日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			A.產品編號		
 			
@@ -28815,7 +29906,7 @@ FROM
 			A.單據類別 = 'C4M' AND
 			A.產品編號 != ' ' AND
 			DECODE(G.批號管理,0,'不分批號',C.批號) != ' ' AND
-			TO_CHAR(C1.填表日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(C1.填表日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			A.產品編號		
 			
@@ -28838,7 +29929,7 @@ FROM
 			A.異動數量 != 0 AND
 			A.產品編號 != ' ' AND
 			DECODE(C.批號管理,0,'不分批號',B.批號) != ' ' AND
-			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			A.產品編號		
 		
@@ -28858,7 +29949,7 @@ FROM
 			A.異動類別 = 'A' AND
 			C.製程代碼 between 'C31F' and 'C31G' AND
 			B.文數字1 != ' ' AND
-			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			E.料號		
 
@@ -28878,7 +29969,7 @@ FROM
 			A.異動類別 = 'A' AND
 			C.製程代碼 between 'C31F' and 'C31G' AND
 			B.文數字2 != ' ' AND
-			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(A.最後更新日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			E.料號		
 		
@@ -28900,7 +29991,7 @@ FROM
 			A.單據類別 = 'C41' AND
 			A.異動類別 = 'C' AND
 			A.贈品數量 != 0 AND
-			TO_CHAR(c1.填表日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(c1.填表日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			A.產品編號		
 			
@@ -28918,7 +30009,7 @@ FROM
 		WHERE
 			A.單據類別 = 'F32' AND
 			A.異動類別 = '2' AND
-			TO_CHAR(B.填表日,'YYYYMMDDHH24MISS')<=':1'
+			TO_CHAR(B.填表日,'YYYYMMDDHH24MISS')<='20220628070000'
 		GROUP BY
 			A.產品編號	
 	) A

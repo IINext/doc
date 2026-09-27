@@ -1,7 +1,9 @@
 """magic_views 轉換規則的測試。"""
+import os
+import tempfile
 import unittest
 
-from magic_views import convert, fix_duplicate_aliases, preclean
+from magic_views import convert, extract_oracle_csv, fix_duplicate_aliases, preclean
 
 
 class ConvertTest(unittest.TestCase):
@@ -58,6 +60,27 @@ class ConvertTest(unittest.TestCase):
         out, err = convert('CREATE VIEW v AS SELECT a.k FROM t a, u b WHERE a.k = b.k(+)')
         self.assertIsNone(out)
         self.assertIn('(+)', err)
+
+
+class OracleCsvTest(unittest.TestCase):
+    def test_parse_sqlplus_csv_with_column_list(self):
+        views = '\r\n"VIEW_NAME","TEXT"\r\n"V1","SELECT A.X, nvl(A.Y,\' \') FROM T A\r\r\nWHERE A.Z = \'""\'"\r\n' \
+                '"V2","(SELECT 1 FROM DUAL)"\r\n'
+        cols = '\r\n"TABLE_NAME","COLUMN_ID","COLUMN_NAME","DATA_TYPE","DATA_LENGTH","CHAR_LENGTH",' \
+               '"DATA_PRECISION","DATA_SCALE","NULLABLE","OBJECT_TYPE"\r\n' \
+               '"V1",2,"Y2","VARCHAR2",1,1,,,"Y","VIEW"\r\n"V1",1,"X1","VARCHAR2",1,1,,,"Y","VIEW"\r\n' \
+               '"V2",1,"C","UNDEFINED",,,,,"Y","VIEW"\r\n'
+        with tempfile.TemporaryDirectory() as d:
+            vp, cp = os.path.join(d, 'v.csv'), os.path.join(d, 'c.csv')
+            with open(vp, 'w', encoding='utf-8', newline='') as f:
+                f.write(views)
+            with open(cp, 'w', encoding='utf-8', newline='') as f:
+                f.write(cols)
+            got = extract_oracle_csv(vp, cp)
+        self.assertEqual(sorted(got), ['V1', 'V2'])
+        self.assertTrue(got['V1']['sql'].startswith('CREATE VIEW "V1" ("X1", "Y2") AS SELECT'))
+        self.assertIn("WHERE A.Z = '\"'", got['V1']['sql'])
+        self.assertIn('已失效', got['V2']['desc'])
 
 
 class PrecleanTest(unittest.TestCase):
