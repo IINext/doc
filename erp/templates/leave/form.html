@@ -7,6 +7,13 @@
   <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('leave.index') }}"><i class="bi bi-arrow-left"></i></a>
   <h5 class="mb-0 me-auto">請假申請單 {% if doc %}{{ doc['單號'] }}
     <span class="badge bg-secondary">{{ status_text.get(status, '草稿') }}</span>{% endif %}</h5>
+  {% if flow.get('can_cancel_reject') %}
+  <form method="post" action="{{ url_for('leave.cancel_reject', no=doc['單號']) }}" class="m-0"
+        onsubmit="return confirm('確定取消退回？這一關會回到未簽，單據回到簽核中。')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-outline-warning btn-sm"><i class="bi bi-arrow-repeat"></i> 取消退回</button>
+  </form>
+  {% endif %}
   {% if flow.get('can_withdraw') %}
   <form method="post" action="{{ url_for('leave.withdraw', no=doc['單號']) }}" class="m-0"
         onsubmit="return confirm('確定取回並修正？簽核流程會刪除，修改後要重新送簽。')">
@@ -37,13 +44,29 @@
 
 {% if flow.get('my_turn') %}
 <div class="card border-warning mb-3">
-  <div class="card-header bg-warning-subtle py-2"><i class="bi bi-pen"></i> 輪到您簽核</div>
+  <div class="card-header bg-warning-subtle py-2 d-flex align-items-center">
+    <span class="me-auto"><i class="bi bi-pen"></i> 輪到您簽核{% if flow['my_turn']['folder'] == '3' %}
+      <span class="badge bg-secondary">待處理</span>{% endif %}</span>
+    {% if flow['my_turn']['folder'] != '3' %}
+    <form method="post" action="{{ url_for('leave.hold', no=doc['單號']) }}" class="m-0"
+          onsubmit="return confirm('確定歸入待處理文件？')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-inbox"></i> 待處理</button>
+    </form>
+    {% endif %}
+  </div>
   <div class="card-body">
     <div class="row g-3">
       <form class="col-md-6" method="post" action="{{ url_for('leave.approve', no=doc['單號']) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="form-label" for="comment">意見（可不填）</label>
         <textarea class="form-control mb-2" id="comment" name="comment" rows="2"></textarea>
+        {% if flow['my_turn']['addflow'] %}
+        <div class="input-group mb-2">
+          <label class="input-group-text" for="add_signer">加簽給</label>
+          <input class="form-control" id="add_signer" name="add_signer" placeholder="員工編號（不加簽就留空）">
+        </div>
+        {% endif %}
         <button class="btn btn-success"><i class="bi bi-check-lg"></i> 同意</button>
       </form>
       <form class="col-md-6" method="post" action="{{ url_for('leave.reject', no=doc['單號']) }}"
@@ -145,7 +168,8 @@
     {% for h in flow['history'] %}
       <tr class="{{ 'text-muted' if h['free2sign'] or not h['signorcc'] else '' }}">
         <td>{{ h['serial_num_seq'] }}{% if h['version'] %}（會簽）{% endif %}{% if not h['signorcc'] %} 副本{% endif %}
-            {% if h['會簽判定'] %}會簽主項{% endif %}</td>
+            {% if h['會簽判定'] %}會簽主項{% endif %}
+            {% if h['processfor'].strip() %}<span class="text-muted small">{{ h['processfor'] }}</span>{% endif %}</td>
         <td>{{ h['assignee_name'] or '' }}</td>
         <td>{% if h['free2sign'] %}免簽{% elif h['signorcc'] %}
           <span class="badge {{ 'bg-success' if h['signedtype'] == '1' else 'bg-danger' if h['signedtype'] == '2' else 'bg-secondary' }}">

@@ -1,7 +1,9 @@
-"""簽核整合測試：核准、依序多關、退回與取回、作廢、會簽、副本。需要 ERP_TEST_DATABASE_URL。"""
+"""簽核整合測試：核准、依序多關、退回與取回、作廢、會簽、副本、加簽、待處理、取消退回。需要 ERP_TEST_DATABASE_URL。"""
 from datetime import date
 
-from erp import db
+import pytest
+
+from erp import db, edb
 from erp.auth import set_password
 from erp.magic import roc_date7
 
@@ -184,3 +186,158 @@ def test_pending_badge(client):
     submitted(client)
     switch(client, 'E002')
     assert 'bg-danger">1</span>' in client.get('/flow/').get_data(as_text=True)
+
+
+# ── 加簽、待處理、取消退回 ─────────────────────────────────────────
+
+def allow_add(app):
+    with app.app_context():
+        db.execute('UPDATE a20_1 SET addflow = 1')
+        db.commit()
+
+
+def test_add_signer_on_approve(client, app):
+    add_employee(app, 'E005', '張專員', 'S-E005', 'P-STAFF')
+    allow_add(app)
+    submitted(client)
+    switch(client, 'E002')
+    assert 'add_signer' in client.get(f'/hr/leave/{NO}').get_data(as_text=True)
+    resp = post(client, 'approve', comment='請專員確認', add_signer='E005')
+    assert '已同意' in resp.get_data(as_text=True) and status(app) == 'I'
+    assert [f[:3] for f in flows(app)] == [(10, 'S-E002', '1'), (11, 'S-E005', '0')]
+    with app.app_context():
+        added = db.one('SELECT * FROM a01_2 WHERE serial_num_seq = 11')
+        first = db.one('SELECT * FROM a01_2 WHERE serial_num_seq = 10')
+        assert added['addflow'] == 1 and added['processfor'] == '加簽人:陳主管'
+        assert added['fromid'] == first['recordid'] != ' ' and first['folder'] == '7'
+
+    switch(client, 'E005')
+    assert NO in client.get('/flow/').get_data(as_text=True)
+    assert '簽核完成' in post(client, 'approve').get_data(as_text=True)
+    assert status(app) == 'E'
+
+
+def test_add_signer_before_next_step(client, app):
+    add_employee(app, 'E004', '林經理', 'S-E004', 'P-DIR', manages='G-D01')
+    add_employee(app, 'E005', '張專員', 'S-E005', 'P-STAFF')
+    add_node(app, 20, posiid='P-DIR')
+    allow_add(app)
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'approve', add_signer='E005')
+    switch(client, 'E004')                                   # 加簽人還沒簽，第二關還沒輪到
+    assert NO not in client.get('/flow/').get_data(as_text=True)
+    switch(client, 'E005')
+    post(client, 'approve')
+    switch(client, 'E004')
+    assert NO in client.get('/flow/').get_data(as_text=True)
+
+
+def test_add_signer_checks(client, app):
+    submitted(client)
+    switch(client, 'E002')
+    assert 'add_signer' not in client.get(f'/hr/leave/{NO}').get_data(as_text=True)   # 節點不能加簽
+    assert '這一關不能加簽' in post(client, 'approve', add_signer='E001').get_data(as_text=True)
+    allow_add(app)
+    with app.app_context():
+        db.execute('UPDATE a01_2 SET addflow = 1')
+        db.commit()
+    assert '員工編號不能選自己' in post(client, 'approve', add_signer='E002').get_data(as_text=True)
+    assert '或已停用' in post(client, 'approve', add_signer='E003').get_data(as_text=True)
+    assert '或已停用' in post(client, 'approve', add_signer='X999').get_data(as_text=True)
+    assert status(app) == 'I' and [f[:3] for f in flows(app)] == [(10, 'S-E002', '0')]   # 失敗時沒有簽下去
+
+
+def test_add_signer_sequence_taken(client, app):
+    add_employee(app, 'E004', '林經理', 'S-E004', 'P-DIR', manages='G-D01')
+    add_employee(app, 'E005', '張專員', 'S-E005', 'P-STAFF')
+    add_node(app, 11, posiid='P-DIR')
+    allow_add(app)
+    submitted(client)
+    switch(client, 'E002')
+    assert '下一個流程序號已經有關卡' in post(client, 'approve', add_signer='E005').get_data(as_text=True)
+    assert flows(app)[0][2] == '0'
+
+
+def test_hold(client, app):
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'hold')
+    with app.app_context():
+        assert db.scalar('SELECT folder FROM a01_2') == '3'
+    page = client.get('/flow/').get_data(as_text=True)
+    assert '待處理' in page and NO in page and 'bg-danger">1</span>' not in page   # 不算在待簽數量
+    form = client.get(f'/hr/leave/{NO}').get_data(as_text=True)
+    assert '輪到您簽核' in form and 'leave/' + NO + '/hold' not in form               # 已在待處理
+    post(client, 'approve')
+    assert status(app) == 'E'
+
+
+def test_hold_only_my_turn(client, app):
+    submitted(client)
+    assert '目前不是輪到您簽核' in post(client, 'hold').get_data(as_text=True)
+
+
+def test_cancel_reject(client, app):
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'reject', reason='日期寫錯')
+    assert '取消退回' in client.get(f'/hr/leave/{NO}').get_data(as_text=True)
+    post(client, 'cancel-reject')
+    assert status(app) == 'I'
+    with app.app_context():
+        row = db.one('SELECT * FROM a01_2')
+        assert (row['signedtype'], row['signedby'], row['folder'], row['signbackto']) == ('0', ' ', '2', ' ')
+        assert '已取消退回' in row['註解']
+        msgs = [m['message'] for m in db.query('SELECT * FROM messages WHERE messageto = %s ORDER BY createtime',
+                                                ('S-E001',))]
+        assert any('已取消退回' in m for m in msgs)
+    assert NO in client.get('/flow/').get_data(as_text=True)
+    post(client, 'approve')
+    assert status(app) == 'E'
+
+
+def test_cancel_reject_only_rejector(client, app):
+    add_employee(app, 'E005', '張專員', 'S-E005', 'P-STAFF')
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'reject', reason='日期寫錯')
+    switch(client, 'E001')                                   # 開單人不能取消別人的退回
+    assert '找不到可以取消的退回' in post(client, 'cancel-reject').get_data(as_text=True)
+    switch(client, 'E005')                                   # 不在流程上的人看不到這張單
+    assert post(client, 'cancel-reject').status_code == 404
+    assert status(app) == 'D'
+
+
+def test_cancel_reject_after_withdraw(client, app):
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'reject', reason='日期寫錯')
+    switch(client, 'E001')
+    post(client, 'withdraw')
+    switch(client, 'E002')                                   # 流程已刪除，簽核人也看不到這張單了
+    assert post(client, 'cancel-reject').status_code == 404
+    with app.app_context():
+        with pytest.raises(edb.EdbError, match='找不到可以取消的退回'):
+            edb.cancel_reject(db.scalar('SELECT serial_num FROM a01'), 'S-E002')
+    assert status(app) == '0'
+
+
+def test_cancel_countersign_reject(client, app):
+    add_employee(app, 'E005', '張會簽', 'S-E005', 'P-STAFF')
+    with app.app_context():
+        db.execute('TRUNCATE a20_1')
+        db.commit()
+    add_node(app, 10, **{'會簽判定': 1, '會簽方式': '2'})
+    add_node(app, 11, level_=10, posiid='P-MGR')
+    add_node(app, 12, level_=10, **{'指定人員': 'S-E005'})
+    submitted(client)
+    switch(client, 'E002')
+    post(client, 'reject', reason='不同意')
+    assert status(app) == 'D' and flows(app)[0][2] == '2'
+    post(client, 'cancel-reject')
+    assert status(app) == 'I' and flows(app)[0][2] == '0'           # 主項重新計算
+    post(client, 'approve')
+    switch(client, 'E005')
+    post(client, 'approve')
+    assert status(app) == 'E'

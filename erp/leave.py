@@ -378,6 +378,7 @@ def _render_form(f, doc=None, rows=None):
         flow_info = {
             'history': edb.history(doc['流水編號']),
             'my_turn': edb.my_turn(doc['流水編號'], me),
+            'can_cancel_reject': edb.cancelable_reject(doc['流水編號'], me) is not None,
             # 開單人或申請人：簽核中、退回可以取回修正；還沒結案可以作廢
             'can_withdraw': status in ('I', 'D') and is_requester(doc),
             'can_void': status in ('I', 'D') and is_requester(doc),
@@ -535,10 +536,10 @@ def _flow_action(no, action, done_message):
 @bp.route('/<no>/approve', methods=('POST',))
 @login_required
 def approve(no):
-    """同意（Home #94 WorkflowSign）。"""
+    """同意（Home #94 WorkflowSign），可以同時加簽。"""
     return _flow_action(
         no, lambda doc: edb.approve(doc['流水編號'], g.user['serial_num'], request.form.get('comment', ''),
-                                    values=flow_values(doc)),
+                                    values=flow_values(doc), add_signer=request.form.get('add_signer', '')),
         lambda status: '已同意，簽核完成' if status == 'E' else '已同意')
 
 
@@ -548,6 +549,21 @@ def reject(no):
     """退回（Home #94 WorkflowDrawback），通知開單人。"""
     return _flow_action(no, lambda doc: edb.reject(doc['流水編號'], g.user['serial_num'],
                                                    request.form.get('reason', '')), '已退回')
+
+
+@bp.route('/<no>/hold', methods=('POST',))
+@login_required
+def hold(no):
+    """歸入待處理（Home #94 WorkflowHold）。"""
+    return _flow_action(no, lambda doc: edb.hold(doc['流水編號'], g.user['serial_num']), '已歸入待處理')
+
+
+@bp.route('/<no>/cancel-reject', methods=('POST',))
+@login_required
+def cancel_reject(no):
+    """取消退回（Home #94 WorkflowCancelDB），只有退回的人可以執行。"""
+    return _flow_action(no, lambda doc: edb.cancel_reject(doc['流水編號'], g.user['serial_num']),
+                        '已取消退回，單據回到簽核中')
 
 
 @bp.route('/<no>/withdraw', methods=('POST',))

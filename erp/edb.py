@@ -3,11 +3,14 @@
 - create_object()：EDB #54 ObjProperties(Batch)，建立單據的簽核物件（A01）與授權（A01_4）
 - submit()：EDB #7 表單送簽(正本)，依 A20_1 的流程設定產生簽核流程（A01_2）
 - create_activity()：EDB #55 CreateActivity，寫活動記錄（A01_3）
+- approve()／reject()／hold()／cancel_reject()：Home #94 SignDocument 的同意（含加簽）、退回、待處理、取消退回
+- withdraw()／void()：開單人取回修正、作廢
 
 EDB 資料表在 Oracle 用英文欄位名稱，這裡照資料庫的名稱寫，註解標示 Magic 的名稱。
 狀態碼（A01.flowstatus）：'0' 草稿、'I' 簽核中、'E' 結案、'A' 作廢、'D' 退回。
 """
 import secrets
+import uuid
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
@@ -102,6 +105,11 @@ def _has_assignee(serial, person):
     return db.one('SELECT 1 FROM a01_2 WHERE serial_num = %s AND assignedto = %s', (serial, person)) is not None
 
 
+def _record_id(serial):
+    """EDB #4 新增序號(ole)：單據流水號 + GUID。"""
+    return serial.strip() + str(uuid.uuid4()).upper()
+
+
 def _add_flow(serial, node, seq, assignee, urgent, in_progress=True):
     """新增一筆 A01_2（單據流程）。
 
@@ -124,6 +132,7 @@ def _add_flow(serial, node, seq, assignee, urgent, in_progress=True):
         'signedtime': from_time(now.time()) if free else '000000',
         '會簽判定': node['會簽判定'], '會簽方式': node['會簽方式'],
         'singature_line': node['singature_line'], 'singature_seq': node['singature_seq'],
+        'recordid': _record_id(serial),
     })
     if in_progress:
         db.execute("UPDATE a01 SET flowstatus = 'I' WHERE serial_num = %s", (serial,))
@@ -376,10 +385,47 @@ def _close(serial, obj, values):
         _generate(serial, obj, reg, emp, values or {}, copies=True)
 
 
-def approve(serial, user_serial, comment='', values=None):
+def _signer_to_add(emp_no, user_serial, row):
+    """加簽對象的檢查（Home #96 加簽）。回傳員工資料。"""
+    from .auth import is_disabled
+    if not row['addflow']:
+        raise EdbError('這一關不能加簽')
+    emp = db.one('SELECT * FROM fil0010 WHERE "員工編號" = %s', (emp_no.strip(),))
+    if emp is None or is_disabled(emp):
+        raise EdbError(f'找不到加簽的員工 {emp_no.strip()}，或已停用')
+    if emp['serial_num'] == user_serial:
+        raise EdbError('員工編號不能選自己')
+    return emp
+
+
+def _add_signer(serial, obj, row, emp, user_serial):
+    """Home #94 子任務「簽核」→ Create加簽：在目前這一關的下一個序號插入加簽人，同一層（父階序號相同）。
+
+    原程式固定用「流程序號 + 1」，序號已被使用時寫入會失敗；這裡同樣不覆蓋，改為顯示錯誤。
+    """
+    seq = row['serial_num_seq'] + 1
+    if db.one('SELECT 1 FROM a01_2 WHERE serial_num = %s AND serial_num_seq = %s', (serial, seq)):
+        raise EdbError('下一個流程序號已經有關卡，無法在這一關加簽，請洽系統管理員調整流程序號')
+    me = employee(user_serial)
+    db.insert('a01_2', {
+        'serial_num': serial, 'version': row['version'], 'serial_num_seq': seq,
+        'assignedto': emp['serial_num'], 'signedtype': '0', 'signorcc': 1,
+        'folder': '1' if obj['urgency'] else '2',
+        'addflow': 1,                                          # 加簽（加簽人也可以再加簽）
+        'processfor': f'加簽人:{(me or {}).get("empname", "").strip()}'[:60],     # 執行說明
+        'fromid': row['fromid'] if row['fromid'].strip() else row['recordid'],   # 來源或加簽人
+        'recordid': _record_id(serial),
+    })
+    return seq
+
+
+def approve(serial, user_serial, comment='', values=None, add_signer=None):
     """同意（Home #94 WorkflowSign）。回傳單據的簽核狀態（'I' 簽核中、'E' 結案、'D' 退回）。
-    values：結案時產生副本用的流程條件值（同送簽）。"""
+    values：結案時產生副本用的流程條件值（同送簽）。
+    add_signer：加簽的員工編號，加簽人排在這一關之後，要等他同意才會往下（或結案）。"""
     obj, row = _lock_turn(serial, user_serial)
+    if add_signer and add_signer.strip():
+        _add_signer(serial, obj, row, _signer_to_add(add_signer, user_serial, row), user_serial)
     now = _now()
     has_next = db.one("""SELECT 1 FROM a01_2 WHERE serial_num = %s AND version = %s AND signorcc = 1
                          AND free2sign = 0 AND serial_num_seq > %s LIMIT 1""",
@@ -390,8 +436,7 @@ def approve(serial, user_serial, comment='', values=None):
                   WHERE serial_num = %s AND serial_num_seq = %s""",
                (user_serial, from_date(now.date()), from_time(now.time()), 'E' if closing else '7',
                 _append_note(row['註解'], comment.strip()), serial, row['serial_num_seq']))
-    db.execute('UPDATE a01 SET "異動日期" = %s, "異動時間" = %s WHERE serial_num = %s',
-               (from_date(now.date()), from_time(now.time()), serial))
+    _touch(serial, now)
     if row['version'] != 0:                                   # 會簽子關卡：重新計算主項
         _countersign(serial, row['version'])
     status = db.scalar('SELECT flowstatus FROM a01 WHERE serial_num = %s', (serial,))
@@ -399,6 +444,50 @@ def approve(serial, user_serial, comment='', values=None):
         _close(serial, obj, values)
         status = 'E'
     return status
+
+
+def _touch(serial, now):
+    db.execute('UPDATE a01 SET "異動日期" = %s, "異動時間" = %s WHERE serial_num = %s',
+               (from_date(now.date()), from_time(now.time()), serial))
+
+
+def hold(serial, user_serial):
+    """待處理（Home #94 WorkflowHold）：資料夾改為 '3'，仍然輪到自己簽，只是從待簽數量移到「待處理」。"""
+    _, row = _lock_turn(serial, user_serial)
+    db.execute("""UPDATE a01_2 SET folder = '3', signedtype = '0' WHERE serial_num = %s AND serial_num_seq = %s""",
+               (serial, row['serial_num_seq']))
+
+
+def cancelable_reject(serial, user_serial):
+    """user_serial 退回、而且還可以取消的關卡（單據仍是退回或簽核中，開單人還沒取回）。"""
+    return db.one("""SELECT f.* FROM a01_2 f JOIN a01 o ON o.serial_num = f.serial_num
+                     WHERE f.serial_num = %s AND f.signedby = %s AND f.signedtype = '2' AND f.signorcc = 1
+                       AND o.flowstatus IN ('D', 'I')
+                     ORDER BY f.serial_num_seq DESC LIMIT 1""", (serial, user_serial))
+
+
+def cancel_reject(serial, user_serial):
+    """取消退回（Home #94 WorkflowCancelDB）：退回的人把自己的退回撤銷，這一關回到未簽、單據回到簽核中。
+
+    原程式只有簽核人本人可以執行（MnuShow B = 簽核人員）。新系統另外通知開單人退回已取消，
+    避免開單人依照先前的退回通知去取回修正。"""
+    obj = db.one('SELECT * FROM a01 WHERE serial_num = %s FOR UPDATE', (serial,))
+    row = cancelable_reject(serial, user_serial) if obj else None
+    if row is None:
+        raise EdbError('找不到可以取消的退回（開單人可能已經取回修正）')
+    now = _now()
+    db.execute("""UPDATE a01_2 SET signedtype = '0', signedby = ' ', signeddate = '00000000', signedtime = '000000',
+                  folder = %s, read = 0, actioncompleted = 0, signbackto = ' ', "註解" = %s
+                  WHERE serial_num = %s AND serial_num_seq = %s""",
+               ('1' if obj['urgency'] else '2', _append_note(row['註解'], '（已取消退回）'),
+                serial, row['serial_num_seq']))
+    db.execute("UPDATE a01 SET flowstatus = 'I' WHERE serial_num = %s", (serial,))
+    _touch(serial, now)
+    if row['version'] != 0:                                   # 會簽子關卡：重新計算主項（其他人的退回仍然算）
+        _countersign(serial, row['version'])
+    back_to = row['signbackto'].strip() or obj['owner']
+    create_message(serial, back_to, f'{obj["name"].strip()} 已取消退回，回到簽核中', user_serial)
+    return db.scalar('SELECT flowstatus FROM a01 WHERE serial_num = %s', (serial,))
 
 
 def reject(serial, user_serial, reason, back_to=None):
@@ -418,8 +507,7 @@ def reject(serial, user_serial, reason, back_to=None):
         _countersign(serial, row['version'])
     else:
         db.execute("UPDATE a01 SET flowstatus = 'D' WHERE serial_num = %s", (serial,))
-    db.execute('UPDATE a01 SET "異動日期" = %s, "異動時間" = %s WHERE serial_num = %s',
-               (from_date(now.date()), from_time(now.time()), serial))
+    _touch(serial, now)
     create_message(serial, back_to, f'{obj["name"].strip()} 退回：{reason}', user_serial, kind='Q')
     return db.scalar('SELECT flowstatus FROM a01 WHERE serial_num = %s', (serial,))
 
