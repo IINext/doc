@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ doc['單號'] }} 出勤調整單 - ERP{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3 gap-2">
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('attendance.index') }}"><i class="bi bi-arrow-left"></i></a>
+  <h5 class="mb-0">出勤調整單 {{ doc['單號'] }}
+    <span class="badge bg-success">{{ status_text.get(doc['簽核狀態'], doc['簽核狀態']) }}</span></h5>
+</div>
+<div class="card">
+<div class="card-body">
+  <div class="row g-3">
+    <div class="col-sm-4 col-lg-2"><label class="form-label">申請人</label>
+      <input class="form-control" readonly value="{{ doc['申請人姓名'] }}（{{ doc['申請人'] }}）"></div>
+    <div class="col-sm-4 col-lg-2"><label class="form-label">扣薪假別</label>
+      <input class="form-control" readonly value="{{ doc['假別名稱'] }}"></div>
+    <div class="col-sm-4 col-lg-2"><label class="form-label">代理人</label>
+      <input class="form-control" readonly value="{{ doc['代理人姓名'] }}"></div>
+    <div class="w-100 d-none d-lg-block"></div>
+    <div class="col-sm-6 col-lg-3"><label class="form-label">起始</label>
+      <input class="form-control" readonly value="{{ to_date(doc['起始日期']) }} {{ to_time(doc['起始時間']).strftime('%H:%M') }}"></div>
+    <div class="col-sm-6 col-lg-3"><label class="form-label">截止</label>
+      <input class="form-control" readonly value="{{ to_date(doc['截止日期']) }} {{ to_time(doc['截止時間']).strftime('%H:%M') }}"></div>
+    <div class="col-sm-2 col-lg-1"><label class="form-label">天數</label>
+      <input class="form-control" readonly value="{{ doc['天數'] }}"></div>
+    <div class="col-sm-2 col-lg-1"><label class="form-label">時數</label>
+      <input class="form-control" readonly value="{{ '%g' % doc['時數'] }}"></div>
+    <div class="col-12"><label class="form-label">請假事由</label>
+      <textarea class="form-control" readonly rows="2">{{ doc['請假事由'] }}</textarea></div>
+    <div class="col-sm-4"><label class="form-label">填寫人</label>
+      <input class="form-control" readonly value="{{ doc['填寫人姓名'] }}"></div>
+  </div>
+</div>
+</div>
+{% endblock %}

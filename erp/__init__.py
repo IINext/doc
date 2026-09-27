@@ -21,7 +21,7 @@ from pathlib import Path
 import click
 from flask import Flask, redirect, url_for
 
-from . import auth, db, expense, flow, leave
+from . import attendance, auth, db, expense, flow, leave
 
 
 def create_app(test_config=None):
@@ -40,6 +40,7 @@ def create_app(test_config=None):
     app.register_blueprint(auth.bp)
     app.register_blueprint(leave.bp)
     app.register_blueprint(expense.bp)
+    app.register_blueprint(attendance.bp)
     app.register_blueprint(flow.bp)
     app.jinja_env.globals['csrf_token'] = auth.csrf_token
     app.jinja_env.globals['pending_count'] = flow.pending_count

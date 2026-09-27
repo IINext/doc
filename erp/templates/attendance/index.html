@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}出勤調整單 - ERP{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h5 class="mb-0 me-auto">出勤調整單</h5>
+  {% if manager %}
+  <a class="btn btn-primary btn-sm" href="{{ url_for('attendance.create') }}"><i class="bi bi-plus-lg"></i> 新增</a>
+  {% endif %}
+</div>
+<p class="text-muted small">存檔即核定，不能修改或刪除；只有人資（H01 單據管理員）可以新增，一般員工只看得到自己填的或自己是申請人的單。</p>
+
+<form class="row g-2 align-items-end mb-3" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">填寫日期</label>
+    <div class="input-group input-group-sm">
+      <input class="form-control" type="date" name="date_from" value="{{ date_from.isoformat() }}">
+      <span class="input-group-text">～</span>
+      <input class="form-control" type="date" name="date_to" value="{{ date_to.isoformat() }}">
+    </div>
+  </div>
+  <div class="col-auto"><button class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i> 查詢</button></div>
+</form>
+
+<div class="table-responsive bg-white border rounded">
+<table class="table table-sm table-hover mb-0">
+  <thead class="table-light">
+    <tr><th>單號</th><th>申請人</th><th>假別</th><th>起始</th><th>截止</th>
+        <th class="text-end">天</th><th class="text-end">時</th><th>代理人</th><th>填寫人</th></tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="{{ url_for('attendance.view', no=r['單號']) }}">{{ r['單號'] }}</a></td>
+      <td>{{ r['申請人姓名'] }}</td>
+      <td>{{ r['假別名稱'] }}</td>
+      <td>{{ to_date(r['起始日期']) }} {{ to_time(r['起始時間']).strftime('%H:%M') }}</td>
+      <td>{{ to_date(r['截止日期']) }} {{ to_time(r['截止時間']).strftime('%H:%M') }}</td>
+      <td class="text-end">{{ r['天數'] }}</td>
+      <td class="text-end">{{ '%g' % r['時數'] }}</td>
+      <td>{{ r['代理人姓名'] }}</td>
+      <td>{{ r['填寫人姓名'] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9" class="text-center text-muted py-4">沒有資料</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

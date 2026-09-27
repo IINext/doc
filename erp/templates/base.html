@@ -22,6 +22,7 @@
         {% set n = pending_count() %}{% if n %}<span class="badge rounded-pill bg-danger">{{ n }}</span>{% endif %}</a></li>
       <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.index') }}">請假申請單</a></li>
       <li class="nav-item"><a class="nav-link" href="{{ url_for('expense.index') }}">費用申請單</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('attendance.index') }}">出勤調整單</a></li>
     </ul>
     <div class="d-flex align-items-center gap-2 text-light small">
       <span><i class="bi bi-person-circle"></i> {{ g.user['員工姓名'] }}（{{ g.user['員工編號'] }}）</span>
