@@ -4,6 +4,55 @@ Flask + PostgreSQL。和 repo 根目錄的文件管理系統**完全獨立**：�
 
 資料表沿用 Oracle 轉過來的結構（`magic2py/schema/`），欄位名稱和舊系統相同，**新舊系統可以共用同一份資料並行一段時間**。
 
+## 先試用看看（demo 模式）
+
+還沒有從 Oracle 搬資料的工具，所以現在沒辦法直接看到舊系統的真實單據；
+但可以用「示範資料」在自己電腦上完整跑一次登入、填單、送簽、核准，畫面和操作都和正式使用一樣。
+
+1. **安裝 PostgreSQL**（14 以上）。Windows 可以到 https://www.postgresql.org/download/windows/ 下載安裝，
+   安裝時會設定一組密碼（記得記住），預設會在 5432 port 開一個服務。
+2. **建立一個空的資料庫**，例如叫 `erp_demo`（用安裝時附的 pgAdmin，或命令列 `psql`）。
+3. **載入資料表結構**（在 repo 根目錄的命令列視窗執行，`erp_demo` 換成您實際的資料庫名稱）：
+
+   ```
+   psql -U postgres -d erp_demo -f magic2py/schema/postgresql.sql
+   psql -U postgres -d erp_demo -f magic2py/oracle_compat.sql
+   psql -U postgres -d erp_demo -f magic2py/schema/postgresql_views.sql
+   psql -U postgres -d erp_demo -f erp/schema.sql
+   ```
+
+4. **設定**：複製 `erp/erp.env.example.bat` 為 `erp/erp.env.bat`，把 `ERP_DATABASE_URL` 改成剛剛的資料庫，例如：
+
+   ```
+   set ERP_DATABASE_URL=postgresql://postgres:您的密碼@localhost:5432/erp_demo
+   ```
+
+5. **建立示範資料**（只要做一次；重複執行會直接報錯，不會弄壞資料）：
+
+   ```
+   erp\erp.env.bat
+   pip install -r erp\requirements.txt
+   flask --app erp init-db
+   flask --app erp seed-demo
+   ```
+
+   會建立 4 個示範帳號（密碼都是 `demo1234`）：
+   - `E001` 王小明：一般員工
+   - `E002` 陳主管：課長，請假單／費用申請單的簽核人
+   - `E004` 林經理：經理，請假單的第二關簽核人
+   - `E009` 林人資：人資，可以新增「出勤調整單」
+
+6. **啟動**：`erp\start_erp.bat`，然後瀏覽器打開 http://127.0.0.1:8100 。
+
+7. **照著這個順序試試看**（可以開無痕視窗，或是登出換帳號）：
+   - 用 `E001` 登入 → 請假申請單 → 新增一張 → 存檔 → 送簽
+   - 登出，用 `E002` 登入（課長）→ 導覽列「待簽」會出現 1 → 點進去 → 同意
+   - 登出，用 `E004` 登入（經理，第二關）→「待簽」→ 同意 → 請假單狀態變成「已簽」
+   - 用 `E009` 登入（人資）→ 出勤調整單 → 新增 → 存檔即核定
+   - 也可以試試退回、取回修正、作廢、費用申請單（多筆申請人明細）
+
+試用滿意、要換成真實資料的話，跟我說一聲，我再繼續做 Oracle 搬資料的工具。
+
 ## 目前完成
 
 | 功能 | 對應舊程式 | 狀態 |
@@ -165,18 +214,20 @@ ERP_TEST_DATABASE_URL=postgresql://postgres@localhost/erp_test python -m pytest 
 ```
 
 整合測試會**清空** `ERP_TEST_DATABASE_URL` 指定的資料庫，重建全部資料表與 View，請用專門的測試資料庫。
-目前 79 個測試：請假時數計算、每日明細、登入安全性、請假單的各項檢查、費用申請單的各項檢查、
-出勤調整單的各項檢查、送簽產生簽核流程、核准／退回／取回／作廢／會簽／副本、加簽／待處理／取消退回。
+目前 81 個測試：請假時數計算、每日明細、登入安全性、請假單的各項檢查、費用申請單的各項檢查、
+出勤調整單的各項檢查、送簽產生簽核流程、核准／退回／取回／作廢／會簽／副本、加簽／待處理／取消退回、
+示範資料（`seed-demo`）本身也要能正常送簽核准。
 
 ## 程式結構
 
 | 檔案 | 內容 |
 |---|---|
-| `__init__.py` | app 建立、管理指令（init-db、import-passwords、set-password） |
+| `__init__.py` | app 建立、管理指令（init-db、import-passwords、set-password、seed-demo） |
 | `db.py` | 資料庫連線；`insert()` 會替沒給值的 NOT NULL 欄位補 Magic 的空白值（`' '`、`0`、`'00000000'`） |
 | `magic.py` | Magic 資料格式轉換：`'YYYYMMDD'` 日期、`'HHMMSS'` 時間、民國年、流水編號 |
 | `auth.py` | 登入、CSRF |
 | `numbering.py` | 單號（民國年月日 + 當日序號） |
+| `demo.py` | 示範資料（`flask --app erp seed-demo`），只給試用，不是正式資料 |
 | `attendance.py` | H05 出勤調整單（人資登打、存檔即核定） |
 | `formdocs.py` | 各表單共用：單據管理員判斷、人資關帳日期、簽核狀態文字 |
 | `edb.py` | 簽核引擎：建立簽核物件、送簽產生流程、核准（含加簽）、退回、待處理、取消退回、取回、作廢、會簽判定 |

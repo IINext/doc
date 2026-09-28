@@ -11,6 +11,7 @@
 執行：
     flask --app erp init-db              # 建立 ERP 自己的資料表（erp_auth）
     flask --app erp import-passwords     # 把舊系統的密碼轉成雜湊（一次性）
+    flask --app erp seed-demo            # 建立示範資料，方便第一次試用（不是正式資料，見 demo.py）
     flask --app erp run                  # 開發用
     python -m erp.serve                  # 正式執行（waitress）
 """
@@ -21,7 +22,7 @@ from pathlib import Path
 import click
 from flask import Flask, redirect, url_for
 
-from . import attendance, auth, db, expense, flow, leave
+from . import attendance, auth, db, demo, expense, flow, leave
 
 
 def create_app(test_config=None):
@@ -67,6 +68,17 @@ def create_app(test_config=None):
             auth.set_password(r['員工編號'], r['個人密碼'].strip(), must_change=True)
         db.commit()
         click.echo(f'匯入 {len(rows)} 個帳號；舊系統停用後，建議清空 FIL0010."個人密碼"')
+
+    @app.cli.command('seed-demo')
+    def seed_demo():
+        """建立示範資料（幾個帳號、部門、假別、行事曆、簽核流程），方便第一次試用。不是正式資料！"""
+        try:
+            demo.seed()
+        except RuntimeError as e:
+            raise click.ClickException(str(e))
+        db.commit()
+        click.echo(f'示範資料建立完成，可以用 {", ".join(no for no, *_ in demo.EMPLOYEES)} '
+                  f'登入，密碼都是 {demo.PASSWORD}')
 
     @app.cli.command('set-password')
     @click.argument('emp_no')
